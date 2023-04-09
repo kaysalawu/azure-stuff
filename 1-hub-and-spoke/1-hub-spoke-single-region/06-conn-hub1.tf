@@ -18,12 +18,12 @@ resource "azurerm_virtual_network_peering" "spoke1_to_hub1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
   name                         = "${local.prefix}-spoke1-to-hub1-peering"
   virtual_network_name         = module.spoke1.vnet[0].name
-  remote_virtual_network_id    = module.hub1.vnet.id
+  remote_virtual_network_id    = module.hub1.vnet.0.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   use_remote_gateways          = true
   depends_on = [
-    module.hub1.vpngw.0
+    module.hub1.vpngw
   ]
 }
 
@@ -33,13 +33,13 @@ resource "azurerm_virtual_network_peering" "spoke1_to_hub1_peering" {
 resource "azurerm_virtual_network_peering" "hub1_to_spoke1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
   name                         = "${local.prefix}-hub1-to-spoke1-peering"
-  virtual_network_name         = module.hub1.vnet.name
+  virtual_network_name         = module.hub1.vnet.0.name
   remote_virtual_network_id    = module.spoke1.vnet[0].id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = true
   depends_on = [
-    module.hub1.vpngw.0
+    module.hub1.vpngw
   ]
 }
 
@@ -99,7 +99,7 @@ resource "azurerm_virtual_network_peering" "spoke2_to_hub1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
   name                         = "${local.prefix}-spoke2-to-hub1-peering"
   virtual_network_name         = module.spoke2.vnet.0.name
-  remote_virtual_network_id    = module.hub1.vnet.id
+  remote_virtual_network_id    = module.hub1.vnet.0.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   use_remote_gateways          = true
@@ -113,7 +113,7 @@ resource "azurerm_virtual_network_peering" "spoke2_to_hub1_peering" {
 resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
   name                         = "${local.prefix}-hub1-to-spoke2-peering"
-  virtual_network_name         = module.hub1.vnet.name
+  virtual_network_name         = module.hub1.vnet.0.name
   remote_virtual_network_id    = module.spoke2.vnet.0.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
@@ -155,7 +155,7 @@ resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
   location                   = local.hub1_location
   type                       = "IPsec"
   enable_bgp                 = true
-  virtual_network_gateway_id = module.hub1.vpngw.id
+  virtual_network_gateway_id = module.hub1.vpngw.0.id
   local_network_gateway_id   = azurerm_local_network_gateway.hub1_branch1_lng.id
   shared_key                 = local.psk
 }
