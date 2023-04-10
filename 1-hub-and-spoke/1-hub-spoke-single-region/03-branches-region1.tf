@@ -23,7 +23,6 @@ module "branch1" {
     {
       address_space = local.branch1_address_space
       subnets       = local.branch1_subnets
-      dns_servers   = [local.branch1_dns_addr, ]
     }
   ]
 
@@ -40,7 +39,7 @@ module "branch1" {
       name             = "dns"
       subnet           = "${local.branch1_prefix}main"
       private_ip       = local.branch1_dns_addr
-      custom_data      = base64encode(local.vm_startup)
+      custom_data      = base64encode(local.branch_unbound_config)
       source_image     = "debian"
       use_vm_extension = true
     }

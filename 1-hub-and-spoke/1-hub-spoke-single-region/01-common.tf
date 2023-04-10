@@ -36,9 +36,9 @@ resource "azurerm_log_analytics_workspace" "analytics_ws" {
 
 # my public ip
 
-data "http" "mypip" {
+/*data "http" "mypip" {
   url = "http://ipv4.icanhazip.com"
-}
+}*/
 
 ####################################################
 # nsg
@@ -428,19 +428,6 @@ module "branch_dns_cloud_init" {
     #". /var/tmp/unbound.sh",
   ]
 }
-
-####################################################
-# addresses
-####################################################
-
-resource "azurerm_public_ip" "branch1_nva_pip" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.branch1_prefix}nva-pip"
-  location            = local.branch1_location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
 
 ####################################################
 # output files

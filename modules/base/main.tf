@@ -33,10 +33,6 @@ locals {
   ])
 }
 
-output "test" {
-  value = local.dns_rulesets
-}
-
 # vnet
 #----------------------------
 

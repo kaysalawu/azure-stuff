@@ -181,7 +181,3 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub1_onprem" {
   }
 }
 
-output "test" {
-  value = module.hub1.test
-}
-
