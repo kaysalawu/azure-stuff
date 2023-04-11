@@ -14,7 +14,7 @@ locals {
   hub2_vpngw_asn = "65515"
   hub2_ergw_asn  = "65515"
   hub2_ars_asn   = "65515"
-  #mypip          = chomp(data.http.mypip.response_body)
+  #mypip         = chomp(data.http.mypip.response_body)
 
   vm_script_targets_region1 = [
     { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },

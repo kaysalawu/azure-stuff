@@ -1,6 +1,7 @@
 
-# env
-#----------------------------
+####################################################
+# base
+####################################################
 
 module "hub1" {
   source          = "../../modules/base"
@@ -51,48 +52,10 @@ module "hub1" {
     }
   ]
 }
-/*
-# udr
-#----------------------------
 
-# route table
-
-resource "azurerm_route_table" "hub1_vpngw_rt" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.hub1_prefix}vpngw-rt"
-  location            = local.region1
-
-  disable_bgp_route_propagation = false
-}
-
-# routes
-
-locals {
-  hub1_vpngw_routes = {
-    spoke2 = local.spoke2_address_space[0],
-    spoke3 = local.spoke3_address_space[0],
-  }
-}
-
-resource "azurerm_route" "hub1_vpngw_rt_routes" {
-  for_each               = local.hub1_vpngw_routes
-  resource_group_name    = azurerm_resource_group.rg.name
-  name                   = "${local.hub1_prefix}vpngw-rt-${each.key}-route"
-  route_table_name       = azurerm_route_table.hub1_vpngw_rt.name
-  address_prefix         = each.value
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "hub1_vpngw_rt_spoke_route" {
-  subnet_id      = module.hub1.subnets["GatewaySubnet"].id
-  route_table_id = azurerm_route_table.hub1_vpngw_rt.id
-}
-
+####################################################
 # internal lb
-#----------------------------
+####################################################
 
 resource "azurerm_lb" "hub1_nva_lb" {
   resource_group_name = azurerm_resource_group.rg.name
@@ -105,7 +68,6 @@ resource "azurerm_lb" "hub1_nva_lb" {
     private_ip_address            = local.hub1_nva_ilb_addr
     private_ip_address_allocation = "Static"
   }
-
   lifecycle {
     ignore_changes = [frontend_ip_configuration, ]
   }
@@ -121,7 +83,7 @@ resource "azurerm_lb_backend_address_pool" "hub1_nva" {
 resource "azurerm_lb_backend_address_pool_address" "hub1_nva" {
   name                    = "${local.hub1_prefix}nva-beap-addr"
   backend_address_pool_id = azurerm_lb_backend_address_pool.hub1_nva.id
-  virtual_network_id      = module.hub1.vnet.id
+  virtual_network_id      = module.hub1.vnet.0.id
   ip_address              = local.hub1_nva_addr
 }
 
@@ -152,10 +114,11 @@ resource "azurerm_lb_rule" "hub1_nva" {
   idle_timeout_in_minutes        = 30
   load_distribution              = "Default"
   probe_id                       = azurerm_lb_probe.hub1_nva1_lb_probe.id
-}*/
+}
 
+####################################################
 # dns resolver ruleset
-#----------------------------
+####################################################
 
 # onprem
 

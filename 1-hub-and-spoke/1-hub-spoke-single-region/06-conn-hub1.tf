@@ -43,49 +43,6 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke1_peering" {
   ]
 }
 
-# routes
-#----------------------------
-
-# route table
-
-resource "azurerm_route_table" "rt_spoke1" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-rt-spoke1"
-  location            = local.region1
-
-  disable_bgp_route_propagation = false
-}
-
-# udr
-
-locals {
-  rt_spoke1_routes = {
-    "default" = "0.0.0.0/0"
-    #"10-8"    = local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0]
-
-  }
-}
-
-resource "azurerm_route" "spoke1_routes_hub1" {
-  for_each               = local.rt_spoke1_routes
-  name                   = "${local.prefix}-${each.key}-route-hub1"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.rt_spoke1.name
-  address_prefix         = each.value
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "hub1_routes_hub1" {
-  subnet_id      = module.hub1.subnets["${local.hub1_prefix}main"].id
-  route_table_id = azurerm_route_table.rt_spoke1.id
-  lifecycle {
-    ignore_changes = all
-  }
-}
-
 ####################################################
 # spoke2
 ####################################################
@@ -123,9 +80,41 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
   ]
 }
 
-# routes
-#----------------------------
+####################################################
+# hub1
+####################################################
 
+# udr
+
+module "branch1_udr_vpngw" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub1_prefix}vpngw"
+  location               = local.hub1_location
+  subnet_id              = module.hub1.subnets["GatewaySubnet"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = [
+    local.spoke1_address_space[0],
+    local.spoke2_address_space[0],
+    local.hub1_subnets["${local.hub1_prefix}main"].address_prefixes[0],
+  ]
+}
+
+module "hub1_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub1_prefix}main"
+  location               = local.hub1_location
+  subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = [
+    local.spoke1_address_space[0],
+    local.spoke2_address_space[0],
+    local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0],
+  ]
+}
 
 ####################################################
 # branch1
