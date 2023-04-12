@@ -151,7 +151,7 @@ resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
 }
 
 ####################################################
-# branch2
+# hub1
 ####################################################
 
 # nva

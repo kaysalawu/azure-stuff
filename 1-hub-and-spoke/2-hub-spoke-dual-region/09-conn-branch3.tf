@@ -99,7 +99,7 @@ module "branch3_nva" {
   storage_account      = azurerm_storage_account.region2
   admin_username       = local.username
   admin_password       = local.password
-  custom_data          = base64encode(local.branch1_nva_init)
+  custom_data          = base64encode(local.branch3_nva_init)
 }
 
 # udr

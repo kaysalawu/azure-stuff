@@ -27,14 +27,14 @@ module "branch3" {
   ]
 
   vm_config = [
-    /*{
+    {
       name         = "vm1"
       subnet       = "${local.branch3_prefix}main"
       private_ip   = local.branch3_vm_addr
       custom_data  = base64encode(local.vm_startup)
       source_image = "ubuntu"
       dns_servers  = [local.branch3_dns_addr, ]
-    },*/
+    },
     {
       name             = "dns"
       subnet           = "${local.branch3_prefix}main"

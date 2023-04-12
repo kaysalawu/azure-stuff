@@ -70,7 +70,6 @@ variable "dns_zone_linked_rulesets" {
 
 variable "vnet_config" {
   type = list(object({
-    vnet_number                 = optional(string, 0)
     address_space               = list(string)
     subnets                     = optional(map(any), null)
     nsg_id                      = optional(string)
@@ -93,6 +92,7 @@ variable "vm_config" {
   type = list(object({
     name                 = string
     subnet               = string
+    vnet_number          = optional(string, 0)
     dns_host             = optional(string)
     zone                 = optional(string, null)
     size                 = optional(string, "Standard_B1s")
