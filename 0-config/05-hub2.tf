@@ -2,9 +2,9 @@
 locals {
   hub2_vpngw_bgp0  = module.hub2.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
   hub2_vpngw_bgp1  = module.hub2.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
-  hub2_ars_bgp0    = tolist(module.hub2.ars.0.virtual_router_ips)[0]
-  hub2_ars_bgp1    = tolist(module.hub2.ars.0.virtual_router_ips)[1]
-  hub2_ars_bgp_asn = module.hub2.ars.0.virtual_router_asn
+  hub2_ars_bgp0    = tolist(module.hub2.ars.virtual_router_ips)[0]
+  hub2_ars_bgp1    = tolist(module.hub2.ars.virtual_router_ips)[1]
+  hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
 }
 
 ####################################################
@@ -134,7 +134,7 @@ resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" "hub2_onprem" {
   resource_group_name                        = azurerm_resource_group.rg.name
   name                                       = "${local.hub2_prefix}onprem"
   location                                   = local.hub2_location
-  private_dns_resolver_outbound_endpoint_ids = [module.hub2.private_dns_outbound_ep.0.id]
+  private_dns_resolver_outbound_endpoint_ids = [module.hub2.private_dns_outbound_ep.id]
 }
 
 resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_onprem" {
@@ -148,6 +148,26 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_onprem" {
   }
   target_dns_servers {
     ip_address = local.branch1_dns_addr
+    port       = 53
+  }
+}
+
+# cloud
+
+resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" "hub2_cloud" {
+  resource_group_name                        = azurerm_resource_group.rg.name
+  name                                       = "${local.hub2_prefix}cloud"
+  location                                   = local.hub2_location
+  private_dns_resolver_outbound_endpoint_ids = [module.hub2.private_dns_outbound_ep.id]
+}
+
+resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_cloud" {
+  name                      = "${local.hub2_prefix}cloud"
+  dns_forwarding_ruleset_id = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_cloud.id
+  domain_name               = "${local.cloud_domain}."
+  enabled                   = true
+  target_dns_servers {
+    ip_address = local.hub1_dns_in_addr
     port       = 53
   }
 }

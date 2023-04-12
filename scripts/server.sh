@@ -123,9 +123,11 @@ chmod a+x /usr/local/bin/curl-dns
 cat <<EOF > /usr/local/bin/trace-ip
 echo -e "\n trace ip ...\n"
 %{ for target in TARGETS ~}
+%{~ if try(target.ping, true) ~}
 %{~ if try(target.ip, "") != "" ~}
 traceroute ${target.ip}
 echo -e "${target.name}\n"
+%{ endif ~}
 %{ endif ~}
 %{ endfor ~}
 EOF

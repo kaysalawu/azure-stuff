@@ -20,11 +20,11 @@ output "interface" {
 }
 
 output "private_dns_inbound_ep" {
-  value = try(azurerm_private_dns_resolver_inbound_endpoint.this, {})
+  value = try(azurerm_private_dns_resolver_inbound_endpoint.this[0], {})
 }
 
 output "private_dns_outbound_ep" {
-  value = try(azurerm_private_dns_resolver_outbound_endpoint.this, {})
+  value = try(azurerm_private_dns_resolver_outbound_endpoint.this[0], {})
 }
 
 output "ars_pip" {
@@ -44,7 +44,7 @@ output "vpngw_pip1" {
 }
 
 output "ars" {
-  value = try(azurerm_route_server.ars, {})
+  value = try(azurerm_route_server.ars[0], {})
 }
 
 output "ergw" {

@@ -259,7 +259,7 @@ module "hub2_nva" {
 
 resource "azurerm_route_server_bgp_connection" "hub2_ars_bgp_conn" {
   name            = "${local.hub2_prefix}ars-bgp-conn"
-  route_server_id = module.hub2.ars.0.id
+  route_server_id = module.hub2.ars.id
   peer_asn        = local.hub2_nva_asn
   peer_ip         = local.hub2_nva_addr
 }
