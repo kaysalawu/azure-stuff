@@ -1,9 +1,4 @@
 
-locals {
-  hub1_vpngw_bgp0 = module.hub1.vpngw.0.bgp_settings[0].peering_addresses[0].default_addresses[0]
-  hub1_vpngw_bgp1 = module.hub1.vpngw.0.bgp_settings[0].peering_addresses[1].default_addresses[0]
-}
-
 ####################################################
 # spoke1
 ####################################################
@@ -17,7 +12,7 @@ locals {
 resource "azurerm_virtual_network_peering" "spoke1_to_hub1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
   name                         = "${local.prefix}-spoke1-to-hub1-peering"
-  virtual_network_name         = module.spoke1.vnet[0].name
+  virtual_network_name         = module.spoke1.vnet.0.name
   remote_virtual_network_id    = module.hub1.vnet.0.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
@@ -34,7 +29,7 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
   name                         = "${local.prefix}-hub1-to-spoke1-peering"
   virtual_network_name         = module.hub1.vnet.0.name
-  remote_virtual_network_id    = module.spoke1.vnet[0].id
+  remote_virtual_network_id    = module.spoke1.vnet.0.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = true
@@ -183,6 +178,8 @@ locals {
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
+      { network = local.hub1_ars_bgp0, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
+      { network = local.hub1_ars_bgp1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
     ]
 
     BGP_SESSIONS            = []
@@ -203,6 +200,17 @@ module "hub1_nva" {
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.hub1_router_init)
+}
+
+####################################################
+# ars
+####################################################
+
+resource "azurerm_route_server_bgp_connection" "hub1_ars_bgp_conn" {
+  name            = "${local.hub1_prefix}ars-bgp-conn"
+  route_server_id = module.hub1.ars.0.id
+  peer_asn        = local.hub1_nva_asn
+  peer_ip         = local.hub1_nva_addr
 }
 
 ####################################################

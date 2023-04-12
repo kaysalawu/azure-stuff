@@ -33,8 +33,31 @@ locals {
     { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
   ]
   vm_startup = templatefile("../../scripts/server.sh", {
-    TARGETS = local.vm_script_targets_region1
+    TARGETS = concat(local.vm_script_targets_region1)
   })
+  branch_unbound_config = templatefile("../../scripts/unbound.sh", {
+    ONPREM_LOCAL_RECORDS = local.onprem_local_records
+    REDIRECTED_HOSTS     = local.onprem_redirected_hosts
+    FORWARD_ZONES        = local.onprem_forward_zones
+    TARGETS              = local.vm_script_targets_region1
+  })
+  branch_unbound_vars = {
+    ONPREM_LOCAL_RECORDS = local.onprem_local_records
+    REDIRECTED_HOSTS     = local.onprem_redirected_hosts
+    FORWARD_ZONES        = local.onprem_forward_zones
+    TARGETS              = local.vm_script_targets_region1
+  }
+  onprem_local_records = [
+    { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
+    { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
+    { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
+    { name = (local.branch4_vm_dns), record = local.branch4_vm_addr },
+  ]
+  onprem_forward_zones = [
+    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },
+    { zone = ".", targets = ["168.63.129.16"] },
+  ]
+  onprem_redirected_hosts = []
 }
 
 ####################################################

@@ -70,6 +70,7 @@ variable "dns_zone_linked_rulesets" {
 
 variable "vnet_config" {
   type = list(object({
+    vnet_number                 = optional(string, 0)
     address_space               = list(string)
     subnets                     = optional(map(any), null)
     nsg_id                      = optional(string)

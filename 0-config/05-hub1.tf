@@ -1,4 +1,13 @@
 
+
+locals {
+  hub1_vpngw_bgp0  = module.hub1.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
+  hub1_vpngw_bgp1  = module.hub1.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
+  hub1_ars_bgp0    = tolist(module.hub1.ars.0.virtual_router_ips)[0]
+  hub1_ars_bgp1    = tolist(module.hub1.ars.0.virtual_router_ips)[1]
+  hub1_ars_bgp_asn = module.hub1.ars.0.virtual_router_asn
+}
+
 ####################################################
 # base
 ####################################################
@@ -12,8 +21,8 @@ module "hub1" {
 
   private_dns_zone = local.hub1_dns_zone
   dns_zone_linked_vnets = {
-    "spoke1" = { vnet = module.spoke1.vnet.0.id, registration_enabled = false }
-    "spoke2" = { vnet = module.spoke2.vnet.0.id, registration_enabled = false }
+    "spoke1" = { vnet = module.spoke1.vnet.id, registration_enabled = false }
+    "spoke2" = { vnet = module.spoke2.vnet.id, registration_enabled = false }
   }
   dns_zone_linked_rulesets = {
     "hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
@@ -83,13 +92,13 @@ resource "azurerm_lb_backend_address_pool" "hub1_nva" {
 resource "azurerm_lb_backend_address_pool_address" "hub1_nva" {
   name                    = "${local.hub1_prefix}nva-beap-addr"
   backend_address_pool_id = azurerm_lb_backend_address_pool.hub1_nva.id
-  virtual_network_id      = module.hub1.vnet.0.id
+  virtual_network_id      = module.hub1.vnet.id
   ip_address              = local.hub1_nva_addr
 }
 
 # probe
 
-resource "azurerm_lb_probe" "hub1_nva1_lb_probe" {
+resource "azurerm_lb_probe" "hub1_nva_lb_probe" {
   name                = "${local.hub1_prefix}nva-probe"
   interval_in_seconds = 5
   number_of_probes    = 2
@@ -113,7 +122,7 @@ resource "azurerm_lb_rule" "hub1_nva" {
   enable_floating_ip             = false
   idle_timeout_in_minutes        = 30
   load_distribution              = "Default"
-  probe_id                       = azurerm_lb_probe.hub1_nva1_lb_probe.id
+  probe_id                       = azurerm_lb_probe.hub1_nva_lb_probe.id
 }
 
 ####################################################
@@ -144,3 +153,27 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub1_onprem" {
   }
 }
 
+####################################################
+# private endpoint
+####################################################
+
+resource "azurerm_private_endpoint" "hub1_spoke3_pe" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub1_prefix}spoke3-pe"
+  location            = local.hub1_location
+  subnet_id           = module.hub1.subnets["${local.hub1_prefix}pep"].id
+
+  private_service_connection {
+    name                           = "${local.hub1_prefix}spoke3-pe-psc"
+    private_connection_resource_id = module.spoke3_pls.private_link_service_id
+    is_manual_connection           = false
+  }
+}
+
+resource "azurerm_private_dns_a_record" "hub1_spoke3_pe" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = local.hub1_pep_dns_host
+  zone_name           = local.hub1_dns_zone
+  ttl                 = 300
+  records             = [azurerm_private_endpoint.hub1_spoke3_pe.private_service_connection[0].private_ip_address, ]
+}

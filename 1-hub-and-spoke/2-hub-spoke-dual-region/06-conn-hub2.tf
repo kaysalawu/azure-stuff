@@ -38,47 +38,6 @@ resource "azurerm_virtual_network_peering" "hub2_to_spoke4_peering" {
   ]
 }
 
-# routes
-#----------------------------
-
-# route table
-
-resource "azurerm_route_table" "rt_spoke4" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-rt-spoke4"
-  location            = local.region2
-
-  disable_bgp_route_propagation = false
-}
-
-# udr
-
-locals {
-  rt_spoke4_routes = {
-    "10-8" = "10.0.0.0/8",
-  }
-}
-
-resource "azurerm_route" "spoke4_routes_hub2" {
-  for_each               = local.rt_spoke4_routes
-  name                   = "${local.prefix}-${each.key}-route-hub2"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.rt_spoke4.name
-  address_prefix         = each.value
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub2_nva_ilb_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "spoke4_routes_hub2" {
-  subnet_id      = module.spoke4.subnets["${local.spoke4_prefix}main"].id
-  route_table_id = azurerm_route_table.rt_spoke4.id
-  lifecycle {
-    ignore_changes = all
-  }
-}
-
 ####################################################
 # spoke5
 ####################################################
@@ -116,52 +75,53 @@ resource "azurerm_virtual_network_peering" "hub2_to_spoke5_peering" {
   ]
 }
 
-# routes
-#----------------------------
-
-# route table
-
-resource "azurerm_route_table" "rt_spoke5" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-rt-spoke5"
-  location            = local.region2
-
-  disable_bgp_route_propagation = false
-}
+####################################################
+# hub2
+####################################################
 
 # udr
 
-locals {
-  rt_spoke5_routes = {
-    "10-8" = "10.0.0.0/8",
-  }
-}
-
-resource "azurerm_route" "spoke5_routes_hub2" {
-  for_each               = local.rt_spoke5_routes
-  name                   = "${local.prefix}-${each.key}-route-hub2"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.rt_spoke5.name
-  address_prefix         = each.value
+module "branch3_udr_vpngw" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub2_prefix}vpngw"
+  location               = local.hub2_location
+  subnet_id              = module.hub2.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = [
+    local.spoke1_address_space[0],
+    local.spoke2_address_space[0],
+    local.spoke4_address_space[0],
+    local.spoke5_address_space[0],
+    local.hub1_subnets["${local.hub1_prefix}main"].address_prefixes[0],
+    local.hub2_subnets["${local.hub2_prefix}main"].address_prefixes[0],
+  ]
 }
 
-# association
-
-resource "azurerm_subnet_route_table_association" "spoke5_routes_hub2" {
-  subnet_id      = module.spoke5.subnets["${local.spoke5_prefix}main"].id
-  route_table_id = azurerm_route_table.rt_spoke5.id
-  lifecycle {
-    ignore_changes = all
-  }
+module "hub2_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub2_prefix}main"
+  location               = local.hub2_location
+  subnet_id              = module.hub2.subnets["${local.hub2_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = [
+    local.spoke1_address_space[0],
+    local.spoke2_address_space[0],
+    local.spoke4_address_space[0],
+    local.spoke5_address_space[0],
+    local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0],
+    local.branch3_subnets["${local.branch3_prefix}main"].address_prefixes[0],
+  ]
 }
 
 ####################################################
 # branch3
 ####################################################
 
-# local gw
+# lng
 #----------------------------
 
 resource "azurerm_local_network_gateway" "hub2_branch3_lng" {
@@ -238,10 +198,10 @@ locals {
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub2_default_gw_nva },
-      { network = local.hub1_nva_loopback0, mask = "255.255.255.255", next_hop = "Tunnel0" },
-      { network = local.hub1_nva_addr, mask = "255.255.255.255", next_hop = local.hub2_default_gw_nva },
       { network = local.hub2_ars_bgp0, mask = "255.255.255.255", next_hop = local.hub2_default_gw_nva },
       { network = local.hub2_ars_bgp1, mask = "255.255.255.255", next_hop = local.hub2_default_gw_nva },
+      { network = local.hub1_nva_loopback0, mask = "255.255.255.255", next_hop = "Tunnel0" },
+      { network = local.hub1_nva_addr, mask = "255.255.255.255", next_hop = local.hub2_default_gw_nva },
     ]
 
     BGP_SESSIONS = [
@@ -299,7 +259,7 @@ module "hub2_nva" {
 
 resource "azurerm_route_server_bgp_connection" "hub2_ars_bgp_conn" {
   name            = "${local.hub2_prefix}ars-bgp-conn"
-  route_server_id = module.hub2.ars.id
+  route_server_id = module.hub2.ars.0.id
   peer_asn        = local.hub2_nva_asn
   peer_ip         = local.hub2_nva_addr
 }

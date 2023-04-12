@@ -4,7 +4,6 @@
 ####################################################
 
 # router
-#----------------------------
 
 locals {
   branch1_nva_init = templatefile("../../scripts/nva-branch.sh", {
@@ -23,10 +22,10 @@ locals {
           address = cidrhost(local.branch1_nva_tun_range0, 1)
           mask    = cidrnetmask(local.branch1_nva_tun_range0)
           source  = local.branch1_nva_ext_addr
-          dest    = module.hub1.vpngw_pip0.ip_address
+          dest    = module.hub1.vpngw_pip0.0.ip_address
         },
         ipsec = {
-          peer_ip = module.hub1.vpngw_pip0.ip_address
+          peer_ip = module.hub1.vpngw_pip0.0.ip_address
           psk     = local.psk
         }
       },
@@ -36,10 +35,10 @@ locals {
           address = cidrhost(local.branch1_nva_tun_range1, 1)
           mask    = cidrnetmask(local.branch1_nva_tun_range1)
           source  = local.branch1_nva_ext_addr
-          dest    = module.hub1.vpngw_pip1.ip_address
+          dest    = module.hub1.vpngw_pip1.0.ip_address
         },
         ipsec = {
-          peer_ip = module.hub1.vpngw_pip1.ip_address
+          peer_ip = module.hub1.vpngw_pip1.0.ip_address
           psk     = local.psk
         }
       },
@@ -82,16 +81,6 @@ locals {
   })
 }
 
-# addresses
-
-resource "azurerm_public_ip" "branch1_nva_pip" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.branch1_prefix}nva-pip"
-  location            = local.branch1_location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
 # vm
 
 module "branch1_nva" {
@@ -113,37 +102,16 @@ module "branch1_nva" {
 }
 
 # udr
-#----------------------------
 
-# route table
-
-resource "azurerm_route_table" "branch1_rt" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.branch1_prefix}rt"
-  location            = local.region1
-
-  disable_bgp_route_propagation = true
-}
-
-# routes
-
-resource "azurerm_route" "branch1_default_route_azure" {
-  name                   = "${local.branch1_prefix}default-route-azure"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.branch1_rt.name
-  address_prefix         = "10.0.0.0/8"
+module "branch1_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.branch1_prefix}-main"
+  location               = local.branch1_location
+  subnet_id              = module.branch1.subnets["${local.branch1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.branch1_nva_int_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "branch1_default_route_azure" {
-  subnet_id      = module.branch1.subnets["${local.branch1_prefix}main"].id
-  route_table_id = azurerm_route_table.branch1_rt.id
-  lifecycle {
-    ignore_changes = all
-  }
+  destinations           = ["10.0.0.0/8"]
 }
 
 ####################################################

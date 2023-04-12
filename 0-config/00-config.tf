@@ -22,37 +22,10 @@ locals {
   default_region      = "westeurope"
   subnets_without_nsg = ["GatewaySubnet"]
 
-  onprem_domain = "corp"
-  cloud_domain  = "az.corp"
-  azuredns      = "168.63.129.16"
-
+  onprem_domain    = "corp"
+  cloud_domain     = "az.corp"
+  azuredns         = "168.63.129.16"
   rfc1918_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-
-  branch_unbound_config = templatefile("../../scripts/unbound.sh", {
-    ONPREM_LOCAL_RECORDS = local.onprem_local_records
-    REDIRECTED_HOSTS     = local.onprem_redirected_hosts
-    FORWARD_ZONES        = local.onprem_forward_zones
-    TARGETS              = local.vm_script_targets_region1
-  })
-
-  branch_unbound_vars = {
-    ONPREM_LOCAL_RECORDS = local.onprem_local_records
-    REDIRECTED_HOSTS     = local.onprem_redirected_hosts
-    FORWARD_ZONES        = local.onprem_forward_zones
-    TARGETS              = local.vm_script_targets_region1
-  }
-
-  onprem_local_records = [
-    { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
-    { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
-    { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
-    { name = (local.branch4_vm_dns), record = local.branch4_vm_addr },
-  ]
-  onprem_forward_zones = [
-    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },
-    { zone = ".", targets = ["168.63.129.16"] },
-  ]
-  onprem_redirected_hosts = []
 }
 
 # vhub1
@@ -175,9 +148,6 @@ locals {
     ("${local.branch1_prefix}ext")  = { address_prefixes = ["10.10.1.0/24"] }
     ("${local.branch1_prefix}int")  = { address_prefixes = ["10.10.2.0/24"] }
     ("GatewaySubnet")               = { address_prefixes = ["10.10.3.0/24"] }
-  }
-  branch1_subnets_vnet1 = {
-    ("${local.branch1_prefix}test") = { address_prefixes = ["10.20.0.0/24"] }
   }
   branch1_ext_default_gw = cidrhost(local.branch1_subnets["${local.branch1_prefix}ext"].address_prefixes[0], 1)
   branch1_int_default_gw = cidrhost(local.branch1_subnets["${local.branch1_prefix}int"].address_prefixes[0], 1)
