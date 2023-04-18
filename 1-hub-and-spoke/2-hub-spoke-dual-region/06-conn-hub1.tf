@@ -38,6 +38,23 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke1_peering" {
   ]
 }
 
+# udr
+#----------------------------
+
+module "spoke1_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.spoke1_prefix}main"
+  location               = local.spoke1_location
+  subnet_id              = module.spoke1.subnets["${local.spoke1_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
+}
+
 ####################################################
 # spoke2
 ####################################################
@@ -75,46 +92,21 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
   ]
 }
 
-####################################################
-# hub1
-####################################################
-
 # udr
+#----------------------------
 
-module "branch1_udr_vpngw" {
+module "spoke2_udr_main" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.hub1_prefix}vpngw"
-  location               = local.hub1_location
-  subnet_id              = module.hub1.subnets["GatewaySubnet"].id
+  prefix                 = "${local.spoke2_prefix}main"
+  location               = local.spoke2_location
+  subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = [
-    local.spoke1_address_space[0],
-    local.spoke2_address_space[0],
-    local.spoke4_address_space[0],
-    local.spoke5_address_space[0],
-    local.hub1_subnets["${local.hub1_prefix}main"].address_prefixes[0],
-    local.hub2_subnets["${local.hub2_prefix}main"].address_prefixes[0],
-  ]
-}
-
-module "hub1_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.hub1_prefix}main"
-  location               = local.hub1_location
-  subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = [
-    local.spoke1_address_space[0],
-    local.spoke2_address_space[0],
-    local.spoke4_address_space[0],
-    local.spoke5_address_space[0],
-    local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0],
-    local.branch3_subnets["${local.branch3_prefix}main"].address_prefixes[0],
-  ]
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
 ####################################################
@@ -251,6 +243,36 @@ module "hub1_nva" {
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.hub1_router_init)
+}
+
+# udr
+
+module "branch1_udr_vpngw" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub1_prefix}vpngw"
+  location               = local.hub1_location
+  subnet_id              = module.hub1.subnets["GatewaySubnet"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
+}
+
+module "hub1_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub1_prefix}main"
+  location               = local.hub1_location
+  subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
 ####################################################

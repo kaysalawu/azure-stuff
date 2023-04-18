@@ -4,7 +4,6 @@
 ####################################################
 
 # router
-#----------------------------
 
 locals {
   branch3_nva_init = templatefile("../../scripts/nva-branch.sh", {
@@ -82,16 +81,6 @@ locals {
   })
 }
 
-# addresses
-
-resource "azurerm_public_ip" "branch3_nva_pip" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.branch3_prefix}nva-pip"
-  location            = local.branch3_location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
 # vm
 
 module "branch3_nva" {
@@ -113,37 +102,16 @@ module "branch3_nva" {
 }
 
 # udr
-#----------------------------
 
-# route table
-
-resource "azurerm_route_table" "branch3_rt" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.branch3_prefix}rt"
-  location            = local.region2
-
-  disable_bgp_route_propagation = true
-}
-
-# routes
-
-resource "azurerm_route" "branch3_default_route_azure" {
-  name                   = "${local.branch3_prefix}default-route-azure"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.branch3_rt.name
-  address_prefix         = "10.0.0.0/8"
+module "branch3_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.branch3_prefix}-main"
+  location               = local.branch3_location
+  subnet_id              = module.branch3.subnets["${local.branch3_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.branch3_nva_int_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "branch3_default_route_azure" {
-  subnet_id      = module.branch3.subnets["${local.branch3_prefix}main"].id
-  route_table_id = azurerm_route_table.branch3_rt.id
-  lifecycle {
-    ignore_changes = all
-  }
+  destinations           = ["10.0.0.0/8"]
 }
 
 ####################################################

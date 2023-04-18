@@ -26,6 +26,21 @@ locals {
   cloud_domain     = "az.corp"
   azuredns         = "168.63.129.16"
   rfc1918_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+
+  udr_destinations_region1 = [
+    local.spoke1_address_space[0],
+    local.spoke2_address_space[0],
+    local.hub1_address_space[0],
+    local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0],
+    local.branch2_subnets["${local.branch2_prefix}main"].address_prefixes[0],
+  ]
+
+  udr_destinations_region2 = [
+    local.spoke4_address_space[0],
+    local.spoke5_address_space[0],
+    local.hub2_address_space[0],
+    local.branch3_subnets["${local.branch3_prefix}main"].address_prefixes[0],
+  ]
 }
 
 # vhub1

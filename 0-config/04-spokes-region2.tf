@@ -45,19 +45,6 @@ module "spoke4" {
   ]
 }
 
-# udr
-
-module "spoke4_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.spoke4_prefix}main"
-  location               = local.spoke4_location
-  subnet_id              = module.spoke4.subnets["${local.spoke4_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub2_nva_ilb_addr
-  destinations           = ["10.0.0.0/8"]
-}
-
 ####################################################
 # spoke5
 ####################################################
@@ -103,19 +90,6 @@ module "spoke5" {
   ]
 }
 
-# udr
-
-module "spoke5_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.spoke5_prefix}main"
-  location               = local.spoke5_location
-  subnet_id              = module.spoke5.subnets["${local.spoke5_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub2_nva_ilb_addr
-  destinations           = ["10.0.0.0/8"]
-}
-
 ####################################################
 # spoke6
 ####################################################
@@ -159,19 +133,6 @@ module "spoke6" {
       source_image = "ubuntu"
     }
   ]
-}
-
-# udr
-
-module "spoke6_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.spoke6_prefix}main"
-  location               = local.spoke6_location
-  subnet_id              = module.spoke6.subnets["${local.spoke6_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub2_nva_ilb_addr
-  destinations           = ["10.0.0.0/8"]
 }
 
 # internal load balancer

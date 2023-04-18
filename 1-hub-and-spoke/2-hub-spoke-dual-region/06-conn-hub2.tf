@@ -38,6 +38,22 @@ resource "azurerm_virtual_network_peering" "hub2_to_spoke4_peering" {
   ]
 }
 
+# udr
+
+module "spoke4_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.spoke4_prefix}main"
+  location               = local.spoke4_location
+  subnet_id              = module.spoke4.subnets["${local.spoke4_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
+}
+
 ####################################################
 # spoke5
 ####################################################
@@ -75,46 +91,20 @@ resource "azurerm_virtual_network_peering" "hub2_to_spoke5_peering" {
   ]
 }
 
-####################################################
-# hub2
-####################################################
-
 # udr
 
-module "branch3_udr_vpngw" {
+module "spoke5_udr_main" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.hub2_prefix}vpngw"
-  location               = local.hub2_location
-  subnet_id              = module.hub2.subnets["GatewaySubnet"].id
+  prefix                 = "${local.spoke5_prefix}main"
+  location               = local.spoke5_location
+  subnet_id              = module.spoke5.subnets["${local.spoke5_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
-  destinations = [
-    local.spoke1_address_space[0],
-    local.spoke2_address_space[0],
-    local.spoke4_address_space[0],
-    local.spoke5_address_space[0],
-    local.hub1_subnets["${local.hub1_prefix}main"].address_prefixes[0],
-    local.hub2_subnets["${local.hub2_prefix}main"].address_prefixes[0],
-  ]
-}
-
-module "hub2_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.hub2_prefix}main"
-  location               = local.hub2_location
-  subnet_id              = module.hub2.subnets["${local.hub2_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub2_nva_ilb_addr
-  destinations = [
-    local.spoke1_address_space[0],
-    local.spoke2_address_space[0],
-    local.spoke4_address_space[0],
-    local.spoke5_address_space[0],
-    local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0],
-    local.branch3_subnets["${local.branch3_prefix}main"].address_prefixes[0],
-  ]
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
 ####################################################
@@ -251,6 +241,36 @@ module "hub2_nva" {
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.hub2_router_init)
+}
+
+# udr
+
+module "branch3_udr_vpngw" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub2_prefix}vpngw"
+  location               = local.hub2_location
+  subnet_id              = module.hub2.subnets["GatewaySubnet"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
+}
+
+module "hub2_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub2_prefix}main"
+  location               = local.hub2_location
+  subnet_id              = module.hub2.subnets["${local.hub2_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
 ####################################################
