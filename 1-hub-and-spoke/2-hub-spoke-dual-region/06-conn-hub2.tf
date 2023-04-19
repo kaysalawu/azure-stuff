@@ -245,7 +245,7 @@ module "hub2_nva" {
 
 # udr
 
-module "branch3_udr_vpngw" {
+module "hub2_udr_vpngw" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
   prefix                 = "${local.hub2_prefix}vpngw"

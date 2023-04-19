@@ -1,7 +1,34 @@
 
 ####################################################
-# vnet peering
+# spoke4
 ####################################################
+
+# vnet connections
+
+resource "azurerm_virtual_hub_connection" "spoke4_vnet_conn" {
+  name                      = "${local.vhub2_prefix}spoke4-vnet-conn"
+  virtual_hub_id            = azurerm_virtual_hub.vhub2.id
+  remote_virtual_network_id = module.spoke4.vnet.id
+
+  routing {
+    associated_route_table_id = azurerm_virtual_hub.vhub2.default_route_table_id
+    propagated_route_table {
+      labels = [
+        "default",
+      ]
+      route_table_ids = [
+        azurerm_virtual_hub.vhub2.default_route_table_id,
+      ]
+    }
+  }
+}
+
+####################################################
+# spoke5
+####################################################
+
+# vnet peering
+#----------------------------
 
 # spoke5-to-hub2
 
@@ -33,8 +60,24 @@ resource "azurerm_virtual_network_peering" "hub2_to_spoke5_peering" {
   ]
 }
 
+# udr
+
+module "spoke5_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.spoke5_prefix}main"
+  location               = local.spoke5_location
+  subnet_id              = module.spoke5.subnets["${local.spoke5_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
+}
+
 ####################################################
-# nva
+# hub2
 ####################################################
 
 locals {
@@ -71,6 +114,8 @@ locals {
   })
 }
 
+# nva
+
 module "hub2_nva" {
   source               = "../../modules/csr-hub"
   resource_group       = azurerm_resource_group.rg.name
@@ -86,150 +131,37 @@ module "hub2_nva" {
   custom_data          = base64encode(local.hub2_router_init)
 }
 
-####################################################
-# udr
-####################################################
-
-# spoke5
-#----------------------------
-
-# route table
-
-resource "azurerm_route_table" "rt_spoke5" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-rt-spoke5"
-  location            = local.region2
-
-  disable_bgp_route_propagation = false
-}
-
 # udr
 
-locals {
-  rt_spoke5_routes = {
-    spoke5 = "10.0.0.0/8"
-  }
-}
-
-resource "azurerm_route" "spoke5_routes_hub2" {
-  for_each               = local.rt_spoke5_routes
-  name                   = "${local.prefix}-${each.key}-route-hub2"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.rt_spoke5.name
-  address_prefix         = each.value
+module "hub2_udr_vpngw" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub2_prefix}vpngw"
+  location               = local.hub2_location
+  subnet_id              = module.hub2.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub2_nva_addr
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
-# association
-
-resource "azurerm_subnet_route_table_association" "spoke5_routes_hub2" {
-  subnet_id      = module.spoke5.subnets["${local.spoke5_prefix}main"].id
-  route_table_id = azurerm_route_table.rt_spoke5.id
-  lifecycle {
-    ignore_changes = all
-  }
+module "hub2_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub2_prefix}main"
+  location               = local.hub2_location
+  subnet_id              = module.hub2.subnets["${local.hub2_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
-
-####################################################
-# vpn-site connection
-####################################################
-
-# branch3
-
-resource "azurerm_vpn_gateway_connection" "vhub2_site_branch3_conn" {
-  name                      = "${local.vhub2_prefix}site-branch3-conn"
-  vpn_gateway_id            = azurerm_vpn_gateway.vhub2.id
-  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_branch3.id
-  internet_security_enabled = false
-
-  vpn_link {
-    name             = "${local.vhub2_prefix}site-branch3-conn-vpn-link-0"
-    bgp_enabled      = true
-    shared_key       = local.psk
-    vpn_site_link_id = azurerm_vpn_site.vhub2_site_branch3.link[0].id
-  }
-
-  routing {
-    associated_route_table = azurerm_virtual_hub.vhub2.default_route_table_id
-    propagated_route_table {
-      labels = [
-        "default",
-      ]
-      route_table_ids = [
-        azurerm_virtual_hub.vhub1.default_route_table_id,
-      ]
-    }
-  }
-}
-
-# hub2
-
-resource "azurerm_vpn_gateway_connection" "vhub2_site_hub2_conn" {
-  name                      = "${local.vhub2_prefix}site-hub2-conn"
-  vpn_gateway_id            = azurerm_vpn_gateway.vhub2.id
-  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_hub2.id
-  internet_security_enabled = false
-
-  vpn_link {
-    name             = "${local.vhub2_prefix}site-hub2-conn-vpn-link-0"
-    bgp_enabled      = true
-    shared_key       = local.psk
-    vpn_site_link_id = azurerm_vpn_site.vhub2_site_hub2.link[0].id
-  }
-  vpn_link {
-    name             = "${local.vhub2_prefix}site-hub2-conn-vpn-link-1"
-    bgp_enabled      = true
-    shared_key       = local.psk
-    vpn_site_link_id = azurerm_vpn_site.vhub2_site_hub2.link[1].id
-  }
-
-  routing {
-    associated_route_table = azurerm_virtual_hub.vhub1.default_route_table_id
-    propagated_route_table {
-      labels = [
-        "default",
-      ]
-      route_table_ids = [
-        azurerm_virtual_hub.vhub1.default_route_table_id,
-      ]
-    }
-  }
-}
-
-####################################################
-# vhub connections
-####################################################
-
-# spoke4
-#----------------------------
-
-resource "azurerm_virtual_hub_connection" "spoke4_vnet_conn" {
-  name                      = "${local.vhub2_prefix}spoke4-vnet-conn"
-  virtual_hub_id            = azurerm_virtual_hub.vhub2.id
-  remote_virtual_network_id = module.spoke4.vnet.id
-
-  routing {
-    associated_route_table_id = azurerm_virtual_hub.vhub1.default_route_table_id
-    propagated_route_table {
-      labels = [
-        "default",
-      ]
-      route_table_ids = [
-        azurerm_virtual_hub.vhub1.default_route_table_id,
-      ]
-    }
-  }
-}
-
-####################################################
-# hub2
-####################################################
 
 # lng
-#----------------------------
-
-# vhub2
 
 resource "azurerm_local_network_gateway" "hub2_vhub2_lng0" {
   resource_group_name = azurerm_resource_group.rg.name
@@ -256,9 +188,6 @@ resource "azurerm_local_network_gateway" "hub2_vhub2_lng1" {
 }
 
 # lng connection
-#----------------------------
-
-# vhub2
 
 resource "azurerm_virtual_network_gateway_connection" "hub2_vhub2_lng0" {
   resource_group_name        = azurerm_resource_group.rg.name
@@ -280,4 +209,74 @@ resource "azurerm_virtual_network_gateway_connection" "hub2_vhub2_lng1" {
   virtual_network_gateway_id = module.hub2.vpngw.id
   local_network_gateway_id   = azurerm_local_network_gateway.hub2_vhub2_lng1.id
   shared_key                 = local.psk
+}
+
+####################################################
+# branch3
+####################################################
+
+# vpn-site connection
+
+resource "azurerm_vpn_gateway_connection" "vhub2_site_branch3_conn" {
+  name                      = "${local.vhub2_prefix}site-branch3-conn"
+  vpn_gateway_id            = azurerm_vpn_gateway.vhub2.id
+  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_branch3.id
+  internet_security_enabled = false
+
+  vpn_link {
+    name             = "${local.vhub2_prefix}site-branch3-conn-vpn-link-0"
+    bgp_enabled      = true
+    shared_key       = local.psk
+    vpn_site_link_id = azurerm_vpn_site.vhub2_site_branch3.link[0].id
+  }
+
+  routing {
+    associated_route_table = azurerm_virtual_hub.vhub2.default_route_table_id
+    propagated_route_table {
+      labels = [
+        "default",
+      ]
+      route_table_ids = [
+        azurerm_virtual_hub.vhub2.default_route_table_id,
+      ]
+    }
+  }
+}
+
+####################################################
+# vhub2
+####################################################
+
+# vpn-site connection
+
+resource "azurerm_vpn_gateway_connection" "vhub2_site_hub2_conn" {
+  name                      = "${local.vhub2_prefix}site-hub2-conn"
+  vpn_gateway_id            = azurerm_vpn_gateway.vhub2.id
+  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_hub2.id
+  internet_security_enabled = false
+
+  vpn_link {
+    name             = "${local.vhub2_prefix}site-hub2-conn-vpn-link-0"
+    bgp_enabled      = true
+    shared_key       = local.psk
+    vpn_site_link_id = azurerm_vpn_site.vhub2_site_hub2.link[0].id
+  }
+  vpn_link {
+    name             = "${local.vhub2_prefix}site-hub2-conn-vpn-link-1"
+    bgp_enabled      = true
+    shared_key       = local.psk
+    vpn_site_link_id = azurerm_vpn_site.vhub2_site_hub2.link[1].id
+  }
+
+  routing {
+    associated_route_table = azurerm_virtual_hub.vhub2.default_route_table_id
+    propagated_route_table {
+      labels = [
+        "default",
+      ]
+      route_table_ids = [
+        azurerm_virtual_hub.vhub2.default_route_table_id,
+      ]
+    }
+  }
 }

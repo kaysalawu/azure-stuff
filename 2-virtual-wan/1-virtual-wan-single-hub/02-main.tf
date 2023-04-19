@@ -55,7 +55,7 @@ locals {
   ]
   onprem_forward_zones = [
     { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },
-    { zone = ".", targets = ["168.63.129.16"] },
+    { zone = ".", targets = [local.azuredns, ] },
   ]
   onprem_redirected_hosts = []
 }

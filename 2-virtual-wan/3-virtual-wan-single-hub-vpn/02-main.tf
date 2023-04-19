@@ -14,7 +14,7 @@ locals {
   hub2_vpngw_asn = "65021"
   hub2_ergw_asn  = "65022"
   hub2_ars_asn   = "65515"
-  mypip          = chomp(data.http.mypip.response_body)
+  #mypip          = chomp(data.http.mypip.response_body)
 
   vm_script_targets_region1 = [
     { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },
@@ -33,6 +33,41 @@ locals {
     { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
   ]
   vm_startup = templatefile("../../scripts/server.sh", {
-    TARGETS = local.vm_script_targets_region2
+    TARGETS = concat(local.vm_script_targets_region2)
   })
+  branch_unbound_config = templatefile("../../scripts/unbound.sh", {
+    ONPREM_LOCAL_RECORDS = local.onprem_local_records
+    REDIRECTED_HOSTS     = local.onprem_redirected_hosts
+    FORWARD_ZONES        = local.onprem_forward_zones
+    TARGETS              = local.vm_script_targets_region1
+  })
+  branch_unbound_vars = {
+    ONPREM_LOCAL_RECORDS = local.onprem_local_records
+    REDIRECTED_HOSTS     = local.onprem_redirected_hosts
+    FORWARD_ZONES        = local.onprem_forward_zones
+    TARGETS              = local.vm_script_targets_region1
+  }
+  onprem_local_records = [
+    { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
+    { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
+    { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
+    { name = (local.branch4_vm_dns), record = local.branch4_vm_addr },
+  ]
+  onprem_forward_zones = [
+    { zone = "${local.cloud_domain}.", targets = [local.hub2_dns_in_addr, ] },
+    { zone = ".", targets = [local.azuredns, ] },
+  ]
+  onprem_redirected_hosts = []
+}
+
+####################################################
+# addresses
+####################################################
+
+resource "azurerm_public_ip" "branch3_nva_pip" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.branch3_prefix}nva-pip"
+  location            = local.branch3_location
+  sku                 = "Standard"
+  allocation_method   = "Static"
 }

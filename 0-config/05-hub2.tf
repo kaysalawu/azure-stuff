@@ -76,6 +76,7 @@ resource "azurerm_lb" "hub2_nva_lb" {
     private_ip_address            = local.hub2_nva_ilb_addr
     private_ip_address_allocation = "Static"
   }
+
   lifecycle {
     ignore_changes = [frontend_ip_configuration, ]
   }

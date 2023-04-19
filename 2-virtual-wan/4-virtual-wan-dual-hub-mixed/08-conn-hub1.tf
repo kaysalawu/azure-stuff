@@ -1,7 +1,34 @@
 
 ####################################################
-# vnet peering
+# spoke1
 ####################################################
+
+# vnet connections
+
+resource "azurerm_virtual_hub_connection" "spoke1_vnet_conn" {
+  name                      = "${local.vhub1_prefix}spoke1-vnet-conn"
+  virtual_hub_id            = azurerm_virtual_hub.vhub1.id
+  remote_virtual_network_id = module.spoke1.vnet.id
+
+  routing {
+    associated_route_table_id = azurerm_virtual_hub.vhub1.default_route_table_id
+    propagated_route_table {
+      labels = [
+        "default",
+      ]
+      route_table_ids = [
+        azurerm_virtual_hub.vhub1.default_route_table_id,
+      ]
+    }
+  }
+}
+
+####################################################
+# spoke2
+####################################################
+
+# vnet peering
+#----------------------------
 
 # spoke2-to-hub1
 
@@ -12,7 +39,6 @@ resource "azurerm_virtual_network_peering" "spoke2_to_hub1_peering" {
   remote_virtual_network_id    = module.hub1.vnet.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  #use_remote_gateways          = true
 }
 
 # hub1-to-spoke2
@@ -24,11 +50,26 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
   remote_virtual_network_id    = module.spoke2.vnet.id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  #allow_gateway_transit        = true
+}
+
+# udr
+
+module "spoke2_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.spoke2_prefix}main"
+  location               = local.spoke2_location
+  subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
 ####################################################
-# nva
+# hub1
 ####################################################
 
 locals {
@@ -79,6 +120,8 @@ locals {
   })
 }
 
+# nva
+
 module "hub1_nva" {
   source               = "../../modules/csr-hub"
   resource_group       = azurerm_resource_group.rg.name
@@ -94,56 +137,27 @@ module "hub1_nva" {
   custom_data          = base64encode(local.hub1_router_init)
 }
 
-####################################################
-# udr
-####################################################
-
-# spoke2
-#----------------------------
-
-# route table
-
-resource "azurerm_route_table" "rt_spoke2" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-rt-spoke2"
-  location            = local.region1
-
-  disable_bgp_route_propagation = false
-}
-
 # udr
 
-locals {
-  rt_spoke2_routes = {
-    spoke2 = "10.0.0.0/8"
-  }
-}
-
-resource "azurerm_route" "spoke2_routes_hub1" {
-  for_each               = local.rt_spoke2_routes
-  name                   = "${local.prefix}-${each.key}-route-hub1"
-  resource_group_name    = azurerm_resource_group.rg.name
-  route_table_name       = azurerm_route_table.rt_spoke2.name
-  address_prefix         = each.value
+module "hub1_udr_main" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub1_prefix}main"
+  location               = local.hub1_location
+  subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "spoke2_routes_hub1" {
-  subnet_id      = module.spoke2.subnets["${local.spoke2_prefix}main"].id
-  route_table_id = azurerm_route_table.rt_spoke2.id
-  lifecycle {
-    ignore_changes = all
-  }
+  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  destinations = concat(
+    local.udr_destinations_region1,
+    local.udr_destinations_region2
+  )
 }
 
 ####################################################
-# vpn-site connection
-####################################################
-
 # branch1
+####################################################
+
+# vpn-site connection
 
 resource "azurerm_vpn_gateway_connection" "vhub1_site_branch1_conn" {
   name                      = "${local.vhub1_prefix}site-branch1-conn"
@@ -172,32 +186,8 @@ resource "azurerm_vpn_gateway_connection" "vhub1_site_branch1_conn" {
 }
 
 ####################################################
-# vnet connections
+# vhub1
 ####################################################
-
-# spoke1
-#----------------------------
-
-resource "azurerm_virtual_hub_connection" "spoke1_vnet_conn" {
-  name                      = "${local.vhub1_prefix}spoke1-vnet-conn"
-  virtual_hub_id            = azurerm_virtual_hub.vhub1.id
-  remote_virtual_network_id = module.spoke1.vnet.id
-
-  routing {
-    associated_route_table_id = azurerm_virtual_hub.vhub1.default_route_table_id
-    propagated_route_table {
-      labels = [
-        "default",
-      ]
-      route_table_ids = [
-        azurerm_virtual_hub.vhub1.default_route_table_id,
-      ]
-    }
-  }
-}
-
-# hub1
-#----------------------------
 
 locals {
   vhub1_hub1_vnet_conn_routes = []
@@ -229,11 +219,7 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
   }
 }
 
-####################################################
 # bgp connections
-####################################################
-
-# hub1
 
 resource "azurerm_virtual_hub_bgp_connection" "vhub1_hub1_bgp_conn" {
   name           = "${local.vhub1_prefix}hub1-bgp-conn"
