@@ -32,6 +32,9 @@ resource "azurerm_network_interface" "this" {
     private_ip_address            = var.private_ip == null ? null : var.private_ip
     public_ip_address_id          = var.enable_public_ip ? azurerm_public_ip.this.0.id : null
   }
+  timeouts {
+    create = "60m"
+  }
 }
 
 # vm
@@ -72,6 +75,9 @@ resource "azurerm_linux_virtual_machine" "this" {
       secure_boot_enabled,
       tags,
     ]
+  }
+  timeouts {
+    create = "60m"
   }
 }
 

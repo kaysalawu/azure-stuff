@@ -22,8 +22,8 @@ locals {
   default_region      = "westeurope"
   subnets_without_nsg = ["GatewaySubnet"]
 
-  onprem_domain = "corp"
-  cloud_domain  = "az.corp"
+  onprem_domain = "corp.net"
+  cloud_domain  = "az.corp.net"
 
   rfc1918_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
@@ -49,7 +49,7 @@ locals {
   ]
   onprem_forward_zones = [
     { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, local.hub2_dns_in_addr, ] },
-    { zone = ".", targets = [local.azuredns, ] },
+    { zone = ".", targets = ["168.63.129.16"] },
   ]
   onprem_redirected_hosts = []
 }
@@ -233,6 +233,7 @@ locals {
     ("${local.branch3_prefix}main") = { address_prefixes = ["10.30.0.0/24"] }
     ("${local.branch3_prefix}ext")  = { address_prefixes = ["10.30.1.0/24"] }
     ("${local.branch3_prefix}int")  = { address_prefixes = ["10.30.2.0/24"] }
+    ("GatewaySubnet")               = { address_prefixes = ["10.30.3.0/24"] }
   }
   branch3_ext_default_gw = cidrhost(local.branch3_subnets["${local.branch3_prefix}ext"].address_prefixes[0], 1)
   branch3_int_default_gw = cidrhost(local.branch3_subnets["${local.branch3_prefix}int"].address_prefixes[0], 1)

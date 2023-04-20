@@ -76,6 +76,9 @@ resource "azurerm_subnet_network_security_group_association" "this" {
   for_each                  = var.nsg_config
   subnet_id                 = [for k, v in azurerm_subnet.this : v.id if length(regexall("${each.key}", k)) > 0][0]
   network_security_group_id = each.value
+  timeouts {
+    create = "60m"
+  }
 }
 
 # dns
@@ -85,6 +88,9 @@ resource "azurerm_private_dns_zone" "this" {
   count               = var.private_dns_zone == null ? 0 : 1
   resource_group_name = var.resource_group
   name                = var.private_dns_zone
+  timeouts {
+    create = "60m"
+  }
 }
 
 # vnet link (local vnet)
@@ -96,6 +102,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "this" {
   private_dns_zone_name = azurerm_private_dns_zone.this[0].name
   virtual_network_id    = each.value.id
   registration_enabled  = true
+  timeouts {
+    create = "60m"
+  }
 }
 
 # vnet link (external vnets)
@@ -107,6 +116,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "external" {
   private_dns_zone_name = azurerm_private_dns_zone.this[0].name
   virtual_network_id    = each.value.vnet
   registration_enabled  = each.value.registration_enabled
+  timeouts {
+    create = "60m"
+  }
 }
 
 # dns resolver
@@ -117,6 +129,9 @@ resource "azurerm_private_dns_resolver" "this" {
   name                = "${local.prefix}vnet${each.key}-dns-resolver-${each.key}"
   location            = var.location
   virtual_network_id  = azurerm_virtual_network.this[each.key].id
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_private_dns_resolver_inbound_endpoint" "this" {
@@ -128,6 +143,9 @@ resource "azurerm_private_dns_resolver_inbound_endpoint" "this" {
     private_ip_allocation_method = "Dynamic"
     subnet_id                    = [for k, v in azurerm_subnet.this : v.id if length(regexall("dns-in", k)) > 0][0]
   } # TODO: replace regex with subnet_key
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_private_dns_resolver_outbound_endpoint" "this" {
@@ -136,6 +154,9 @@ resource "azurerm_private_dns_resolver_outbound_endpoint" "this" {
   private_dns_resolver_id = azurerm_private_dns_resolver.this[each.key].id
   location                = var.location
   subnet_id               = [for k, v in azurerm_subnet.this : v.id if length(regexall("dns-out", k)) > 0][0]
+  timeouts {
+    create = "60m"
+  }
 } # TODO: replace regex with subnet_key
 
 resource "azurerm_private_dns_resolver_virtual_network_link" "this" {
@@ -143,6 +164,9 @@ resource "azurerm_private_dns_resolver_virtual_network_link" "this" {
   name                      = "${local.prefix}${each.key}-vnet${each.value.vnet_key}-link"
   dns_forwarding_ruleset_id = each.value.ruleset_id
   virtual_network_id        = azurerm_virtual_network.this[each.value.vnet_key].id
+  timeouts {
+    create = "60m"
+  }
 }
 
 # vm
@@ -178,6 +202,9 @@ resource "azurerm_public_ip" "nat" {
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_nat_gateway" "nat" {
@@ -186,12 +213,18 @@ resource "azurerm_nat_gateway" "nat" {
   name                = "${local.prefix}vnet${each.key}-natgw"
   location            = var.location
   sku_name            = "Standard"
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "nat" {
   for_each             = { for k, v in var.vnet_config : k => v if length(v.subnets_nat_gateway) > 0 }
   nat_gateway_id       = azurerm_nat_gateway.nat[each.key].id
   public_ip_address_id = azurerm_public_ip.nat[each.key].id
+  timeouts {
+    create = "60m"
+  }
 }
 
 # route server
@@ -204,6 +237,9 @@ resource "azurerm_public_ip" "ars_pip" {
   location            = var.location
   sku                 = "Standard"
   allocation_method   = "Static"
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_route_server" "ars" {
@@ -221,6 +257,9 @@ resource "azurerm_route_server" "ars" {
       subnet_id
     ]
   }
+  timeouts {
+    create = "60m"
+  }
 }
 
 # vpngw
@@ -233,6 +272,9 @@ resource "azurerm_public_ip" "vpngw_pip0" {
   location            = var.location
   sku                 = "Standard"
   allocation_method   = "Static"
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_public_ip" "vpngw_pip1" {
@@ -242,6 +284,9 @@ resource "azurerm_public_ip" "vpngw_pip1" {
   location            = var.location
   sku                 = "Standard"
   allocation_method   = "Static"
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_virtual_network_gateway" "vpngw" {
@@ -279,6 +324,9 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
       apipa_addresses       = try(var.vnet_config[0].vpngw_config.ip_config1_apipa_addresses, ["169.254.21.5"])
     }
   }
+  timeouts {
+    create = "60m"
+  }
 }
 
 # ergw
@@ -291,6 +339,9 @@ resource "azurerm_public_ip" "ergw_pip" {
   location            = var.location
   sku                 = "Standard"
   allocation_method   = "Static"
+  timeouts {
+    create = "60m"
+  }
 }
 
 resource "azurerm_virtual_network_gateway" "ergw" {
@@ -308,5 +359,8 @@ resource "azurerm_virtual_network_gateway" "ergw" {
     subnet_id                     = azurerm_subnet.this["GatewaySubnet"].id
     public_ip_address_id          = azurerm_public_ip.ergw_pip[0].id
     private_ip_address_allocation = "Dynamic"
+  }
+  timeouts {
+    create = "60m"
   }
 }

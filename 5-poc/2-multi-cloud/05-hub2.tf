@@ -1,12 +1,15 @@
 
 locals {
-  hub2_vpngw_bgp0 = module.hub2.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
-  hub2_vpngw_bgp1 = module.hub2.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
+  hub2_vpngw_bgp0  = module.hub2.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
+  hub2_vpngw_bgp1  = module.hub2.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
+  hub2_ars_bgp0    = tolist(module.hub2.ars.virtual_router_ips)[0]
+  hub2_ars_bgp1    = tolist(module.hub2.ars.virtual_router_ips)[1]
+  hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
+  #hub2_dns_in_ip = module.hub2.private_dns_inbound_ep.ip_configurations[0].private_ip_address
 }
 
-####################################################
-# base
-####################################################
+# env
+#----------------------------
 
 module "hub2" {
   source          = "../../modules/base"
@@ -17,17 +20,20 @@ module "hub2" {
 
   private_dns_zone = local.hub2_dns_zone
   dns_zone_linked_vnets = {
-    "spoke4" = { vnet = module.spoke4.vnet.id, registration_enabled = false }
-    "spoke5" = { vnet = module.spoke5.vnet.id, registration_enabled = false }
+    "hub1"   = module.hub1.vnet.id
+    "spoke4" = module.spoke4.vnet.id
+    "spoke5" = module.spoke5.vnet.id
+    "spoke6" = module.spoke6.vnet.id
   }
   dns_zone_linked_rulesets = {
     "hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
   }
 
-  nsg_config = {
-    "${local.hub2_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
-    "${local.hub2_prefix}nva"  = azurerm_network_security_group.nsg_region2_nva.id
-    "${local.hub2_prefix}ilb"  = azurerm_network_security_group.nsg_region2_default.id
+  nsg_subnets = {
+    "main" = azurerm_network_security_group.nsg_region2_main.id
+    "nva"  = azurerm_network_security_group.nsg_region2_nva.id
+    #"ilb"  = azurerm_network_security_group.nsg_region2_default.id
+    #"dns"  = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -37,7 +43,7 @@ module "hub2" {
       enable_private_dns_resolver = true
       enable_ergw                 = false
       enable_vpngw                = true
-      enable_ars                  = false
+      enable_ars                  = true
 
       vpngw_config = [
         {
@@ -49,18 +55,53 @@ module "hub2" {
 
   vm_config = [
     {
-      name         = local.hub2_vm_dns_host
-      subnet       = "${local.hub2_prefix}main"
-      private_ip   = local.hub2_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
+      name        = local.hub2_vm_dns_host
+      private_ip  = local.hub2_vm_addr
+      custom_data = base64encode(local.vm_startup)
     }
   ]
 }
 
-####################################################
+# udr
+#----------------------------
+
+# route table
+
+resource "azurerm_route_table" "hub2_vpngw_rt" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub2_prefix}vpngw-rt"
+  location            = local.region2
+
+  disable_bgp_route_propagation = false
+}
+
+# routes
+
+locals {
+  hub2_vpngw_routes = {
+    spoke5 = local.spoke5_address_space[0],
+  }
+}
+
+resource "azurerm_route" "hub2_vpngw_rt_routes" {
+  for_each               = local.hub2_vpngw_routes
+  resource_group_name    = azurerm_resource_group.rg.name
+  name                   = "${local.hub2_prefix}vpngw-rt-${each.key}-route"
+  route_table_name       = azurerm_route_table.hub2_vpngw_rt.name
+  address_prefix         = each.value
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_nva_ilb_addr
+}
+
+# association
+
+resource "azurerm_subnet_route_table_association" "hub2_vpngw_rt_spoke_route" {
+  subnet_id      = module.hub2.subnets["GatewaySubnet"].id
+  route_table_id = azurerm_route_table.hub2_vpngw_rt.id
+}
+
 # internal lb
-####################################################
+#----------------------------
 
 resource "azurerm_lb" "hub2_nva_lb" {
   resource_group_name = azurerm_resource_group.rg.name
@@ -122,9 +163,8 @@ resource "azurerm_lb_rule" "hub2_nva" {
   probe_id                       = azurerm_lb_probe.hub2_nva1_lb_probe.id
 }
 
-####################################################
 # dns resolver ruleset
-####################################################
+#----------------------------
 
 # onprem
 
@@ -146,22 +186,26 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_onprem" {
   }
 }
 
-# cloud
+# private endpoint
+#----------------------------
 
-resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" "hub2_cloud" {
-  resource_group_name                        = azurerm_resource_group.rg.name
-  name                                       = "${local.hub2_prefix}cloud"
-  location                                   = local.hub2_location
-  private_dns_resolver_outbound_endpoint_ids = [module.hub2.private_dns_outbound_ep.id]
+resource "azurerm_private_endpoint" "hub2_spoke6_pe" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub2_prefix}spoke6-pe"
+  location            = local.hub2_location
+  subnet_id           = module.hub2.subnets["${local.hub2_prefix}pep"].id
+
+  private_service_connection {
+    name                           = "${local.hub2_prefix}spoke6-pe-psc"
+    private_connection_resource_id = module.spoke6_pls.private_link_service_id
+    is_manual_connection           = false
+  }
 }
 
-resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_cloud" {
-  name                      = "${local.hub2_prefix}cloud"
-  dns_forwarding_ruleset_id = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_cloud.id
-  domain_name               = "${local.cloud_domain}."
-  enabled                   = true
-  target_dns_servers {
-    ip_address = local.hub1_dns_in_addr
-    port       = 53
-  }
+resource "azurerm_private_dns_a_record" "hub2_spoke6_pe" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = local.hub1_pep_dns_host
+  zone_name           = local.hub2_dns_zone
+  ttl                 = 300
+  records             = [azurerm_private_endpoint.hub2_spoke6_pe.private_service_connection[0].private_ip_address, ]
 }
