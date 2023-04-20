@@ -49,11 +49,10 @@ resource "azurerm_vpn_gateway" "vhub2" {
 resource "azurerm_vpn_site" "vhub2_site_branch3" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "${local.vhub2_prefix}site-branch3"
-
-  location       = local.vhub2_location
-  virtual_wan_id = azurerm_virtual_wan.vwan.id
-  device_model   = "Azure"
-  device_vendor  = "Microsoft"
+  location            = local.vhub2_location
+  virtual_wan_id      = azurerm_virtual_wan.vwan.id
+  device_model        = "Azure"
+  device_vendor       = "Microsoft"
   link {
     name          = "${local.vhub2_prefix}site-branch3-link-0"
     provider_name = "Microsoft"

@@ -3,7 +3,7 @@
 #----------------------------
 
 locals {
-  prefix = "VwanS3"
+  prefix = "VwanS4"
 
   hub1_nva_asn   = "65010"
   hub1_vpngw_asn = "65011"
@@ -39,13 +39,13 @@ locals {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
     REDIRECTED_HOSTS     = local.onprem_redirected_hosts
     FORWARD_ZONES        = local.onprem_forward_zones
-    TARGETS              = local.vm_script_targets_region1
+    TARGETS              = local.vm_script_targets_region2
   })
   branch_unbound_vars = {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
     REDIRECTED_HOSTS     = local.onprem_redirected_hosts
     FORWARD_ZONES        = local.onprem_forward_zones
-    TARGETS              = local.vm_script_targets_region1
+    TARGETS              = local.vm_script_targets_region2
   }
   onprem_local_records = [
     { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
@@ -54,7 +54,7 @@ locals {
     { name = (local.branch4_vm_dns), record = local.branch4_vm_addr },
   ]
   onprem_forward_zones = [
-    { zone = "${local.cloud_domain}.", targets = [local.hub2_dns_in_addr, ] },
+    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },
     { zone = ".", targets = [local.azuredns, ] },
   ]
   onprem_redirected_hosts = []
