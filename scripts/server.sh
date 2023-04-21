@@ -24,7 +24,7 @@ def default():
     address = socket.gethostbyname(hostname)
     data_dict = {}
     data_dict['hostname'] = hostname
-    data_dict['local-ip'] = address
+    data_dict['server-ip'] = address
     data_dict['remote-ip'] = request.remote_addr
     data_dict['headers'] = dict(request.headers)
     return data_dict
@@ -35,9 +35,9 @@ def path1():
     address = socket.gethostbyname(hostname)
     data_dict = {}
     data_dict['app'] = 'PATH1-APP'
-    data_dict['name'] = hostname
-    data_dict['address'] = address
-    data_dict['remote'] = request.remote_addr
+    data_dict['hostname'] = hostname
+    data_dict['server-ip'] = address
+    data_dict['remote-ip'] = request.remote_addr
     data_dict['headers'] = dict(request.headers)
     return data_dict
 
@@ -47,9 +47,9 @@ def path2():
     address = socket.gethostbyname(hostname)
     data_dict = {}
     data_dict['app'] = 'PATH2-APP'
-    data_dict['name'] = hostname
-    data_dict['address'] = address
-    data_dict['remote'] = request.remote_addr
+    data_dict['hostname'] = hostname
+    data_dict['server-ip'] = address
+    data_dict['remote-ip'] = request.remote_addr
     data_dict['headers'] = dict(request.headers)
     return data_dict
 

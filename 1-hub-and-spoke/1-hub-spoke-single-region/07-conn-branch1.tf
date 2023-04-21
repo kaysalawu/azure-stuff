@@ -22,10 +22,10 @@ locals {
           address = cidrhost(local.branch1_nva_tun_range0, 1)
           mask    = cidrnetmask(local.branch1_nva_tun_range0)
           source  = local.branch1_nva_ext_addr
-          dest    = module.hub1.vpngw_pip0.0.ip_address
+          dest    = module.hub1.vpngw_pip0.ip_address
         },
         ipsec = {
-          peer_ip = module.hub1.vpngw_pip0.0.ip_address
+          peer_ip = module.hub1.vpngw_pip0.ip_address
           psk     = local.psk
         }
       },
@@ -35,10 +35,10 @@ locals {
           address = cidrhost(local.branch1_nva_tun_range1, 1)
           mask    = cidrnetmask(local.branch1_nva_tun_range1)
           source  = local.branch1_nva_ext_addr
-          dest    = module.hub1.vpngw_pip1.0.ip_address
+          dest    = module.hub1.vpngw_pip1.ip_address
         },
         ipsec = {
-          peer_ip = module.hub1.vpngw_pip1.0.ip_address
+          peer_ip = module.hub1.vpngw_pip1.ip_address
           psk     = local.psk
         }
       },
