@@ -364,3 +364,25 @@ resource "azurerm_virtual_network_gateway" "ergw" {
     create = "60m"
   }
 }
+
+# azure firewall
+#----------------------------
+/*
+resource "azurerm_firewall" "this" {
+  for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  name                = "${local.prefix}vnet${each.key}-firewall"
+  location            = var.location
+  resource_group_name = var.resource_group
+  threat_intel_mode   = "Alert"
+  sku_tier            = "Basic"
+  dynamic "ip_config" {
+    for_each = var.vnet_config[each.key].firewall_ip_configurations
+    content {
+      name                          = ip_config.value.name
+      subnet_id                     = azurerm_subnet.this[ip_config.value.subnet_key].id
+      public_ip_address_id          = ip_config.value.public_ip_address_id
+      private_ip_address_allocation = "Dynamic"
+    }
+  }
+  tags = var.tags
+}*/
