@@ -80,6 +80,9 @@ variable "vnet_config" {
     enable_ergw                 = optional(bool, false)
     enable_firewall             = optional(bool, false)
     subnets_nat_gateway         = optional(list(string), [])
+    firewall_config = optional(list(object({
+      firewall_policy_id = optional(string)
+    })))
     vpngw_config = optional(list(object({
       asn                        = string
       ip_config0_apipa_addresses = optional(list(string), ["169.254.21.1"])

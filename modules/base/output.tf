@@ -54,3 +54,7 @@ output "ergw" {
 output "vpngw" {
   value = try(azurerm_virtual_network_gateway.vpngw[0], {})
 }
+
+output "azure_firewall" {
+  value = try(azurerm_firewall.azfw[0], {})
+}

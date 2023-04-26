@@ -231,6 +231,58 @@ module "hub1_nva" {
   custom_data          = base64encode(local.hub1_router_init)
 }
 
+module "hub1_fw_policy" {
+  source             = "../../modules/fw-policy"
+  prefix             = trimsuffix(local.hub1_prefix, "-")
+  firewall_policy_id = azurerm_firewall_policy.firewall_policy.id
+
+  network_rule_collection = [
+    {
+      name     = "network-rc"
+      priority = 400
+      action   = "Deny"
+      rule = [
+        {
+          name                  = "network-rc-all-tcp-udp"
+          source_ip_groups      = [azurerm_ip_group.hub1_azfw_ip_group.id]
+          destination_ip_groups = [azurerm_ip_group.hub1_azfw_ip_group.id]
+          protocols             = ["TCP", "UDP"]
+          destination_ports     = ["*"]
+        }
+      ]
+    }
+  ]
+  application_rule_collection = []
+  nat_rule_collection         = []
+}
+
+# firewall rules
+/*
+resource "azurerm_firewall_application_rule_collection" "hub1_azfw_rule_allow_all" {
+  resource_group = azurerm_resource_group.rg.name
+  name           = "${local.hub1_prefix}azfw-rule-allow-all"
+  firewall_name  = "example-firewall"
+
+  priority = 100
+
+  rule {
+    name                           = "allow-all-tcp-udp"
+    description                    = "Allows all TCP and UDP traffic"
+    protocols                      = ["TCP", "UDP"]
+    source_addresses               = ["*"]
+    destination_addresses          = ["*"]
+    destination_ports              = ["*"]
+    source_ip_groups               = []
+    destination_fqdns              = []
+    destination_ip_groups          = []
+    azure_services                 = []
+    source_ip_groups_override      = false
+    destination_fqdns_override     = false
+    destination_ip_groups_override = false
+    azure_services_override        = false
+  }
+}*/
+
 ####################################################
 # ars
 ####################################################

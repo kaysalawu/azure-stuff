@@ -413,6 +413,56 @@ resource "azurerm_storage_account" "region2" {
 }
 
 ####################################################
+# firewall policy
+####################################################
+
+
+# firewall policy
+
+resource "azurerm_firewall_policy" "firewall_policy" {
+  resource_group_name      = azurerm_resource_group.rg.name
+  name                     = "${local.hub1_prefix}fw-policy"
+  location                 = local.hub1_location
+  threat_intelligence_mode = "Alert"
+  sku                      = "Standard"
+
+  dns {
+    proxy_enabled = true
+    #servers      = [local.azuredns, ]
+  }
+}
+
+#value = module.hub1.azure_firewall.name
+
+# firewall ip group
+
+resource "azurerm_ip_group" "hub1_azfw_ip_group" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub1_prefix}azfw-ip-group"
+  location            = local.hub1_location
+  cidrs               = local.udr_destinations_region1
+}
+
+# rule collection group
+
+
+# firewall application rule collection
+/*
+resource "azure_firewall_application_rule_collection" "hub1_azfw_rule_allow_all" {
+  resource_group_name = azurerm_resource_group.rg.name
+  firewall_name       = module.hub1_nva.name
+  name                = "${local.hub1_prefix}azfw-rule-allow-all"
+  priority            = 100
+  action              = "Allow"
+  target_fqdns        = []
+  source_addresses    = ["*"]
+  protocols           = ["TCP", "UDP"]
+  fqdn_tags           = []
+  ip_groups           = [azurerm_firewall_ip_group.hub1_azfw_ip_group.name]
+}
+*/
+
+####################################################
 # dns
 ####################################################
 

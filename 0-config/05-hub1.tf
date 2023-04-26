@@ -49,6 +49,11 @@ module "hub1" {
           asn = local.hub1_vpngw_asn
         }
       ]
+      firewall_config = [
+        {
+          firewall_policy_id = azurerm_firewall_policy.firewall_policy.id
+        }
+      ]
     }
   ]
 
