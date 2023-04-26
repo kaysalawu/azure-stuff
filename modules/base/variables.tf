@@ -78,6 +78,7 @@ variable "vnet_config" {
     enable_ars                  = optional(bool, false)
     enable_vpngw                = optional(bool, false)
     enable_ergw                 = optional(bool, false)
+    enable_firewall             = optional(bool, false)
     subnets_nat_gateway         = optional(list(string), [])
     vpngw_config = optional(list(object({
       asn                        = string

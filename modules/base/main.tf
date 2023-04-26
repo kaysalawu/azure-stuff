@@ -367,22 +367,50 @@ resource "azurerm_virtual_network_gateway" "ergw" {
 
 # azure firewall
 #----------------------------
-/*
-resource "azurerm_firewall" "this" {
+
+resource "azurerm_public_ip" "azfw_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
-  name                = "${local.prefix}vnet${each.key}-firewall"
-  location            = var.location
   resource_group_name = var.resource_group
-  threat_intel_mode   = "Alert"
-  sku_tier            = "Basic"
-  dynamic "ip_config" {
-    for_each = var.vnet_config[each.key].firewall_ip_configurations
-    content {
-      name                          = ip_config.value.name
-      subnet_id                     = azurerm_subnet.this[ip_config.value.subnet_key].id
-      public_ip_address_id          = ip_config.value.public_ip_address_id
-      private_ip_address_allocation = "Dynamic"
-    }
+  name                = "${local.prefix}vnet${each.key}-azfw-pip0"
+  location            = var.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+  timeouts {
+    create = "60m"
   }
-  tags = var.tags
-}*/
+}
+
+resource "azurerm_public_ip" "azfw_mgt_pip" {
+  for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  resource_group_name = var.resource_group
+  name                = "${local.prefix}vnet${each.key}-azfw-mgt-pip0"
+  location            = var.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+  timeouts {
+    create = "60m"
+  }
+}
+
+resource "azurerm_firewall" "azfw" {
+  for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  name                = "${local.prefix}vnet${each.key}-azfw"
+  resource_group_name = var.resource_group
+  location            = var.location
+  sku_name            = "AZFW_VNet"
+  sku_tier            = "Basic"
+
+  ip_configuration {
+    name                 = "${local.prefix}ip-config"
+    subnet_id            = azurerm_subnet.this["AzureFirewallSubnet"].id
+    public_ip_address_id = azurerm_public_ip.azfw_pip[0].id
+  }
+  management_ip_configuration {
+    name                 = "${local.prefix}mgmt-ip-config"
+    subnet_id            = azurerm_subnet.this["AzureFirewallManagementSubnet"].id
+    public_ip_address_id = azurerm_public_ip.azfw_mgt_pip[0].id
+  }
+  timeouts {
+    create = "60m"
+  }
+}
