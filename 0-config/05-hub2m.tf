@@ -38,12 +38,9 @@ module "hub2" {
       enable_ergw                 = false
       enable_vpngw                = true
       enable_ars                  = false
+      enable_firewall             = false
 
-      vpngw_config = [
-        {
-          asn = local.hub2_vpngw_asn
-        }
-      ]
+      vpngw_config = [{ asn = local.hub2_vpngw_asn }]
     }
   ]
 

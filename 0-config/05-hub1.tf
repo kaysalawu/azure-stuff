@@ -42,18 +42,9 @@ module "hub1" {
       enable_ergw                 = false
       enable_vpngw                = true
       enable_ars                  = true
-      enable_firewall             = true
+      enable_firewall             = false
 
-      vpngw_config = [
-        {
-          asn = local.hub1_vpngw_asn
-        }
-      ]
-      firewall_config = [
-        {
-          firewall_policy_id = azurerm_firewall_policy.firewall_policy.id
-        }
-      ]
+      vpngw_config = [{ asn = local.hub1_vpngw_asn }]
     }
   ]
 

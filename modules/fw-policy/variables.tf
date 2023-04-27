@@ -33,8 +33,8 @@ variable "network_rule_collection" {
     rule = list(object({
       name                  = string
       protocols             = list(string)
-      source_ip_groups      = list(string)
-      destination_ip_groups = list(string)
+      source_addresses      = list(string)
+      destination_addresses = list(string)
       destination_ports     = list(string)
     }))
   }))
@@ -49,8 +49,8 @@ variable "nat_rule_collection" {
     rule = list(object({
       name                  = string
       protocols             = list(string)
-      source_ip_groups      = list(string)
-      destination_ip_groups = string
+      source_addresses      = list(string)
+      destination_addresses = string
       destination_ports     = list(string)
       translated_address    = string
       translated_port       = string

@@ -368,7 +368,18 @@ resource "azurerm_virtual_network_gateway" "ergw" {
 # azure firewall
 #----------------------------
 
-resource "azurerm_public_ip" "azfw_pip" {
+# workspace
+
+resource "azurerm_log_analytics_workspace" "this" {
+  for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  resource_group_name = var.resource_group
+  name                = "${local.prefix}vnet${each.key}-fw-workspace"
+  location            = var.location
+}
+
+# firewall public ip
+
+resource "azurerm_public_ip" "fw_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
   name                = "${local.prefix}vnet${each.key}-azfw-pip0"
@@ -380,7 +391,9 @@ resource "azurerm_public_ip" "azfw_pip" {
   }
 }
 
-resource "azurerm_public_ip" "azfw_mgt_pip" {
+# firewall management public ip
+
+resource "azurerm_public_ip" "fw_mgt_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
   name                = "${local.prefix}vnet${each.key}-azfw-mgt-pip0"
@@ -391,6 +404,8 @@ resource "azurerm_public_ip" "azfw_mgt_pip" {
     create = "60m"
   }
 }
+
+# firewall
 
 resource "azurerm_firewall" "azfw" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
@@ -404,14 +419,20 @@ resource "azurerm_firewall" "azfw" {
   ip_configuration {
     name                 = "${local.prefix}ip-config"
     subnet_id            = azurerm_subnet.this["AzureFirewallSubnet"].id
-    public_ip_address_id = azurerm_public_ip.azfw_pip[0].id
+    public_ip_address_id = azurerm_public_ip.fw_pip[0].id
   }
   management_ip_configuration {
     name                 = "${local.prefix}mgmt-ip-config"
     subnet_id            = azurerm_subnet.this["AzureFirewallManagementSubnet"].id
-    public_ip_address_id = azurerm_public_ip.azfw_mgt_pip[0].id
+    public_ip_address_id = azurerm_public_ip.fw_mgt_pip[0].id
   }
   timeouts {
     create = "60m"
+  }
+  lifecycle {
+    ignore_changes = [
+      ip_configuration,
+      management_ip_configuration,
+    ]
   }
 }

@@ -1,4 +1,14 @@
 
+
+locals {
+  hub1_vpngw_bgp0  = module.hub1.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
+  hub1_vpngw_bgp1  = module.hub1.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
+  hub1_ars_bgp0    = tolist(module.hub1.ars.virtual_router_ips)[0]
+  hub1_ars_bgp1    = tolist(module.hub1.ars.virtual_router_ips)[1]
+  hub1_ars_bgp_asn = module.hub1.ars.virtual_router_asn
+  #hub1_firewall_ip = module.hub1.firewall.ip_configuration[0].private_ip_address
+}
+
 ####################################################
 # base
 ####################################################
@@ -31,11 +41,12 @@ module "hub1" {
       subnets                     = local.hub1_subnets
       enable_private_dns_resolver = true
       enable_ergw                 = false
-      enable_vpngw                = false
-      enable_ars                  = false
-      enable_firewall             = false
+      enable_vpngw                = true
+      enable_ars                  = true
+      enable_firewall             = true
 
-      vpngw_config = [{ asn = local.hub1_vpngw_asn }]
+      vpngw_config    = [{ asn = local.hub1_vpngw_asn }]
+      firewall_config = [{ firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id }]
     }
   ]
 

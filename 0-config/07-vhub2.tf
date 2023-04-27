@@ -64,34 +64,3 @@ resource "azurerm_vpn_site" "vhub2_site_branch3" {
     }
   }
 }
-
-# hub2
-
-resource "azurerm_vpn_site" "vhub2_site_hub2" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.vhub2_prefix}site-hub2"
-  location            = local.vhub2_location
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
-  device_model        = "Azure"
-  device_vendor       = "Microsoft"
-  link {
-    name          = "${local.vhub2_prefix}site-hub2-link-0"
-    provider_name = "Microsoft"
-    ip_address    = module.hub2.vpngw_pip0.ip_address
-    speed_in_mbps = 50
-    bgp {
-      asn             = local.hub2_vpngw_asn
-      peering_address = local.hub2_vpngw_bgp0
-    }
-  }
-  link {
-    name          = "${local.vhub2_prefix}site-hub2-link-1"
-    provider_name = "Microsoft"
-    ip_address    = module.hub2.vpngw_pip1.ip_address
-    speed_in_mbps = 50
-    bgp {
-      asn             = local.hub2_vpngw_asn
-      peering_address = local.hub2_vpngw_bgp1
-    }
-  }
-}

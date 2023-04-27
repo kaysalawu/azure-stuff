@@ -20,8 +20,8 @@ resource "azurerm_firewall_policy_rule_collection_group" "this" {
         content {
           name                  = rule.value.name
           protocols             = rule.value.protocols
-          source_ip_groups      = rule.value.source_ip_groups
-          destination_ip_groups = rule.value.destination_ip_groups
+          source_addresses      = rule.value.source_addresses
+          destination_addresses = rule.value.destination_addresses
           destination_ports     = rule.value.destination_ports
         }
       }
