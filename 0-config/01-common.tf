@@ -424,12 +424,12 @@ resource "azurerm_firewall_policy" "firewall_policy_region1" {
   name                     = "${local.hub1_prefix}fw-policy-region1"
   location                 = local.region1
   threat_intelligence_mode = "Alert"
-  sku                      = "Standard"
+  sku                      = local.firewall_sku
 
-  dns {
+  /*dns {
     proxy_enabled = true
     #servers      = [local.azuredns, ]
-  }
+  }*/
 }
 
 resource "azurerm_firewall_policy" "firewall_policy_region2" {
@@ -437,12 +437,12 @@ resource "azurerm_firewall_policy" "firewall_policy_region2" {
   name                     = "${local.hub1_prefix}fw-policy-region2"
   location                 = local.region2
   threat_intelligence_mode = "Alert"
-  sku                      = "Standard"
+  sku                      = local.firewall_sku
 
-  dns {
+  /*dns {
     proxy_enabled = true
     #servers      = [local.azuredns, ]
-  }
+  }*/
 }
 
 ####################################################

@@ -3,7 +3,7 @@
 #----------------------------
 
 locals {
-  prefix = "HubSpokeS1"
+  prefix = "HSpokeS2"
 
   hub1_nva_asn   = "65000"
   hub1_vpngw_asn = "65515"
@@ -33,7 +33,7 @@ locals {
     { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
   ]
   vm_startup = templatefile("../../scripts/server.sh", {
-    TARGETS = concat(local.vm_script_targets_region1)
+    TARGETS = concat(local.vm_script_targets_region1, local.vm_script_targets_region2)
   })
   branch_unbound_config = templatefile("../../scripts/unbound.sh", {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
@@ -54,7 +54,7 @@ locals {
     { name = (local.branch4_vm_dns), record = local.branch4_vm_addr },
   ]
   onprem_forward_zones = [
-    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },
+    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, local.hub2_dns_in_addr], },
     { zone = ".", targets = [local.azuredns, ] },
   ]
   onprem_redirected_hosts = []
@@ -68,6 +68,14 @@ resource "azurerm_public_ip" "branch1_nva_pip" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "${local.branch1_prefix}nva-pip"
   location            = local.branch1_location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+}
+
+resource "azurerm_public_ip" "branch3_nva_pip" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.branch3_prefix}nva-pip"
+  location            = local.branch3_location
   sku                 = "Standard"
   allocation_method   = "Static"
 }

@@ -48,7 +48,7 @@ module "spoke1_udr_main" {
   location               = local.spoke1_location
   subnet_id              = module.spoke1.subnets["${local.spoke1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1
   )
@@ -101,7 +101,7 @@ module "spoke2_udr_main" {
   location               = local.spoke2_location
   subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1
   )
@@ -121,7 +121,7 @@ module "branch1_udr_vpngw" {
   location               = local.hub1_location
   subnet_id              = module.hub1.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1
   )
@@ -134,7 +134,7 @@ module "hub1_udr_main" {
   location               = local.hub1_location
   subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1
   )
@@ -186,7 +186,7 @@ locals {
     LOCAL_ASN = local.hub1_nva_asn
     LOOPBACK0 = local.hub1_nva_loopback0
     LOOPBACKS = {
-      Loopback1 = local.hub1_nva_ilb_addr
+      Loopback1 = local.hub1_firewall_ip
     }
     INT_ADDR = local.hub1_nva_addr
     VPN_PSK  = local.psk
@@ -198,7 +198,7 @@ locals {
         rule   = 100
         commands = [
           "match ip address prefix-list all",
-          "set ip next-hop ${local.hub1_nva_ilb_addr}"
+          "set ip next-hop ${local.hub1_firewall_ip}"
         ]
       }
     ]

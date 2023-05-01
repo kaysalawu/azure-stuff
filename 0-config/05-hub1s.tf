@@ -6,7 +6,7 @@ locals {
   hub1_ars_bgp0    = tolist(module.hub1.ars.virtual_router_ips)[0]
   hub1_ars_bgp1    = tolist(module.hub1.ars.virtual_router_ips)[1]
   hub1_ars_bgp_asn = module.hub1.ars.virtual_router_asn
-  #hub1_firewall_ip = module.hub1.firewall.ip_configuration[0].private_ip_address
+  hub1_firewall_ip = module.hub1.firewall.ip_configuration[0].private_ip_address
 }
 
 ####################################################
@@ -45,8 +45,13 @@ module "hub1" {
       enable_ars                  = true
       enable_firewall             = true
 
-      vpngw_config    = [{ asn = local.hub1_vpngw_asn }]
-      firewall_config = [{ firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id }]
+      vpngw_config = [{ asn = local.hub1_vpngw_asn }]
+      firewall_config = [
+        {
+          sku_tier           = local.firewall_sku
+          firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
+        }
+      ]
     }
   ]
 
@@ -73,7 +78,7 @@ resource "azurerm_lb" "hub1_nva_lb" {
   frontend_ip_configuration {
     name                          = "${local.hub1_prefix}nva-lb-feip"
     subnet_id                     = module.hub1.subnets["${local.hub1_prefix}ilb"].id
-    private_ip_address            = local.hub1_nva_ilb_addr
+    private_ip_address            = local.hub1_firewall_ip
     private_ip_address_allocation = "Static"
   }
   lifecycle {

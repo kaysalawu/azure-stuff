@@ -27,6 +27,8 @@ locals {
   azuredns         = "168.63.129.16"
   rfc1918_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
+  firewall_sku = "Basic"
+
   udr_destinations_region1 = [
     local.spoke1_address_space[0],
     local.spoke2_address_space[0],

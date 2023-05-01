@@ -370,7 +370,7 @@ resource "azurerm_virtual_network_gateway" "ergw" {
 
 # workspace
 
-resource "azurerm_log_analytics_workspace" "this" {
+resource "azurerm_log_analytics_workspace" "azfw" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
   name                = "${local.prefix}vnet${each.key}-fw-workspace"
@@ -413,7 +413,7 @@ resource "azurerm_firewall" "azfw" {
   resource_group_name = var.resource_group
   location            = var.location
   sku_name            = "AZFW_VNet"
-  sku_tier            = "Standard"
+  sku_tier            = each.value.firewall_config[0].sku_tier
   firewall_policy_id  = each.value.firewall_config[0].firewall_policy_id
 
   ip_configuration {
@@ -434,5 +434,41 @@ resource "azurerm_firewall" "azfw" {
       ip_configuration,
       management_ip_configuration,
     ]
+  }
+}
+
+# storage account
+
+resource "azurerm_storage_account" "azfw" {
+  resource_group_name      = var.resource_group
+  name                     = lower(replace("${local.prefix}azfw", "-", ""))
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+
+# diagnostic setting
+
+resource "azurerm_monitor_diagnostic_setting" "azfw" {
+  for_each                   = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  name                       = "${local.prefix}vnet${each.key}-fw-diagnostic"
+  target_resource_id         = azurerm_firewall.azfw[each.key].id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.azfw[each.key].id
+  storage_account_id         = azurerm_storage_account.azfw.id
+
+  dynamic "metric" {
+    for_each = var.metric_categories_firewall
+    content {
+      category = metric.value
+      enabled  = true
+    }
+  }
+
+  dynamic "enabled_log" {
+    for_each = var.log_categories_firewall
+    content {
+      category = enabled_log.value
+    }
   }
 }

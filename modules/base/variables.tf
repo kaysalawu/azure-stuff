@@ -81,6 +81,7 @@ variable "vnet_config" {
     enable_firewall             = optional(bool, false)
     subnets_nat_gateway         = optional(list(string), [])
     firewall_config = optional(list(object({
+      sku_tier           = optional(string, "Basic")
       firewall_policy_id = optional(string)
     })))
     vpngw_config = optional(list(object({
@@ -109,4 +110,18 @@ variable "vm_config" {
     dns_servers          = optional(list(string), [])
   }))
   default = []
+}
+
+variable "metric_categories_firewall" {
+  type    = list(string)
+  default = ["AllMetrics"]
+}
+
+variable "log_categories_firewall" {
+  type = list(string)
+  default = [
+    "AzureFirewallApplicationRule",
+    "AzureFirewallNetworkRule",
+    "AzureFirewallDnsProxy"
+  ]
 }
