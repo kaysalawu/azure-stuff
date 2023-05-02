@@ -65,15 +65,6 @@ resource "azurerm_vpn_site" "vhub1_site_branch1" {
   }
 }
 
-# firewall policy
-#----------------------------
-
-resource "azurerm_firewall_policy" "vhub1" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.vhub1_prefix}fw-policy"
-  location            = local.vhub1_location
-}
-
 # firewall
 #----------------------------
 
@@ -83,30 +74,9 @@ resource "azurerm_firewall" "vhub1" {
   location            = local.vhub1_location
   sku_tier            = "Standard"
   sku_name            = "AZFW_Hub"
-  firewall_policy_id  = azurerm_firewall_policy.vhub1.id
+  firewall_policy_id  = azurerm_firewall_policy.firewall_policy_region1.id
   virtual_hub {
     virtual_hub_id  = azurerm_virtual_hub.vhub1.id
     public_ip_count = 1
-  }
-}
-
-# rules
-#----------------------------
-
-resource "azurerm_firewall_policy_rule_collection_group" "vhub1_policy1" {
-  name               = "${local.vhub1_prefix}policy1"
-  firewall_policy_id = azurerm_firewall_policy.vhub1.id
-  priority           = 100
-  network_rule_collection {
-    name     = "net-rule1"
-    priority = 400
-    action   = "Allow"
-    rule {
-      name                  = "net-rule1-tcp-udp-all"
-      protocols             = ["TCP", "UDP"]
-      source_addresses      = ["*"]
-      destination_addresses = ["*", ]
-      destination_ports     = ["*", ]
-    }
   }
 }

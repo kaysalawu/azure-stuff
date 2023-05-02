@@ -1,6 +1,7 @@
 
-# env
-#----------------------------
+####################################################
+# base
+####################################################
 
 module "hub1" {
   source          = "../../modules/base"
@@ -11,20 +12,17 @@ module "hub1" {
 
   private_dns_zone = local.hub1_dns_zone
   dns_zone_linked_vnets = {
-    "hub2"   = module.hub2.vnet.id
-    "spoke1" = module.spoke1.vnet.id
-    "spoke2" = module.spoke2.vnet.id
-    "spoke3" = module.spoke3.vnet.id
+    "spoke1" = { vnet = module.spoke1.vnet.id, registration_enabled = false }
+    "spoke2" = { vnet = module.spoke2.vnet.id, registration_enabled = false }
   }
   dns_zone_linked_rulesets = {
     "hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_subnets = {
-    "main" = azurerm_network_security_group.nsg_region1_main.id
-    "nva"  = azurerm_network_security_group.nsg_region1_nva.id
-    #"ilb"  = azurerm_network_security_group.nsg_region1_default.id
-    #"dns"  = azurerm_network_security_group.nsg_region1_default.id
+  nsg_config = {
+    "${local.hub1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
+    "${local.hub1_prefix}nva"  = azurerm_network_security_group.nsg_region1_nva.id
+    "${local.hub1_prefix}ilb"  = azurerm_network_security_group.nsg_region1_default.id
   }
 
   vnet_config = [
@@ -35,64 +33,24 @@ module "hub1" {
       enable_ergw                 = false
       enable_vpngw                = false
       enable_ars                  = false
-
-      vpngw_config = [
-        {
-          asn = local.hub1_vpngw_asn
-        }
-      ]
+      enable_firewall             = false
     }
   ]
 
   vm_config = [
     {
-      name        = local.hub1_vm_dns_host
-      private_ip  = local.hub1_vm_addr
-      custom_data = base64encode(local.vm_startup)
+      name         = local.hub1_vm_dns_host
+      subnet       = "${local.hub1_prefix}main"
+      private_ip   = local.hub1_vm_addr
+      custom_data  = base64encode(local.vm_startup)
+      source_image = "ubuntu"
     }
   ]
 }
 
-# udr
-#----------------------------
-
-# route table
-
-resource "azurerm_route_table" "hub1_vpngw_rt" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.hub1_prefix}vpngw-rt"
-  location            = local.region1
-
-  disable_bgp_route_propagation = false
-}
-
-# routes
-
-locals {
-  hub1_vpngw_routes = {
-    spoke2 = local.spoke2_address_space[0],
-  }
-}
-
-resource "azurerm_route" "hub1_vpngw_rt_routes" {
-  for_each               = local.hub1_vpngw_routes
-  resource_group_name    = azurerm_resource_group.rg.name
-  name                   = "${local.hub1_prefix}vpngw-rt-${each.key}-route"
-  route_table_name       = azurerm_route_table.hub1_vpngw_rt.name
-  address_prefix         = each.value
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
-}
-
-# association
-
-resource "azurerm_subnet_route_table_association" "hub1_vpngw_rt_spoke_route" {
-  subnet_id      = module.hub1.subnets["GatewaySubnet"].id
-  route_table_id = azurerm_route_table.hub1_vpngw_rt.id
-}
-
+####################################################
 # internal lb
-#----------------------------
+####################################################
 
 resource "azurerm_lb" "hub1_nva_lb" {
   resource_group_name = azurerm_resource_group.rg.name
@@ -105,7 +63,6 @@ resource "azurerm_lb" "hub1_nva_lb" {
     private_ip_address            = local.hub1_nva_ilb_addr
     private_ip_address_allocation = "Static"
   }
-
   lifecycle {
     ignore_changes = [frontend_ip_configuration, ]
   }
@@ -154,8 +111,9 @@ resource "azurerm_lb_rule" "hub1_nva" {
   probe_id                       = azurerm_lb_probe.hub1_nva1_lb_probe.id
 }
 
+####################################################
 # dns resolver ruleset
-#----------------------------
+####################################################
 
 # onprem
 
@@ -181,8 +139,29 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub1_onprem" {
   }
 }
 
+# cloud
+
+resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" "hub1_cloud" {
+  resource_group_name                        = azurerm_resource_group.rg.name
+  name                                       = "${local.hub1_prefix}cloud"
+  location                                   = local.hub1_location
+  private_dns_resolver_outbound_endpoint_ids = [module.hub1.private_dns_outbound_ep.id]
+}
+
+resource "azurerm_private_dns_resolver_forwarding_rule" "hub1_cloud" {
+  name                      = "${local.hub1_prefix}cloud"
+  dns_forwarding_ruleset_id = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_cloud.id
+  domain_name               = "${local.cloud_domain}."
+  enabled                   = true
+  target_dns_servers {
+    ip_address = local.hub2_dns_in_addr
+    port       = 53
+  }
+}
+
+####################################################
 # private endpoint
-#----------------------------
+####################################################
 
 resource "azurerm_private_endpoint" "hub1_spoke3_pe" {
   resource_group_name = azurerm_resource_group.rg.name
