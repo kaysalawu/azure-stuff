@@ -24,14 +24,33 @@ resource "azurerm_resource_group" "rg" {
   location = local.default_region
 }
 
+####################################################
 # log analytics workspace
+####################################################
 
-resource "azurerm_log_analytics_workspace" "analytics_ws" {
+resource "azurerm_log_analytics_workspace" "analytics_ws_region1" {
   resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}analytics-ws"
-  location            = local.default_region
+  name                = "${local.prefix}-${local.region1}-analytics-ws"
+  location            = local.region1
   sku                 = "PerGB2018"
   retention_in_days   = 30
+}
+
+resource "azurerm_log_analytics_workspace" "analytics_ws_region2" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-${local.region2}-analytics-ws"
+  location            = local.region2
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+locals {
+  firewall_categories_metric = ["AllMetrics"]
+  firewall_categories_log = [
+    "AzureFirewallApplicationRule",
+    "AzureFirewallNetworkRule",
+    "AzureFirewallDnsProxy"
+  ]
 }
 
 # my public ip
@@ -417,11 +436,11 @@ resource "azurerm_storage_account" "region2" {
 ####################################################
 
 
-# firewall policy
+# region1
 
 resource "azurerm_firewall_policy" "firewall_policy_region1" {
   resource_group_name      = azurerm_resource_group.rg.name
-  name                     = "${local.hub1_prefix}fw-policy-region1"
+  name                     = "${local.prefix}-fw-policy-region1"
   location                 = local.region1
   threat_intelligence_mode = "Alert"
   sku                      = local.firewall_sku
@@ -432,9 +451,36 @@ resource "azurerm_firewall_policy" "firewall_policy_region1" {
   }*/
 }
 
+module "fw_policy_rule_collection_group_region1" {
+  source             = "../../modules/fw-policy"
+  prefix             = local.prefix
+  firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
+
+  network_rule_collection = [
+    {
+      name     = "network-rc"
+      priority = 100
+      action   = "Deny"
+      rule = [
+        {
+          name                  = "network-rc-any-to-any"
+          source_addresses      = ["*"]
+          destination_addresses = ["*"]
+          protocols             = ["Any"]
+          destination_ports     = ["*"]
+        }
+      ]
+    }
+  ]
+  application_rule_collection = []
+  nat_rule_collection         = []
+}
+
+# region2
+
 resource "azurerm_firewall_policy" "firewall_policy_region2" {
   resource_group_name      = azurerm_resource_group.rg.name
-  name                     = "${local.hub1_prefix}fw-policy-region2"
+  name                     = "${local.prefix}-fw-policy-region2"
   location                 = local.region2
   threat_intelligence_mode = "Alert"
   sku                      = local.firewall_sku
@@ -443,6 +489,31 @@ resource "azurerm_firewall_policy" "firewall_policy_region2" {
     proxy_enabled = true
     #servers      = [local.azuredns, ]
   }*/
+}
+
+module "fw_policy_rule_collection_group_region2" {
+  source             = "../../modules/fw-policy"
+  prefix             = local.prefix
+  firewall_policy_id = azurerm_firewall_policy.firewall_policy_region2.id
+
+  network_rule_collection = [
+    {
+      name     = "network-rc"
+      priority = 100
+      action   = "Deny"
+      rule = [
+        {
+          name                  = "network-rc-any-to-any"
+          source_addresses      = ["*"]
+          destination_addresses = ["*"]
+          protocols             = ["Any"]
+          destination_ports     = ["*"]
+        }
+      ]
+    }
+  ]
+  application_rule_collection = []
+  nat_rule_collection         = []
 }
 
 ####################################################

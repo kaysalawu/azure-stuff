@@ -1,11 +1,12 @@
 
 locals {
-  vhub2_vpngw_pip0  = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_0_bgp_peering_address[0].tunnel_ips)[1]
-  vhub2_vpngw_pip1  = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_1_bgp_peering_address[0].tunnel_ips)[1]
-  vhub2_vpngw_bgp0  = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_0_bgp_peering_address[0].default_ips)[0]
-  vhub2_vpngw_bgp1  = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_1_bgp_peering_address[0].default_ips)[0]
-  vhub2_router_bgp0 = azurerm_virtual_hub.vhub2.virtual_router_ips[1]
-  vhub2_router_bgp1 = azurerm_virtual_hub.vhub2.virtual_router_ips[0]
+  vhub2_vpngw_pip0          = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_0_bgp_peering_address[0].tunnel_ips)[1]
+  vhub2_vpngw_pip1          = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_1_bgp_peering_address[0].tunnel_ips)[1]
+  vhub2_vpngw_bgp0          = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_0_bgp_peering_address[0].default_ips)[0]
+  vhub2_vpngw_bgp1          = tolist(azurerm_vpn_gateway.vhub2.bgp_settings[0].instance_1_bgp_peering_address[0].default_ips)[0]
+  vhub2_router_bgp0         = azurerm_virtual_hub.vhub2.virtual_router_ips[1]
+  vhub2_router_bgp1         = azurerm_virtual_hub.vhub2.virtual_router_ips[0]
+  vhub2_firewall_private_ip = azurerm_firewall.vhub2.virtual_hub[0].private_ip_address
 }
 
 # hub

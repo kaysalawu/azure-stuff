@@ -3,7 +3,7 @@
 #----------------------------
 
 locals {
-  prefix = "VwanS4"
+  prefix = "Vwan24"
 
   hub1_nva_asn   = "65010"
   hub1_vpngw_asn = "65011"

@@ -231,31 +231,6 @@ module "hub1_nva" {
   custom_data          = base64encode(local.hub1_router_init)
 }
 
-module "fw_policy_rule_collection_group_region1" {
-  source             = "../../modules/fw-policy"
-  prefix             = trimsuffix(local.hub1_prefix, "-")
-  firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
-
-  network_rule_collection = [
-    {
-      name     = "network-rc"
-      priority = 100
-      action   = "Deny"
-      rule = [
-        {
-          name                  = "network-rc-any-to-any"
-          source_addresses      = ["*"]
-          destination_addresses = ["*"]
-          protocols             = ["Any"]
-          destination_ports     = ["*"]
-        }
-      ]
-    }
-  ]
-  application_rule_collection = []
-  nat_rule_collection         = []
-}
-
 ####################################################
 # ars
 ####################################################
