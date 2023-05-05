@@ -6,6 +6,7 @@ Contents
 - [1. Hub and Spoke](#1-hub-and-spoke)
   - [1.1. Hub and Spoke - Single Region](#11-hub-and-spoke---single-region)
   - [1.2. Hub and Spoke - Dual Region](#12-hub-and-spoke---dual-region)
+  - [1.3. Hub and Spoke Secure - Single Region](#13-hub-and-spoke-secure---single-region)
 - [2. Virtual WAN](#2-virtual-wan)
   - [2.1. Virtual WAN - Single Hub](#21-virtual-wan---single-hub)
   - [2.2. Virtual WAN - Dual Hub](#22-virtual-wan---dual-hub)
