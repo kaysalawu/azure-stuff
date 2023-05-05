@@ -1,26 +1,5 @@
 
 ####################################################
-# spoke1
-####################################################
-
-# udr
-#----------------------------
-
-/*module "spoke1_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.spoke1_prefix}main"
-  location               = local.spoke1_location
-  subnet_id              = module.spoke1.subnets["${local.spoke1_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = concat(
-    local.udr_destinations_region1,
-    local.udr_destinations_region2
-  )
-}*/
-
-####################################################
 # spoke2
 ####################################################
 
@@ -51,23 +30,6 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
   #allow_gateway_transit        = true
 }
 
-# udr
-#----------------------------
-
-module "spoke2_udr_main" {
-  source                 = "../../modules/udr"
-  resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.spoke2_prefix}main"
-  location               = local.spoke2_location
-  subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
-  next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = concat(
-    local.udr_destinations_region1,
-    local.udr_destinations_region2
-  )
-}
-
 ####################################################
 # hub1
 ####################################################
@@ -90,35 +52,10 @@ locals {
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
-      { network = local.vhub1_router_bgp0, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
-      { network = local.vhub1_router_bgp1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
-      {
-        network  = cidrhost(local.spoke2_address_space[0], 0),
-        mask     = cidrnetmask(local.spoke2_address_space[0])
-        next_hop = local.hub1_default_gw_nva
-      },
     ]
 
-    BGP_SESSIONS = [
-      {
-        peer_asn      = local.vhub1_bgp_asn
-        peer_ip       = local.vhub1_router_bgp0
-        ebgp_multihop = true
-        route_map     = {}
-      },
-      {
-        peer_asn      = local.vhub1_bgp_asn
-        peer_ip       = local.vhub1_router_bgp1
-        ebgp_multihop = true
-        route_map     = {}
-      },
-    ]
-    BGP_ADVERTISED_NETWORKS = [
-      {
-        network = cidrhost(local.spoke2_address_space[0], 0)
-        mask    = cidrnetmask(local.spoke2_address_space[0])
-      },
-    ]
+    BGP_SESSIONS            = []
+    BGP_ADVERTISED_NETWORKS = []
   })
 }
 
@@ -239,19 +176,4 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
       }
     }
   }
-}
-
-####################################################
-# bgp connections
-####################################################
-
-# hub1
-
-resource "azurerm_virtual_hub_bgp_connection" "vhub1_hub1_bgp_conn" {
-  name           = "${local.vhub1_prefix}hub1-bgp-conn"
-  virtual_hub_id = azurerm_virtual_hub.vhub1.id
-  peer_asn       = local.hub1_nva_asn
-  peer_ip        = local.hub1_nva_addr
-
-  virtual_network_connection_id = azurerm_virtual_hub_connection.hub1_vnet_conn.id
 }

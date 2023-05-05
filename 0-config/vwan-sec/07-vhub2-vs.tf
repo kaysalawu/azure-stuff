@@ -81,3 +81,26 @@ resource "azurerm_firewall" "vhub2" {
     public_ip_count = 1
   }
 }
+
+# diagnostic setting
+
+resource "azurerm_monitor_diagnostic_setting" "vhub2_firewall_diagnostic" {
+  name                       = "${local.vhub2_prefix}azfw-diagnostic"
+  target_resource_id         = azurerm_firewall.vhub2.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.analytics_ws_region2.id
+  storage_account_id         = azurerm_storage_account.region2.id
+
+  dynamic "metric" {
+    for_each = local.firewall_categories_metric
+    content {
+      category = metric.value
+      enabled  = true
+    }
+  }
+  dynamic "enabled_log" {
+    for_each = local.firewall_categories_log
+    content {
+      category = enabled_log.value
+    }
+  }
+}

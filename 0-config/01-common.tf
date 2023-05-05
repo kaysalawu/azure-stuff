@@ -435,7 +435,6 @@ resource "azurerm_storage_account" "region2" {
 # firewall policy
 ####################################################
 
-
 # region1
 
 resource "azurerm_firewall_policy" "firewall_policy_region1" {
@@ -447,7 +446,6 @@ resource "azurerm_firewall_policy" "firewall_policy_region1" {
 
   /*dns {
     proxy_enabled = true
-    #servers      = [local.azuredns, ]
   }*/
 }
 
@@ -487,7 +485,6 @@ resource "azurerm_firewall_policy" "firewall_policy_region2" {
 
   /*dns {
     proxy_enabled = true
-    #servers      = [local.azuredns, ]
   }*/
 }
 

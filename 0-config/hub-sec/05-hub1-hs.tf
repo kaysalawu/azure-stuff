@@ -42,7 +42,7 @@ module "hub1" {
       enable_private_dns_resolver = true
       enable_ergw                 = false
       enable_vpngw                = true
-      enable_ars                  = true
+      enable_ars                  = false
       enable_firewall             = true
 
       vpngw_config = [{ asn = local.hub1_vpngw_asn }]
