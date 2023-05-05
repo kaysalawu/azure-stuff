@@ -21,7 +21,7 @@ This terraform code deploys a hub and spoke topology playground to observe dynam
 
 `Branch1` is the on-premises network which is simulated in a VNET using a multi-NIC Cisco-CSR-100V NVA appliance.
 
-![Hub and Spoke (Single region)](../../images/scenarios//1-1-hub-spoke-single-region.png)
+![Hub and Spoke Secure (Single region)](../../images/scenarios/1-3-hub-spoke-sec-single-region.png)
 
 ## Prerequisites
 
