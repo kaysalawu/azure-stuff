@@ -114,10 +114,10 @@ module "spoke2_udr_main" {
 # udr
 #----------------------------
 
-module "branch1_udr_vpngw" {
+module "branch1_udr_gateway" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
-  prefix                 = "${local.hub1_prefix}vpngw"
+  prefix                 = "${local.hub1_prefix}gateway"
   location               = local.hub1_location
   subnet_id              = module.hub1.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"

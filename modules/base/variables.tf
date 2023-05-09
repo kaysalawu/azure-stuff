@@ -82,7 +82,7 @@ variable "vnet_config" {
     subnets_nat_gateway         = optional(list(string), [])
     firewall_config = optional(list(object({
       sku_tier           = optional(string, "Basic")
-      firewall_policy_id = optional(string)
+      firewall_policy_id = optional(string, null)
     })))
     vpngw_config = optional(list(object({
       asn                        = string
@@ -108,6 +108,7 @@ variable "vm_config" {
     use_vm_extension     = optional(bool, false)
     source_image         = optional(string, "ubuntu")
     dns_servers          = optional(list(string), [])
+    delay_creation       = optional(string, "0s")
   }))
   default = []
 }

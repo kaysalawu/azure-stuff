@@ -139,3 +139,9 @@ variable "source_image" {
   type        = string
   default     = "ubuntu"
 }
+
+variable "delay_creation" {
+  description = "delay creation of vm by sepcified seconds"
+  type        = string
+  default     = "0s"
+}

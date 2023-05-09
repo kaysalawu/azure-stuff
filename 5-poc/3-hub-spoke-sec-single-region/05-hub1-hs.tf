@@ -37,7 +37,7 @@ module "hub1" {
       address_space               = local.hub1_address_space
       subnets                     = local.hub1_subnets
       enable_private_dns_resolver = true
-      enable_ergw                 = false
+      enable_ergw                 = true
       enable_vpngw                = true
       enable_ars                  = false
       enable_firewall             = true
@@ -45,8 +45,8 @@ module "hub1" {
       vpngw_config = [{ asn = local.hub1_vpngw_asn }]
       firewall_config = [
         {
-          sku_tier = local.firewall_sku
-          #firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
+          sku_tier           = local.firewall_sku
+          firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
         }
       ]
     }
@@ -188,6 +188,9 @@ resource "azurerm_private_endpoint" "hub1_spoke3_pe" {
     name                           = "${local.hub1_prefix}spoke3-pe-psc"
     private_connection_resource_id = module.spoke3_pls.private_link_service_id
     is_manual_connection           = false
+  }
+  lifecycle {
+    ignore_changes = all
   }
 }
 

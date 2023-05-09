@@ -190,6 +190,7 @@ module "vm" {
   admin_username   = var.admin_username
   admin_password   = var.admin_password
   private_dns_zone = try(azurerm_private_dns_zone.this[0].name, "")
+  delay_creation   = each.value.delay_creation
 }
 
 # nat
@@ -373,7 +374,7 @@ resource "azurerm_virtual_network_gateway" "ergw" {
 resource "azurerm_log_analytics_workspace" "azfw" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-fw-workspace"
+  name                = "${local.prefix}vnet${each.key}-azfw-ws"
   location            = var.location
 }
 
@@ -452,7 +453,7 @@ resource "azurerm_storage_account" "azfw" {
 
 resource "azurerm_monitor_diagnostic_setting" "azfw" {
   for_each                   = { for k, v in var.vnet_config : k => v if v.enable_firewall }
-  name                       = "${local.prefix}vnet${each.key}-fw-diagnostic"
+  name                       = "${local.prefix}vnet${each.key}-azfw-diag"
   target_resource_id         = azurerm_firewall.azfw[each.key].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.azfw[each.key].id
   storage_account_id         = azurerm_storage_account.azfw.id

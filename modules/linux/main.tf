@@ -37,6 +37,15 @@ resource "azurerm_network_interface" "this" {
   }
 }
 
+# delay
+
+resource "time_sleep" "this" {
+  depends_on = [
+    azurerm_network_interface.this
+  ]
+  create_duration = var.delay_creation
+}
+
 # vm
 
 resource "azurerm_linux_virtual_machine" "this" {
@@ -79,6 +88,7 @@ resource "azurerm_linux_virtual_machine" "this" {
   timeouts {
     create = "60m"
   }
+  depends_on = [time_sleep.this]
 }
 
 resource "azurerm_virtual_machine_extension" "this" {
