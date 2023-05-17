@@ -39,9 +39,10 @@ locals {
 resource "azurerm_virtual_network" "this" {
   for_each            = { for k, v in var.vnet_config : k => v }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}"
-  address_space       = each.value.address_space
-  location            = var.location
+  #name                = "${local.prefix}vnet${each.key}"
+  name          = "${local.prefix}vnet"
+  address_space = each.value.address_space
+  location      = var.location
 }
 
 # subnets
@@ -126,17 +127,19 @@ resource "azurerm_private_dns_zone_virtual_network_link" "external" {
 resource "azurerm_private_dns_resolver" "this" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_private_dns_resolver }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-dns-resolver-${each.key}"
-  location            = var.location
-  virtual_network_id  = azurerm_virtual_network.this[each.key].id
+  #name                = "${local.prefix}vnet${each.key}-dns-resolver-${each.key}"
+  name               = "${local.prefix}dns-resolver-${each.key}"
+  location           = var.location
+  virtual_network_id = azurerm_virtual_network.this[each.key].id
   timeouts {
     create = "60m"
   }
 }
 
 resource "azurerm_private_dns_resolver_inbound_endpoint" "this" {
-  for_each                = { for k, v in var.vnet_config : k => v if v.enable_private_dns_resolver }
-  name                    = "${local.prefix}vnet${each.key}-dns-in-${each.key}"
+  for_each = { for k, v in var.vnet_config : k => v if v.enable_private_dns_resolver }
+  #name                    = "${local.prefix}vnet${each.key}-dns-in-${each.key}"
+  name                    = "${local.prefix}dns-in-${each.key}"
   private_dns_resolver_id = azurerm_private_dns_resolver.this[each.key].id
   location                = var.location
   ip_configurations {
@@ -149,8 +152,9 @@ resource "azurerm_private_dns_resolver_inbound_endpoint" "this" {
 }
 
 resource "azurerm_private_dns_resolver_outbound_endpoint" "this" {
-  for_each                = { for k, v in var.vnet_config : k => v if v.enable_private_dns_resolver }
-  name                    = "${local.prefix}vnet${each.key}-dns-out-${each.key}"
+  for_each = { for k, v in var.vnet_config : k => v if v.enable_private_dns_resolver }
+  #name                    = "${local.prefix}vnet${each.key}-dns-out-${each.key}"
+  name                    = "${local.prefix}dns-out-${each.key}"
   private_dns_resolver_id = azurerm_private_dns_resolver.this[each.key].id
   location                = var.location
   subnet_id               = [for k, v in azurerm_subnet.this : v.id if length(regexall("dns-out", k)) > 0][0]
@@ -199,10 +203,11 @@ module "vm" {
 resource "azurerm_public_ip" "nat" {
   for_each            = { for k, v in var.vnet_config : k => v if length(v.subnets_nat_gateway) > 0 }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-natgw"
-  location            = var.location
-  allocation_method   = "Static"
-  sku                 = "Standard"
+  #name                = "${local.prefix}vnet${each.key}-natgw"
+  name              = "${local.prefix}natgw"
+  location          = var.location
+  allocation_method = "Static"
+  sku               = "Standard"
   timeouts {
     create = "60m"
   }
@@ -211,9 +216,10 @@ resource "azurerm_public_ip" "nat" {
 resource "azurerm_nat_gateway" "nat" {
   for_each            = { for k, v in var.vnet_config : k => v if length(v.subnets_nat_gateway) > 0 }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-natgw"
-  location            = var.location
-  sku_name            = "Standard"
+  #name                = "${local.prefix}vnet${each.key}-natgw"
+  name     = "${local.prefix}natgw"
+  location = var.location
+  sku_name = "Standard"
   timeouts {
     create = "60m"
   }
@@ -234,19 +240,21 @@ resource "azurerm_nat_gateway_public_ip_association" "nat" {
 resource "azurerm_public_ip" "ars_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_ars }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-ars-pip"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  #name                = "${local.prefix}vnet${each.key}-ars-pip"
+  name              = "${local.prefix}ars-pip"
+  location          = var.location
+  sku               = "Standard"
+  allocation_method = "Static"
   timeouts {
     create = "60m"
   }
 }
 
 resource "azurerm_route_server" "ars" {
-  for_each                         = { for k, v in var.vnet_config : k => v if v.enable_ars }
-  resource_group_name              = var.resource_group
-  name                             = "${local.prefix}vnet${each.key}-ars"
+  for_each            = { for k, v in var.vnet_config : k => v if v.enable_ars }
+  resource_group_name = var.resource_group
+  #name                             = "${local.prefix}vnet${each.key}-ars"
+  name                             = "${local.prefix}ars"
   location                         = var.location
   sku                              = "Standard"
   public_ip_address_id             = azurerm_public_ip.ars_pip[each.key].id
@@ -269,10 +277,11 @@ resource "azurerm_route_server" "ars" {
 resource "azurerm_public_ip" "vpngw_pip0" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_vpngw }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-vpngw-pip0"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  #name                = "${local.prefix}vnet${each.key}-vpngw-pip0"
+  name              = "${local.prefix}vpngw-pip0"
+  location          = var.location
+  sku               = "Standard"
+  allocation_method = "Static"
   timeouts {
     create = "60m"
   }
@@ -281,10 +290,11 @@ resource "azurerm_public_ip" "vpngw_pip0" {
 resource "azurerm_public_ip" "vpngw_pip1" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_vpngw }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-vpngw-pip1"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  #name                = "${local.prefix}vnet${each.key}-vpngw-pip1"
+  name              = "${local.prefix}vpngw-pip1"
+  location          = var.location
+  sku               = "Standard"
+  allocation_method = "Static"
   timeouts {
     create = "60m"
   }
@@ -293,13 +303,14 @@ resource "azurerm_public_ip" "vpngw_pip1" {
 resource "azurerm_virtual_network_gateway" "vpngw" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_vpngw }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-vpngw"
-  location            = var.location
-  type                = "Vpn"
-  vpn_type            = "RouteBased"
-  sku                 = "VpnGw1"
-  enable_bgp          = true
-  active_active       = true
+  #name                = "${local.prefix}vnet${each.key}-vpngw"
+  name          = "${local.prefix}vpngw"
+  location      = var.location
+  type          = "Vpn"
+  vpn_type      = "RouteBased"
+  sku           = "VpnGw1"
+  enable_bgp    = true
+  active_active = true
 
   ip_configuration {
     name                          = "${local.prefix}ip-config0"
@@ -336,10 +347,11 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
 resource "azurerm_public_ip" "ergw_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_ergw }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-ergw-pip0"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  #name                = "${local.prefix}vnet${each.key}-ergw-pip0"
+  name              = "${local.prefix}ergw-pip0"
+  location          = var.location
+  sku               = "Standard"
+  allocation_method = "Static"
   timeouts {
     create = "60m"
   }
@@ -348,13 +360,14 @@ resource "azurerm_public_ip" "ergw_pip" {
 resource "azurerm_virtual_network_gateway" "ergw" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_ergw }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-ergw"
-  location            = var.location
-  type                = "ExpressRoute"
-  vpn_type            = "RouteBased"
-  sku                 = "Standard"
-  enable_bgp          = true
-  active_active       = false
+  #name                = "${local.prefix}vnet${each.key}-ergw"
+  name          = "${local.prefix}ergw"
+  location      = var.location
+  type          = "ExpressRoute"
+  vpn_type      = "RouteBased"
+  sku           = "Standard"
+  enable_bgp    = true
+  active_active = false
   ip_configuration {
     name                          = "${local.prefix}ip0"
     subnet_id                     = azurerm_subnet.this["GatewaySubnet"].id
@@ -374,8 +387,9 @@ resource "azurerm_virtual_network_gateway" "ergw" {
 resource "azurerm_log_analytics_workspace" "azfw" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-azfw-ws"
-  location            = var.location
+  #name                = "${local.prefix}vnet${each.key}-azfw-ws"
+  name     = "${local.prefix}azfw-ws"
+  location = var.location
 }
 
 # firewall public ip
@@ -383,10 +397,11 @@ resource "azurerm_log_analytics_workspace" "azfw" {
 resource "azurerm_public_ip" "fw_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-azfw-pip0"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  #name                = "${local.prefix}vnet${each.key}-azfw-pip0"
+  name              = "${local.prefix}azfw-pip0"
+  location          = var.location
+  sku               = "Standard"
+  allocation_method = "Static"
   timeouts {
     create = "60m"
   }
@@ -397,10 +412,11 @@ resource "azurerm_public_ip" "fw_pip" {
 resource "azurerm_public_ip" "fw_mgt_pip" {
   for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name = var.resource_group
-  name                = "${local.prefix}vnet${each.key}-azfw-mgt-pip0"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  #name                = "${local.prefix}vnet${each.key}-azfw-mgt-pip0"
+  name              = "${local.prefix}azfw-mgt-pip0"
+  location          = var.location
+  sku               = "Standard"
+  allocation_method = "Static"
   timeouts {
     create = "60m"
   }
@@ -409,8 +425,9 @@ resource "azurerm_public_ip" "fw_mgt_pip" {
 # firewall
 
 resource "azurerm_firewall" "azfw" {
-  for_each            = { for k, v in var.vnet_config : k => v if v.enable_firewall }
-  name                = "${local.prefix}vnet${each.key}-azfw"
+  for_each = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  #name                = "${local.prefix}vnet${each.key}-azfw"
+  name                = "${local.prefix}azfw"
   resource_group_name = var.resource_group
   location            = var.location
   sku_name            = "AZFW_VNet"
@@ -430,6 +447,11 @@ resource "azurerm_firewall" "azfw" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_public_ip.fw_mgt_pip,
+    azurerm_public_ip.fw_pip,
+    azurerm_subnet.this
+  ]
   lifecycle {
     ignore_changes = [
       ip_configuration,
@@ -452,8 +474,9 @@ resource "azurerm_storage_account" "azfw" {
 # diagnostic setting
 
 resource "azurerm_monitor_diagnostic_setting" "azfw" {
-  for_each                   = { for k, v in var.vnet_config : k => v if v.enable_firewall }
-  name                       = "${local.prefix}vnet${each.key}-azfw-diag"
+  for_each = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  #name                       = "${local.prefix}vnet${each.key}-azfw-diag"
+  name                       = "${local.prefix}azfw-diag"
   target_resource_id         = azurerm_firewall.azfw[each.key].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.azfw[each.key].id
   storage_account_id         = azurerm_storage_account.azfw.id
@@ -471,5 +494,8 @@ resource "azurerm_monitor_diagnostic_setting" "azfw" {
     content {
       category = enabled_log.value
     }
+  }
+  timeouts {
+    create = "60m"
   }
 }

@@ -31,7 +31,7 @@ module "spoke4" {
       address_space       = local.spoke4_address_space
       subnets             = local.spoke4_subnets
       subnets_nat_gateway = ["${local.spoke4_prefix}main", ]
-    }
+    },
   ]
 
   vm_config = [

@@ -3,7 +3,7 @@
 #----------------------------
 
 locals {
-  prefix = "HSpokeS2"
+  prefix = "HSpoke12"
 
   hub1_nva_asn   = "65000"
   hub1_vpngw_asn = "65515"

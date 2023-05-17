@@ -5,8 +5,8 @@ locals {
   hub2_vpngw_bgp1  = module.hub2.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
   hub2_ars_bgp0    = tolist(module.hub2.ars.virtual_router_ips)[0]
   hub2_ars_bgp1    = tolist(module.hub2.ars.virtual_router_ips)[1]
-  hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
   hub2_firewall_ip = module.hub2.firewall.ip_configuration[0].private_ip_address
+  hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
 }
 
 ####################################################
@@ -48,8 +48,8 @@ module "hub2" {
       vpngw_config = [{ asn = local.hub2_vpngw_asn }]
       firewall_config = [
         {
-          sku_tier           = local.firewall_sku
-          firewall_policy_id = azurerm_firewall_policy.firewall_policy_region2.id
+          sku_tier = local.firewall_sku
+          #firewall_policy_id = azurerm_firewall_policy.firewall_policy_region2.id
         }
       ]
     }
@@ -78,7 +78,7 @@ resource "azurerm_lb" "hub2_nva_lb" {
   frontend_ip_configuration {
     name                          = "${local.hub2_prefix}nva-lb-feip"
     subnet_id                     = module.hub2.subnets["${local.hub2_prefix}ilb"].id
-    private_ip_address            = local.hub2_firewall_ip
+    private_ip_address            = local.hub2_nva_ilb_addr
     private_ip_address_allocation = "Static"
   }
   lifecycle {
@@ -148,11 +148,11 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_onprem" {
   domain_name               = "${local.onprem_domain}."
   enabled                   = true
   target_dns_servers {
-    ip_address = local.branch1_dns_addr
+    ip_address = local.branch3_dns_addr
     port       = 53
   }
   target_dns_servers {
-    ip_address = local.branch3_dns_addr
+    ip_address = local.branch1_dns_addr
     port       = 53
   }
 }

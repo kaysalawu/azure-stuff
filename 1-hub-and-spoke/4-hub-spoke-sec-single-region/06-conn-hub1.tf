@@ -48,7 +48,7 @@ module "spoke1_udr_main" {
   location               = local.spoke1_location
   subnet_id              = module.spoke1.subnets["${local.spoke1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1,
     local.udr_destinations_region2
@@ -102,7 +102,7 @@ module "spoke2_udr_main" {
   location               = local.spoke2_location
   subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1,
     local.udr_destinations_region2
@@ -171,22 +171,7 @@ locals {
         ]
       }
     ]
-
-    TUNNELS = [
-      {
-        ike = {
-          name    = "Tunnel0"
-          address = cidrhost(local.hub1_nva_tun_range0, 1)
-          mask    = cidrnetmask(local.hub1_nva_tun_range0)
-          source  = local.hub1_nva_addr
-          dest    = local.hub2_nva_addr
-        },
-        ipsec = {
-          peer_ip = local.hub2_nva_addr
-          psk     = local.psk
-        }
-      },
-    ]
+    TUNNELS = []
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
@@ -194,6 +179,26 @@ locals {
       { network = local.hub1_ars_bgp1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
       { network = local.hub2_nva_loopback0, mask = "255.255.255.255", next_hop = "Tunnel0" },
       { network = local.hub2_nva_addr, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
+      {
+        network  = split("/", local.branch3_address_space[0])[0]
+        mask     = cidrnetmask(local.branch3_address_space[0])
+        next_hop = local.hub1_default_gw_nva
+      },
+      {
+        network  = split("/", local.hub2_address_space[0])[0]
+        mask     = cidrnetmask(local.hub2_address_space[0])
+        next_hop = local.hub1_default_gw_nva
+      },
+      {
+        network  = split("/", local.spoke4_address_space[0])[0]
+        mask     = cidrnetmask(local.spoke4_address_space[0])
+        next_hop = local.hub1_default_gw_nva
+      },
+      {
+        network  = split("/", local.spoke5_address_space[0])[0]
+        mask     = cidrnetmask(local.spoke5_address_space[0])
+        next_hop = local.hub1_default_gw_nva
+      },
     ]
 
     BGP_SESSIONS = [
@@ -217,16 +222,14 @@ locals {
           direction = "out"
         }
       },
-      {
-        peer_asn        = local.hub2_nva_asn
-        peer_ip         = local.hub2_nva_loopback0
-        next_hop_self   = true
-        source_loopback = true
-        route_map       = {}
-      },
     ]
 
-    BGP_ADVERTISED_NETWORKS = []
+    BGP_ADVERTISED_NETWORKS = [
+      { network = split("/", local.branch3_address_space[0])[0], mask = cidrnetmask(local.branch3_address_space[0]) },
+      { network = split("/", local.hub2_address_space[0])[0], mask = cidrnetmask(local.hub2_address_space[0]) },
+      { network = split("/", local.spoke4_address_space[0])[0], mask = cidrnetmask(local.spoke4_address_space[0]) },
+      { network = split("/", local.spoke5_address_space[0])[0], mask = cidrnetmask(local.spoke5_address_space[0]) }
+    ]
   })
 }
 
@@ -246,6 +249,7 @@ module "hub1_nva" {
 }
 
 # udr
+#----------------------------
 
 module "hub1_udr_gateway" {
   source                 = "../../modules/udr"
@@ -254,7 +258,7 @@ module "hub1_udr_gateway" {
   location               = local.hub1_location
   subnet_id              = module.hub1.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1,
     local.udr_destinations_region2
@@ -268,11 +272,45 @@ module "hub1_udr_main" {
   location               = local.hub1_location
   subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
-  next_hop_in_ip_address = local.hub1_nva_ilb_addr
+  next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_destinations_region1,
     local.udr_destinations_region2
   )
+}
+
+module "hub1_udr_firewall" {
+  source                 = "../../modules/udr"
+  resource_group         = azurerm_resource_group.rg.name
+  prefix                 = "${local.hub1_prefix}fw"
+  location               = local.hub1_location
+  subnet_id              = module.hub1.subnets["AzureFirewallSubnet"].id
+  next_hop_type          = "VirtualAppliance"
+  next_hop_in_ip_address = local.hub2_firewall_ip
+  destinations = concat(
+    local.udr_destinations_region2
+  )
+}
+
+####################################################
+# firewall rules (classic)
+####################################################
+
+# network
+
+resource "azurerm_firewall_network_rule_collection" "hub1_azfw_net_rule" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub1_prefix}azfw-net-rule"
+  azure_firewall_name = module.hub1.firewall.name
+  priority            = 100
+  action              = "Allow"
+  rule {
+    name                  = "any-to-any"
+    source_addresses      = ["*"]
+    destination_ports     = ["*"]
+    destination_addresses = ["*"]
+    protocols             = ["Any"]
+  }
 }
 
 ####################################################

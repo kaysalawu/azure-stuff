@@ -3,7 +3,10 @@
 locals {
   hub1_vpngw_bgp0  = module.hub1.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
   hub1_vpngw_bgp1  = module.hub1.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
+  hub1_ars_bgp0    = tolist(module.hub1.ars.virtual_router_ips)[0]
+  hub1_ars_bgp1    = tolist(module.hub1.ars.virtual_router_ips)[1]
   hub1_firewall_ip = module.hub1.firewall.ip_configuration[0].private_ip_address
+  hub1_ars_bgp_asn = module.hub1.ars.virtual_router_asn
 }
 
 ####################################################
@@ -37,9 +40,9 @@ module "hub1" {
       address_space               = local.hub1_address_space
       subnets                     = local.hub1_subnets
       enable_private_dns_resolver = true
-      enable_ergw                 = false
+      enable_ergw                 = true
       enable_vpngw                = true
-      enable_ars                  = false
+      enable_ars                  = true
       enable_firewall             = true
 
       vpngw_config = [{ asn = local.hub1_vpngw_asn }]
