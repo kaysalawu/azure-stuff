@@ -53,6 +53,7 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
 }
 
 # udr
+#----------------------------
 
 module "spoke2_udr_main" {
   source                 = "../../modules/udr"
@@ -71,6 +72,9 @@ module "spoke2_udr_main" {
 ####################################################
 # hub1
 ####################################################
+
+# nva
+#----------------------------
 
 locals {
   hub1_router_route_map_name_nh = "NEXT-HOP"

@@ -230,6 +230,8 @@ locals {
   })
 }
 
+# nva
+
 module "hub2_nva" {
   source               = "../../modules/csr-hub"
   resource_group       = azurerm_resource_group.rg.name
