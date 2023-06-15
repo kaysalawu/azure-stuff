@@ -1,1 +1,1 @@
-../../0-config/04-spokes-region2.tf
+../../0-templates/04-spokes-region2.tf

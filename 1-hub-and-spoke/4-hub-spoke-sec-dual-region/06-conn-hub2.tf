@@ -279,7 +279,7 @@ module "hub2_udr_main" {
   )
 }
 
-module "hub2_udr_firewall" {
+module "hub2_udr_region1" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
   prefix                 = "${local.hub2_prefix}fw"

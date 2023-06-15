@@ -450,7 +450,10 @@ resource "azurerm_firewall" "azfw" {
   depends_on = [
     azurerm_public_ip.fw_mgt_pip,
     azurerm_public_ip.fw_pip,
-    azurerm_subnet.this
+    azurerm_subnet.this,
+    azurerm_virtual_network_gateway.vpngw,
+    azurerm_virtual_network_gateway.ergw
+
   ]
   lifecycle {
     ignore_changes = [

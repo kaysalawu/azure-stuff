@@ -175,32 +175,9 @@ locals {
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
     ]
 
-    BGP_SESSIONS = [
-      {
-        peer_asn      = local.hub1_ars_bgp_asn
-        peer_ip       = local.hub1_ars_bgp0
-        as_override   = true
-        ebgp_multihop = true
-        route_map = {
-          name      = local.hub1_router_route_map_name_nh
-          direction = "out"
-        }
-      },
-      {
-        peer_asn      = local.hub1_ars_bgp_asn
-        peer_ip       = local.hub1_ars_bgp1
-        as_override   = true
-        ebgp_multihop = true
-        route_map = {
-          name      = local.hub1_router_route_map_name_nh
-          direction = "out"
-        }
-      },
-    ]
+    BGP_SESSIONS = []
 
-    BGP_ADVERTISED_NETWORKS = [
-      { network = split("/", local.branch3_address_space[0])[0], mask = cidrnetmask(local.branch3_address_space[0]) },
-    ]
+    BGP_ADVERTISED_NETWORKS = []
   })
 }
 
