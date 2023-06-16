@@ -128,6 +128,82 @@ resource "azurerm_local_network_gateway" "hub1_branch1_lng" {
   }
 }
 
+# nat
+#----------------------------
+
+data "azurerm_virtual_network_gateway" "hub1" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = module.hub1.vpngw.name
+}
+
+# egress
+
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_egress_ipconfig_0" {
+  resource_group_name        = azurerm_resource_group.rg.name
+  name                       = "${local.hub1_prefix}branch1-nat-egress-ipconfig-0"
+  virtual_network_gateway_id = module.hub1.vpngw.id
+  mode                       = "EgressSnat"
+  type                       = "Dynamic"
+  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.0.id
+
+  internal_mapping {
+    address_space = local.spoke1_address_space[0]
+  }
+  external_mapping {
+    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["egress"], 2, 0)
+  }
+}
+
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_egress_ipconfig_1" {
+  resource_group_name        = azurerm_resource_group.rg.name
+  name                       = "${local.hub1_prefix}branch1-nat-egress-ipconfig-1"
+  virtual_network_gateway_id = module.hub1.vpngw.id
+  mode                       = "EgressSnat"
+  type                       = "Dynamic"
+  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.1.id
+
+  internal_mapping {
+    address_space = local.spoke1_address_space[0]
+  }
+  external_mapping {
+    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["egress"], 2, 1)
+  }
+}
+
+# ingress
+
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_ingress_ipconfig_0" {
+  resource_group_name        = azurerm_resource_group.rg.name
+  name                       = "${local.hub1_prefix}branch1-nat-ingress-ipconfig-0"
+  virtual_network_gateway_id = module.hub1.vpngw.id
+  mode                       = "IngressSnat"
+  type                       = "Dynamic"
+  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.0.id
+
+  internal_mapping {
+    address_space = local.branch1_address_space[0]
+  }
+  external_mapping {
+    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["ingress"], 2, 0)
+  }
+}
+
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_ingress_ipconfig_1" {
+  resource_group_name        = azurerm_resource_group.rg.name
+  name                       = "${local.hub1_prefix}branch1-nat-ingress-ipconfig-1"
+  virtual_network_gateway_id = module.hub1.vpngw.id
+  mode                       = "IngressSnat"
+  type                       = "Dynamic"
+  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.1.id
+
+  internal_mapping {
+    address_space = local.branch1_address_space[0]
+  }
+  external_mapping {
+    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["ingress"], 2, 1)
+  }
+}
+
 # lng connection
 #----------------------------
 
@@ -140,46 +216,14 @@ resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
   virtual_network_gateway_id = module.hub1.vpngw.id
   local_network_gateway_id   = azurerm_local_network_gateway.hub1_branch1_lng.id
   shared_key                 = local.psk
-}
-
-# nat
-#----------------------------
-
-data "azurerm_virtual_network_gateway" "hub1" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = module.hub1.vpngw.name
-}
-
-resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_ipconfig_0" {
-  resource_group_name        = azurerm_resource_group.rg.name
-  name                       = "${local.hub1_prefix}branch1-nat-ipconfig-0"
-  virtual_network_gateway_id = module.hub1.vpngw.id
-  mode                       = "EgressSnat"
-  type                       = "Dynamic"
-  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.0.id
-
-  internal_mapping {
-    address_space = local.spoke1_address_space[0]
-  }
-  external_mapping {
-    address_space = "10.51.0.0/26"
-  }
-}
-
-resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_ipconfig_1" {
-  resource_group_name        = azurerm_resource_group.rg.name
-  name                       = "${local.hub1_prefix}branch1-nat-ipconfig-1"
-  virtual_network_gateway_id = module.hub1.vpngw.id
-  mode                       = "EgressSnat"
-  type                       = "Dynamic"
-  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.1.id
-
-  internal_mapping {
-    address_space = local.spoke1_address_space[0]
-  }
-  external_mapping {
-    address_space = "10.51.0.0/26"
-  }
+  egress_nat_rule_ids = [
+    azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_egress_ipconfig_0.id,
+    azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_egress_ipconfig_1.id
+  ]
+  ingress_nat_rule_ids = [
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_ingress_ipconfig_0.id,
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_ingress_ipconfig_1.id
+  ]
 }
 
 ####################################################

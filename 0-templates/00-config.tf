@@ -76,8 +76,14 @@ locals {
   hub1_prefix        = local.prefix == "" ? "hub1-" : join("-", [local.prefix, "hub1-"])
   hub1_location      = local.region1
   hub1_address_space = ["10.11.0.0/16"]
-  hub1_dns_zone      = "hub1.${local.cloud_domain}"
-  hub1_tags          = { env = "hub1" }
+  hub1_nat_ranges = {
+    "branch1" = {
+      "egress"  = "10.11.99.0/24"
+      "ingress" = "10.11.98.0/24"
+    }
+  }
+  hub1_dns_zone = "hub1.${local.cloud_domain}"
+  hub1_tags     = { env = "hub1" }
   hub1_subnets = {
     ("${local.hub1_prefix}main")      = { address_prefixes = ["10.11.0.0/24"] }
     ("${local.hub1_prefix}nva")       = { address_prefixes = ["10.11.1.0/24"] }
