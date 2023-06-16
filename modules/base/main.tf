@@ -454,7 +454,6 @@ resource "azurerm_firewall" "azfw" {
     azurerm_virtual_network_gateway.vpngw,
     azurerm_virtual_network_gateway.ergw,
     azurerm_route_server.ars
-
   ]
   lifecycle {
     ignore_changes = [
@@ -499,6 +498,11 @@ resource "azurerm_monitor_diagnostic_setting" "azfw" {
       category = enabled_log.value
     }
   }
+  depends_on = [
+    azurerm_firewall.azfw,
+    azurerm_log_analytics_workspace.azfw,
+    azurerm_storage_account.azfw
+  ]
   timeouts {
     create = "60m"
   }
