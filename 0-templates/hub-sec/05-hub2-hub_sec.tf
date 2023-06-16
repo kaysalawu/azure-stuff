@@ -45,7 +45,12 @@ module "hub2" {
       enable_ars                  = true
       enable_firewall             = true
 
-      vpngw_config = [{ asn = local.hub2_vpngw_asn }]
+      vpngw_config = [
+        {
+          sku = "VpnGw2AZ"
+          asn = local.hub2_vpngw_asn
+        }
+      ]
       firewall_config = [
         {
           sku_tier = local.firewall_sku

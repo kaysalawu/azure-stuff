@@ -282,6 +282,7 @@ resource "azurerm_public_ip" "vpngw_pip0" {
   location          = var.location
   sku               = "Standard"
   allocation_method = "Static"
+  zones             = [1, 2, 3]
   timeouts {
     create = "60m"
   }
@@ -295,6 +296,7 @@ resource "azurerm_public_ip" "vpngw_pip1" {
   location          = var.location
   sku               = "Standard"
   allocation_method = "Static"
+  zones             = [1, 2, 3]
   timeouts {
     create = "60m"
   }
@@ -308,7 +310,7 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
   location      = var.location
   type          = "Vpn"
   vpn_type      = "RouteBased"
-  sku           = "VpnGw1"
+  sku           = var.vnet_config[each.key].vpngw_config[0].sku
   enable_bgp    = true
   active_active = true
 
@@ -326,14 +328,14 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
   }
 
   bgp_settings {
-    asn = var.vnet_config[0].vpngw_config[0].asn
+    asn = var.vnet_config[each.key].vpngw_config[0].asn
     peering_addresses {
       ip_configuration_name = "${local.prefix}ip-config0"
-      apipa_addresses       = try(var.vnet_config[0].vpngw_config.ip_config0_apipa_addresses, ["169.254.21.1"])
+      apipa_addresses       = try(var.vnet_config[each.key].vpngw_config.ip_config0_apipa_addresses, ["169.254.21.1"])
     }
     peering_addresses {
       ip_configuration_name = "${local.prefix}ip-config1"
-      apipa_addresses       = try(var.vnet_config[0].vpngw_config.ip_config1_apipa_addresses, ["169.254.21.5"])
+      apipa_addresses       = try(var.vnet_config[each.key].vpngw_config.ip_config1_apipa_addresses, ["169.254.21.5"])
     }
   }
   timeouts {

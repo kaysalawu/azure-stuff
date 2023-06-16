@@ -85,6 +85,7 @@ variable "vnet_config" {
       firewall_policy_id = optional(string, null)
     })))
     vpngw_config = optional(list(object({
+      sku                        = optional(string, "VpnGw2AZ")
       asn                        = string
       ip_config0_apipa_addresses = optional(list(string), ["169.254.21.1"])
       ip_config1_apipa_addresses = optional(list(string), ["169.254.21.5"])
