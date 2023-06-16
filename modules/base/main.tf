@@ -452,7 +452,8 @@ resource "azurerm_firewall" "azfw" {
     azurerm_public_ip.fw_pip,
     azurerm_subnet.this,
     azurerm_virtual_network_gateway.vpngw,
-    azurerm_virtual_network_gateway.ergw
+    azurerm_virtual_network_gateway.ergw,
+    azurerm_route_server.ars
 
   ]
   lifecycle {

@@ -33,6 +33,7 @@ plugins/
 *anthos-keys
 helper*
 output/
+backend.tf
 
 # Skaffold
 bin/
