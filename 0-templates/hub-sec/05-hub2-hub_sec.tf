@@ -7,6 +7,8 @@ locals {
   hub2_ars_bgp1    = tolist(module.hub2.ars.virtual_router_ips)[1]
   hub2_firewall_ip = module.hub2.firewall.ip_configuration[0].private_ip_address
   hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
+  hub2_dns_in_ip   = module.hub2.private_dns_inbound_ep.ip_configurations[0].private_ip_address
+
 }
 
 ####################################################

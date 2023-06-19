@@ -1,0 +1,2 @@
+
+resolvectl status

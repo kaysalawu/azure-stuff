@@ -78,8 +78,9 @@ locals {
   hub1_address_space = ["10.11.0.0/16"]
   hub1_nat_ranges = {
     "branch1" = {
-      "egress"  = "10.11.99.0/24"
-      "ingress" = "10.11.98.0/24"
+      "egress-static"  = "10.11.90.0/24"
+      "egress-dynamic" = "10.11.91.0/24"
+      "ingress-static" = "10.11.80.0/24"
     }
   }
   hub1_dns_zone = "hub1.${local.cloud_domain}"

@@ -136,71 +136,71 @@ data "azurerm_virtual_network_gateway" "hub1" {
   name                = module.hub1.vpngw.name
 }
 
-# egress
+# egress (static)
 
-resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_egress_ipconfig_0" {
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_static_nat_egress" {
   resource_group_name        = azurerm_resource_group.rg.name
-  name                       = "${local.hub1_prefix}branch1-nat-egress-ipconfig-0"
+  name                       = "${local.hub1_prefix}branch1-static-nat-egress"
+  virtual_network_gateway_id = module.hub1.vpngw.id
+  mode                       = "EgressSnat"
+  type                       = "Static"
+
+  internal_mapping {
+    address_space = local.spoke1_subnets["${local.spoke1_prefix}main"].address_prefixes[0]
+  }
+  external_mapping {
+    address_space = local.hub1_nat_ranges["branch1"]["egress-static"]
+  }
+}
+
+# egeress (dynamic)
+
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_dyn_nat_egress_0" {
+  resource_group_name        = azurerm_resource_group.rg.name
+  name                       = "${local.hub1_prefix}branch1-dyn-nat-egress-0"
   virtual_network_gateway_id = module.hub1.vpngw.id
   mode                       = "EgressSnat"
   type                       = "Dynamic"
   ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.0.id
 
   internal_mapping {
-    address_space = local.spoke1_address_space[0]
+    address_space = local.spoke1_subnets["${local.spoke1_prefix}main"].address_prefixes[0]
   }
   external_mapping {
-    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["egress"], 2, 0)
+    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["egress-dynamic"], 2, 0)
   }
 }
 
-resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_egress_ipconfig_1" {
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_dyn_nat_egress_1" {
   resource_group_name        = azurerm_resource_group.rg.name
-  name                       = "${local.hub1_prefix}branch1-nat-egress-ipconfig-1"
+  name                       = "${local.hub1_prefix}branch1-dyn-nat-egress-1"
   virtual_network_gateway_id = module.hub1.vpngw.id
   mode                       = "EgressSnat"
   type                       = "Dynamic"
   ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.1.id
 
   internal_mapping {
-    address_space = local.spoke1_address_space[0]
+    address_space = local.spoke1_subnets["${local.spoke1_prefix}main"].address_prefixes[0]
   }
   external_mapping {
-    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["egress"], 2, 1)
+    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["egress-dynamic"], 2, 1)
   }
 }
 
-# ingress
+# ingress (static)
 
-resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_ingress_ipconfig_0" {
+resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_static_nat_ingress" {
   resource_group_name        = azurerm_resource_group.rg.name
-  name                       = "${local.hub1_prefix}branch1-nat-ingress-ipconfig-0"
+  name                       = "${local.hub1_prefix}branch1-static-nat-ingress"
   virtual_network_gateway_id = module.hub1.vpngw.id
   mode                       = "IngressSnat"
-  type                       = "Dynamic"
-  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.0.id
+  type                       = "Static"
 
   internal_mapping {
-    address_space = local.branch1_address_space[0]
+    address_space = local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0]
   }
   external_mapping {
-    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["ingress"], 2, 0)
-  }
-}
-
-resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_nat_ingress_ipconfig_1" {
-  resource_group_name        = azurerm_resource_group.rg.name
-  name                       = "${local.hub1_prefix}branch1-nat-ingress-ipconfig-1"
-  virtual_network_gateway_id = module.hub1.vpngw.id
-  mode                       = "IngressSnat"
-  type                       = "Dynamic"
-  ip_configuration_id        = data.azurerm_virtual_network_gateway.hub1.ip_configuration.1.id
-
-  internal_mapping {
-    address_space = local.branch1_address_space[0]
-  }
-  external_mapping {
-    address_space = cidrsubnet(local.hub1_nat_ranges["branch1"]["ingress"], 2, 1)
+    address_space = local.hub1_nat_ranges["branch1"]["ingress-static"]
   }
 }
 
@@ -217,12 +217,12 @@ resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
   local_network_gateway_id   = azurerm_local_network_gateway.hub1_branch1_lng.id
   shared_key                 = local.psk
   egress_nat_rule_ids = [
-    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_egress_ipconfig_0.id,
-    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_egress_ipconfig_1.id
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_static_nat_egress.id,
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_dyn_nat_egress_0.id,
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_dyn_nat_egress_1.id,
   ]
   ingress_nat_rule_ids = [
-    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_ingress_ipconfig_0.id,
-    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_nat_ingress_ipconfig_1.id
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_static_nat_ingress.id,
   ]
 }
 

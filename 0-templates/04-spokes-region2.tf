@@ -41,6 +41,7 @@ module "spoke4" {
       private_ip   = local.spoke4_vm_addr
       custom_data  = base64encode(local.vm_startup)
       source_image = "ubuntu"
+      dns_servers  = [local.hub2_dns_in_ip, ]
     }
   ]
 }
@@ -86,6 +87,7 @@ module "spoke5" {
       private_ip   = local.spoke5_vm_addr
       custom_data  = base64encode(local.vm_startup)
       source_image = "ubuntu"
+      dns_servers  = [local.hub2_dns_in_ip, ]
     }
   ]
 }
@@ -131,6 +133,7 @@ module "spoke6" {
       private_ip   = local.spoke6_vm_addr
       custom_data  = base64encode(local.vm_startup)
       source_image = "ubuntu"
+      dns_servers  = [local.hub2_dns_in_ip, ]
     }
   ]
 }
