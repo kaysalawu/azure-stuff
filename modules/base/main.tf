@@ -503,7 +503,8 @@ resource "azurerm_monitor_diagnostic_setting" "azfw" {
   depends_on = [
     azurerm_firewall.azfw,
     azurerm_log_analytics_workspace.azfw,
-    azurerm_storage_account.azfw
+    azurerm_storage_account.azfw,
+    azurerm_subnet.this,
   ]
   timeouts {
     create = "60m"
