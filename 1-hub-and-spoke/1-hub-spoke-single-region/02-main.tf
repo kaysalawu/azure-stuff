@@ -3,7 +3,7 @@
 #----------------------------
 
 locals {
-  prefix = "Hspoke11"
+  prefix = "Hs11"
 
   hub1_nva_asn   = "65000"
   hub1_vpngw_asn = "65515"
@@ -18,6 +18,7 @@ locals {
 
   vm_script_targets_region1 = [
     { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },
+    { name = "branch1-2", dns = local.branch1_vm2_dns, ip = local.branch1_vm2_addr },
     { name = "hub1   ", dns = local.hub1_vm_dns, ip = local.hub1_vm_addr },
     { name = "hub1-pe", dns = local.hub1_pep_dns, ping = false },
     { name = "spoke1 ", dns = local.spoke1_vm_dns, ip = local.spoke1_vm_addr },
@@ -48,6 +49,7 @@ locals {
     TARGETS              = local.vm_script_targets_region1
   }
   onprem_local_records = [
+    { name = (local.branch1_vm2_dns), record = local.branch1_vm_addr },
     { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
     { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
     { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
