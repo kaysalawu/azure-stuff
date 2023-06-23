@@ -217,12 +217,12 @@ resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
   local_network_gateway_id   = azurerm_local_network_gateway.hub1_branch1_lng.id
   shared_key                 = local.psk
   egress_nat_rule_ids = [
-    azurerm_virtual_network_gateway_nat_rule.hub1_branch1_static_nat_egress.id,
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_static_nat_egress.id,
     #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_dyn_nat_egress_0.id,
     #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_dyn_nat_egress_1.id,
   ]
   ingress_nat_rule_ids = [
-    azurerm_virtual_network_gateway_nat_rule.hub1_branch1_static_nat_ingress.id,
+    #azurerm_virtual_network_gateway_nat_rule.hub1_branch1_static_nat_ingress.id,
   ]
 }
 
