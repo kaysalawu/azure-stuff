@@ -468,6 +468,7 @@ resource "azurerm_firewall" "azfw" {
 # storage account
 
 resource "azurerm_storage_account" "azfw" {
+  for_each                 = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name      = var.resource_group
   name                     = lower(replace("${local.prefix}azfw", "-", ""))
   location                 = var.location
@@ -484,7 +485,7 @@ resource "azurerm_monitor_diagnostic_setting" "azfw" {
   name                       = "${local.prefix}azfw-diag"
   target_resource_id         = azurerm_firewall.azfw[each.key].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.azfw[each.key].id
-  storage_account_id         = azurerm_storage_account.azfw.id
+  storage_account_id         = azurerm_storage_account.azfw[each.key].id
 
   dynamic "metric" {
     for_each = var.metric_categories_firewall
