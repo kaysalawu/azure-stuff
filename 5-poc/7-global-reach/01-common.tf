@@ -412,7 +412,7 @@ resource "random_id" "storage_accounts" {
 }
 
 # region 1
-/*
+
 resource "azurerm_storage_account" "region1" {
   resource_group_name      = azurerm_resource_group.rg.name
   name                     = lower("${local.prefix}r1${random_id.storage_accounts.hex}")
@@ -429,7 +429,7 @@ resource "azurerm_storage_account" "region2" {
   location                 = local.region2
   account_replication_type = "LRS"
   account_tier             = "Standard"
-}*/
+}
 
 ####################################################
 # firewall policy

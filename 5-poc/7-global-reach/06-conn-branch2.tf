@@ -3,7 +3,8 @@
 #------------------------
 locals {
   megaport_prefix           = lower("salawu-${local.prefix}")
-  megaport_asn              = 65111
+  megaport_asn_mcr1         = 65011
+  megaport_asn_mcr2         = 65022
   megaport_hub1_er1_vlan    = "110"
   megaport_hub2_er2_vlan    = "210"
   megaport_branch2_er1_vlan = "100"
@@ -142,12 +143,25 @@ resource "azurerm_express_route_circuit_authorization" "branch3_er2_circuit" {
 # mcr
 #----------------------------
 
-resource "megaport_mcr" "megaport_mcr" {
-  mcr_name    = "${local.megaport_prefix}-mcr"
+# mcr1
+
+resource "megaport_mcr" "mcr1" {
+  mcr_name    = "${local.megaport_prefix}-mcr1"
   location_id = data.megaport_location.location.id
   router {
     port_speed    = 1000
-    requested_asn = local.megaport_asn
+    requested_asn = local.megaport_asn_mcr1
+  }
+}
+
+# mcr2
+
+resource "megaport_mcr" "mcr2" {
+  mcr_name    = "${local.megaport_prefix}-mcr2"
+  location_id = data.megaport_location.location.id
+  router {
+    port_speed    = 1000
+    requested_asn = local.megaport_asn_mcr2
   }
 }
 
@@ -164,7 +178,7 @@ resource "megaport_azure_connection" "azure_vcx_hub1_er1" {
   }
   csp_settings {
     service_key = azurerm_express_route_circuit.hub1_er1_circuit.service_key
-    attached_to = megaport_mcr.megaport_mcr.id
+    attached_to = megaport_mcr.mcr1.id
     peerings {
       private_peer   = true
       microsoft_peer = false
@@ -182,7 +196,7 @@ resource "megaport_azure_connection" "azure_vcx_hub2_er2" {
   }
   csp_settings {
     service_key = azurerm_express_route_circuit.hub2_er2_circuit.service_key
-    attached_to = megaport_mcr.megaport_mcr.id
+    attached_to = megaport_mcr.mcr2.id
     peerings {
       private_peer   = true
       microsoft_peer = false
@@ -200,7 +214,7 @@ resource "megaport_azure_connection" "azure_vcx_branch2_er1" {
   }
   csp_settings {
     service_key = azurerm_express_route_circuit.branch2_er1_circuit.service_key
-    attached_to = megaport_mcr.megaport_mcr.id
+    attached_to = megaport_mcr.mcr1.id
     peerings {
       private_peer   = true
       microsoft_peer = false
@@ -218,14 +232,14 @@ resource "megaport_azure_connection" "azure_vcx_branch3_er2" {
   }
   csp_settings {
     service_key = azurerm_express_route_circuit.branch3_er2_circuit.service_key
-    attached_to = megaport_mcr.megaport_mcr.id
+    attached_to = megaport_mcr.mcr2.id
     peerings {
       private_peer   = true
       microsoft_peer = false
     }
   }
 }
-
+/*
 ####################################################
 # gateway
 ####################################################

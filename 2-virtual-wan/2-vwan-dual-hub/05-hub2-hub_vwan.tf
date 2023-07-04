@@ -1,0 +1,1 @@
+../../0-templates/hub-vwan/05-hub2-hub_vwan.tf

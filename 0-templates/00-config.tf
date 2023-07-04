@@ -165,16 +165,16 @@ locals {
 locals {
   branch1_prefix        = local.prefix == "" ? "branch1-" : join("-", [local.prefix, "branch1-"])
   branch1_location      = local.region1
-  branch1_address_space = ["10.10.0.0/16", "10.1.0.0/16"]
+  branch1_address_space = ["10.10.0.0/16", /*"10.1.0.0/16"*/]
   branch1_nva_asn       = "65001"
   branch1_dns_zone      = "branch1.${local.onprem_domain}"
   branch1_tags          = { env = "branch1" }
   branch1_subnets = {
-    ("${local.branch1_prefix}main2") = { address_prefixes = ["10.1.0.0/24"] }
-    ("${local.branch1_prefix}main")  = { address_prefixes = ["10.10.0.0/24"] }
-    ("${local.branch1_prefix}ext")   = { address_prefixes = ["10.10.1.0/24"] }
-    ("${local.branch1_prefix}int")   = { address_prefixes = ["10.10.2.0/24"] }
-    ("GatewaySubnet")                = { address_prefixes = ["10.10.3.0/24"] }
+    #("${local.branch1_prefix}main2") = { address_prefixes = ["10.1.0.0/24"] }
+    ("${local.branch1_prefix}main") = { address_prefixes = ["10.10.0.0/24"] }
+    ("${local.branch1_prefix}ext")  = { address_prefixes = ["10.10.1.0/24"] }
+    ("${local.branch1_prefix}int")  = { address_prefixes = ["10.10.2.0/24"] }
+    ("GatewaySubnet")               = { address_prefixes = ["10.10.3.0/24"] }
   }
   branch1_ext_default_gw = cidrhost(local.branch1_subnets["${local.branch1_prefix}ext"].address_prefixes[0], 1)
   branch1_int_default_gw = cidrhost(local.branch1_subnets["${local.branch1_prefix}int"].address_prefixes[0], 1)
@@ -182,16 +182,16 @@ locals {
   branch1_nva_int_addr   = cidrhost(local.branch1_subnets["${local.branch1_prefix}int"].address_prefixes[0], 9)
   branch1_vm_addr        = cidrhost(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0], 5)
   branch1_dns_addr       = cidrhost(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0], 6)
-  branch1_vm2_addr       = cidrhost(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0], 5)
+  #branch1_vm2_addr       = cidrhost(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0], 5)
   branch1_nva_loopback0  = "192.168.10.10"
   branch1_nva_tun_range0 = "10.10.10.0/30"
   branch1_nva_tun_range1 = "10.10.10.4/30"
   branch1_bgp_apipa_0    = cidrhost(local.bgp_apipa_range3, 2)
   branch1_bgp_apipa_1    = cidrhost(local.bgp_apipa_range4, 2)
   branch1_vm_dns_host    = "vm.branch1"
-  branch1_vm2_dns_host   = "vm2.branch1"
-  branch1_vm_dns         = "${local.branch1_vm_dns_host}.${local.onprem_domain}"
-  branch1_vm2_dns        = "${local.branch1_vm2_dns_host}.${local.onprem_domain}"
+  #branch1_vm2_dns_host   = "vm2.branch1"
+  branch1_vm_dns = "${local.branch1_vm_dns_host}.${local.onprem_domain}"
+  #branch1_vm2_dns        = "${local.branch1_vm2_dns_host}.${local.onprem_domain}"
 }
 
 # branch2

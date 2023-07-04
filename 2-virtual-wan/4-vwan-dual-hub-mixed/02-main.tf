@@ -18,7 +18,7 @@ locals {
 
   vm_script_targets_region1 = [
     { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },
-    { name = "branch1-2", dns = local.branch1_vm2_dns, ip = local.branch1_vm2_addr },
+    #{ name = "branch1-2", dns = local.branch1_vm2_dns, ip = local.branch1_vm2_addr },
     { name = "hub1   ", dns = local.hub1_vm_dns, ip = local.hub1_vm_addr },
     { name = "hub1-pe", dns = local.hub1_pep_dns, ping = false },
     { name = "spoke1 ", dns = local.spoke1_vm_dns, ip = local.spoke1_vm_addr },

@@ -36,7 +36,7 @@ module "branch1" {
       dns_servers    = [local.branch1_dns_addr, ]
       delay_creation = "60s"
     },
-    {
+    /*{
       name           = "vm2"
       subnet         = "${local.branch1_prefix}main2"
       private_ip     = local.branch1_vm2_addr
@@ -44,7 +44,7 @@ module "branch1" {
       source_image   = "ubuntu"
       dns_servers    = [local.branch1_dns_addr, ]
       delay_creation = "60s"
-    },
+    },*/
     {
       name             = "dns"
       subnet           = "${local.branch1_prefix}main"
