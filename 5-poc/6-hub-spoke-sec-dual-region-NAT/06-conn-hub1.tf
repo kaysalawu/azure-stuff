@@ -153,7 +153,7 @@ resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_static_nat_egr
   }
 }
 
-# egeress (dynamic)
+# egress (dynamic)
 
 resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_dyn_nat_egress_0" {
   resource_group_name        = azurerm_resource_group.rg.name

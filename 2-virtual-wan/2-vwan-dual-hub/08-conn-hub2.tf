@@ -157,6 +157,34 @@ module "hub2_udr_main" {
 # vpn-site connection
 ####################################################
 
+# branch1
+
+resource "azurerm_vpn_gateway_connection" "vhub2_site_branch1_conn" {
+  name                      = "${local.vhub2_prefix}site-branch1-conn"
+  vpn_gateway_id            = azurerm_vpn_gateway.vhub2.id
+  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_branch1.id
+  internet_security_enabled = false
+
+  vpn_link {
+    name             = "${local.vhub2_prefix}site-branch1-conn-vpn-link-0"
+    bgp_enabled      = true
+    shared_key       = local.psk
+    vpn_site_link_id = azurerm_vpn_site.vhub2_site_branch1.link[0].id
+  }
+
+  routing {
+    associated_route_table = azurerm_virtual_hub.vhub2.default_route_table_id
+    propagated_route_table {
+      labels = [
+        "default",
+      ]
+      route_table_ids = [
+        azurerm_virtual_hub.vhub2.default_route_table_id,
+      ]
+    }
+  }
+}
+
 # branch3
 
 resource "azurerm_vpn_gateway_connection" "vhub2_site_branch3_conn" {

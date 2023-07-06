@@ -129,10 +129,10 @@ locals {
   hub2_tags          = { env = "hub2" }
   hub2_subnets = {
     ("${local.hub2_prefix}main")      = { address_prefixes = ["10.22.0.0/24"] }
-    ("${local.hub2_prefix}ilb")       = { address_prefixes = ["10.22.1.0/24"] }
-    ("${local.hub2_prefix}pls")       = { address_prefixes = ["10.22.2.0/24"] }
-    ("${local.hub2_prefix}pep")       = { address_prefixes = ["10.22.3.0/24"] }
-    ("${local.hub2_prefix}nva")       = { address_prefixes = ["10.22.4.0/24"] }
+    ("${local.hub2_prefix}nva")       = { address_prefixes = ["10.22.1.0/24"] }
+    ("${local.hub2_prefix}ilb")       = { address_prefixes = ["10.22.2.0/24"] }
+    ("${local.hub2_prefix}pls")       = { address_prefixes = ["10.22.3.0/24"] }
+    ("${local.hub2_prefix}pep")       = { address_prefixes = ["10.22.4.0/24"] }
     ("${local.hub2_prefix}dns-in")    = { address_prefixes = ["10.22.5.0/24"], delegate = ["dns"] }
     ("${local.hub2_prefix}dns-out")   = { address_prefixes = ["10.22.6.0/24"], delegate = ["dns"] }
     ("GatewaySubnet")                 = { address_prefixes = ["10.22.7.0/24"] }
@@ -186,6 +186,8 @@ locals {
   branch1_nva_loopback0  = "192.168.10.10"
   branch1_nva_tun_range0 = "10.10.10.0/30"
   branch1_nva_tun_range1 = "10.10.10.4/30"
+  branch1_nva_tun_range2 = "10.10.10.8/30"
+  branch1_nva_tun_range3 = "10.10.10.12/30"
   branch1_bgp_apipa_0    = cidrhost(local.bgp_apipa_range3, 2)
   branch1_bgp_apipa_1    = cidrhost(local.bgp_apipa_range4, 2)
   branch1_vm_dns_host    = "vm.branch1"
@@ -219,6 +221,8 @@ locals {
   branch2_nva_loopback0  = "192.168.20.20"
   branch2_nva_tun_range0 = "10.20.20.0/30"
   branch2_nva_tun_range1 = "10.20.20.4/30"
+  branch2_nva_tun_range2 = "10.20.20.8/30"
+  branch2_nva_tun_range3 = "10.20.20.12/30"
   branch2_vm_dns_host    = "vm.branch2"
   branch2_vm_dns         = "${local.branch2_vm_dns_host}.${local.onprem_domain}"
 }
@@ -248,6 +252,8 @@ locals {
   branch3_nva_loopback0  = "192.168.30.30"
   branch3_nva_tun_range0 = "10.30.30.0/30"
   branch3_nva_tun_range1 = "10.30.30.4/30"
+  branch3_nva_tun_range2 = "10.30.30.8/30"
+  branch3_nva_tun_range3 = "10.30.30.12/30"
   branch3_bgp_apipa_0    = cidrhost(local.bgp_apipa_range7, 2)
   branch3_bgp_apipa_1    = cidrhost(local.bgp_apipa_range8, 2)
   branch3_vm_dns_host    = "vm.branch3"

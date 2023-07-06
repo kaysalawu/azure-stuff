@@ -17,7 +17,7 @@ locals {
     ]
   ])
   subnets_with_nat = {
-    for x in local.subnets : azurerm_subnet.this[x.subnet_key].id => x.vnet_key
+    for x in local.subnets : x.vnet_key => azurerm_subnet.this[x.subnet_key].id
     if contains(var.vnet_config[x.vnet_key].subnets_nat_gateway, x.subnet_key)
   }
   dns_rulesets = flatten([
@@ -232,6 +232,12 @@ resource "azurerm_nat_gateway_public_ip_association" "nat" {
   timeouts {
     create = "60m"
   }
+}
+
+resource "azurerm_subnet_nat_gateway_association" "nat" {
+  for_each       = local.subnets_with_nat
+  nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
+  subnet_id      = each.value
 }
 
 # route server

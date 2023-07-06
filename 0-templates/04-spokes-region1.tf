@@ -36,12 +36,13 @@ module "spoke1" {
 
   vm_config = [
     {
-      name         = local.spoke1_vm_dns_host
-      subnet       = "${local.spoke1_prefix}main"
-      private_ip   = local.spoke1_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      dns_servers  = [local.hub1_dns_in_ip, ]
+      name           = local.spoke1_vm_dns_host
+      subnet         = "${local.spoke1_prefix}main"
+      private_ip     = local.spoke1_vm_addr
+      custom_data    = base64encode(local.vm_startup)
+      source_image   = "ubuntu"
+      dns_servers    = [local.hub1_dns_in_ip, ]
+      delay_creation = "60s"
     }
   ]
 }
@@ -82,12 +83,13 @@ module "spoke2" {
 
   vm_config = [
     {
-      name         = local.spoke2_vm_dns_host
-      subnet       = "${local.spoke2_prefix}main"
-      private_ip   = local.spoke2_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      dns_servers  = [local.hub1_dns_in_ip, ]
+      name           = local.spoke2_vm_dns_host
+      subnet         = "${local.spoke2_prefix}main"
+      private_ip     = local.spoke2_vm_addr
+      custom_data    = base64encode(local.vm_startup)
+      source_image   = "ubuntu"
+      dns_servers    = [local.hub1_dns_in_ip, ]
+      delay_creation = "60s"
     }
   ]
 }
@@ -121,19 +123,21 @@ module "spoke3" {
 
   vnet_config = [
     {
-      address_space = local.spoke3_address_space
-      subnets       = local.spoke3_subnets
+      address_space       = local.spoke3_address_space
+      subnets             = local.spoke3_subnets
+      subnets_nat_gateway = ["${local.spoke3_prefix}main", ]
     }
   ]
 
   vm_config = [
     {
-      name         = local.spoke3_vm_dns_host
-      subnet       = "${local.spoke3_prefix}main"
-      private_ip   = local.spoke3_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      dns_servers  = [local.hub1_dns_in_ip, ]
+      name           = local.spoke3_vm_dns_host
+      subnet         = "${local.spoke3_prefix}main"
+      private_ip     = local.spoke3_vm_addr
+      custom_data    = base64encode(local.vm_startup)
+      source_image   = "ubuntu"
+      dns_servers    = [local.hub1_dns_in_ip, ]
+      delay_creation = "60s"
     }
   ]
 }
