@@ -36,13 +36,14 @@ module "spoke4" {
 
   vm_config = [
     {
-      name           = local.spoke4_vm_dns_host
-      subnet         = "${local.spoke4_prefix}main"
-      private_ip     = local.spoke4_vm_addr
-      custom_data    = base64encode(local.vm_startup)
-      source_image   = "ubuntu"
-      dns_servers    = [local.hub2_dns_in_ip, ]
-      delay_creation = "60s"
+      name             = local.spoke4_vm_dns_host
+      subnet           = "${local.spoke4_prefix}main"
+      private_ip       = local.spoke4_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      dns_servers      = [local.hub2_dns_in_ip, ]
+      use_vm_extension = true
+      delay_creation   = "60s"
     }
   ]
 }
@@ -83,13 +84,14 @@ module "spoke5" {
 
   vm_config = [
     {
-      name           = local.spoke5_vm_dns_host
-      subnet         = "${local.spoke5_prefix}main"
-      private_ip     = local.spoke5_vm_addr
-      custom_data    = base64encode(local.vm_startup)
-      source_image   = "ubuntu"
-      dns_servers    = [local.hub2_dns_in_ip, ]
-      delay_creation = "60s"
+      name             = local.spoke5_vm_dns_host
+      subnet           = "${local.spoke5_prefix}main"
+      private_ip       = local.spoke5_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      dns_servers      = [local.hub2_dns_in_ip, ]
+      use_vm_extension = true
+      #delay_creation = "60s"
     }
   ]
 }
@@ -131,13 +133,14 @@ module "spoke6" {
 
   vm_config = [
     {
-      name           = local.spoke6_vm_dns_host
-      subnet         = "${local.spoke6_prefix}main"
-      private_ip     = local.spoke6_vm_addr
-      custom_data    = base64encode(local.vm_startup)
-      source_image   = "ubuntu"
-      dns_servers    = [local.hub2_dns_in_ip, ]
-      delay_creation = "60s"
+      name             = local.spoke6_vm_dns_host
+      subnet           = "${local.spoke6_prefix}main"
+      private_ip       = local.spoke6_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      dns_servers      = [local.hub2_dns_in_ip, ]
+      use_vm_extension = true
+      #delay_creation = "60s"
     }
   ]
 }

@@ -19,6 +19,20 @@ resource "azurerm_virtual_hub" "vhub1" {
   address_prefix      = local.vhub1_address_prefix
 }
 
+resource "null_resource" "vhub1" {
+  provisioner "local-exec" {
+    command = <<EOT
+      az network vhub update \
+      --resource-group ${azurerm_resource_group.rg.name} \
+      --name ${local.vhub1_prefix}hub \
+      --hub-routing-preference ASPath
+    EOT
+  }
+  depends_on = [
+    azurerm_virtual_hub.vhub1
+  ]
+}
+
 # vpngw
 #----------------------------
 

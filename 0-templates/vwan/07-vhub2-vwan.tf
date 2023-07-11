@@ -41,6 +41,20 @@ resource "azurerm_vpn_gateway" "vhub2" {
   }
 }
 
+resource "null_resource" "vhub2" {
+  provisioner "local-exec" {
+    command = <<EOT
+      az network vhub update \
+      --resource-group ${azurerm_resource_group.rg.name} \
+      --name ${local.vhub2_prefix}hub \
+      --hub-routing-preference ASPath
+    EOT
+  }
+  depends_on = [
+    azurerm_virtual_hub.vhub2
+  ]
+}
+
 # vpn-site
 #----------------------------
 

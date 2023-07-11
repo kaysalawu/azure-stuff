@@ -6,6 +6,7 @@
 # router
 
 locals {
+  branch1_nva_route_map_name_nh = "NEXT-HOP"
   branch1_nva_init = templatefile("../../scripts/nva-branch.sh", {
     LOCAL_ASN = local.branch1_nva_asn
     LOOPBACK0 = local.branch1_nva_loopback0
@@ -13,7 +14,17 @@ locals {
     EXT_ADDR  = local.branch1_nva_ext_addr
     VPN_PSK   = local.psk
 
-    ROUTE_MAPS = []
+    ROUTE_MAPS = [
+      {
+        name   = local.branch1_nva_route_map_name_nh
+        action = "permit"
+        rule   = 100
+        commands = [
+          "match ip address prefix-list all",
+          "set as-path prepend ${local.branch1_nva_asn} ${local.branch1_nva_asn} ${local.branch1_nva_asn} ${local.branch1_nva_asn}"
+        ]
+      }
+    ]
 
     TUNNELS = [
       {
@@ -103,14 +114,20 @@ locals {
         peer_ip         = local.vhub2_vpngw_bgp0,
         source_loopback = true
         ebgp_multihop   = true
-        route_map       = {}
+        route_map = {
+          name      = local.branch1_nva_route_map_name_nh
+          direction = "out"
+        }
       },
       {
         peer_asn        = local.vhub2_bgp_asn
         peer_ip         = local.vhub2_vpngw_bgp1
         source_loopback = true
         ebgp_multihop   = true
-        route_map       = {}
+        route_map = {
+          name      = local.branch1_nva_route_map_name_nh
+          direction = "out"
+        }
       },
     ]
 

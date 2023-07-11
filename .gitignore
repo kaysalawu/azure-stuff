@@ -31,7 +31,6 @@ plugins/
 *artifact
 *certs
 *anthos-keys
-helper*
 output/
 backend.tf
 

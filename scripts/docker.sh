@@ -1,7 +1,7 @@
 #! /bin/bash
 
 apt update
-apt install -y wget python3-pip python3-dev tcpdump fping dnsutils traceroute tcptraceroute nmap hping3 iperf3 net-tools speedtest-cli
+apt install -y wget tcpdump fping dnsutils traceroute tcptraceroute nmap hping3 iperf3 net-tools
 
 # web server
 pip3 install Flask requests
