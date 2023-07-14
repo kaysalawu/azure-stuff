@@ -1,4 +1,11 @@
 
+
+locals {
+  core1_bak_srv_nic = module.core1.interface["bak-srv"].name
+  core2_bak_srv_nic = module.core2.interface["bak-srv"].name
+  yellow_vm_nic     = module.yellow.interface["vm"].name
+}
+
 ####################################################
 # core1
 ####################################################

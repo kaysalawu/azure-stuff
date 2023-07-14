@@ -2,6 +2,7 @@
 # Common
 
 #----------------------------
+
 locals {
   region1  = "westeurope"
   region2  = "northeurope"

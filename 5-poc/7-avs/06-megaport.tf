@@ -229,18 +229,21 @@ resource "azurerm_virtual_network_gateway_connection" "hub_er2" {
 
 locals {
   er_files = {
-    "output/global-reach.sh" = local.er_config
+    "output/er-scripts.sh" = local.er_scripts
   }
-  peer_circuit_id = ""
-  er_config       = <<EOF
-az network express-route peering connection create \
--g ${azurerm_resource_group.rg.name} \
---circuit-name ${azurerm_express_route_circuit.er1.name} \
---peering-name AzurePrivatePeering \
--n ${azurerm_virtual_network_gateway_connection.onprem_er1.name} \
---peer-circuit ${local.peer_circuit_id} \
---address-prefix ${local.gr_range1}
-EOF
+  er_scripts = templatefile("er-scripts.sh", {
+    RG                   = azurerm_resource_group.rg.name
+    ER1_CIRCUIT          = azurerm_express_route_circuit.er1.name
+    ER2_CIRCUIT          = azurerm_express_route_circuit.er2.name
+    ER1_CONNECTION       = azurerm_virtual_network_gateway_connection.onprem_er1.name
+    ER2_CONNECTION       = azurerm_virtual_network_gateway_connection.onprem_er2.name
+    ER1_PEERING_LOCATION = "Amsterdam"
+    ER2_PEERING_LOCATION = "Amsterdam"
+    NIC_CORE1            = local.core1_bak_srv_nic
+    NIC_CORE2            = local.core2_bak_srv_nic
+    NIC_YELLOW           = local.yellow_vm_nic
+    NIC_ONPREM           = local.onprem_bak_srv_nic
+  })
 }
 
 resource "local_file" "er_files" {
