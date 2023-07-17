@@ -1,6 +1,7 @@
 !#/bin/bash
 
 clear
+
 echo -e "\nER1 Circuit Routes Summary"
 echo "======================================"
 az network express-route list-route-tables-summary \
@@ -15,6 +16,24 @@ echo "======================================"
 az network express-route list-route-tables \
 -g avsRG \
 -n avs-er1 \
+--path primary \
+--peering-name AzurePrivatePeering \
+--query value -o table --only-show-errors
+
+echo -e "\nER2 Circuit Routes Summary"
+echo "======================================"
+az network express-route list-route-tables-summary \
+-g avsRG \
+-n avs-er2 \
+--path primary \
+--peering-name AzurePrivatePeering \
+--query value -o table --only-show-errors
+
+echo -e "\nER2 Circuit Routes Full"
+echo "======================================"
+az network express-route list-route-tables \
+-g avsRG \
+-n avs-er2 \
 --path primary \
 --peering-name AzurePrivatePeering \
 --query value -o table --only-show-errors

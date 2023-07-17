@@ -28,6 +28,8 @@ locals {
   default_region      = "westeurope"
   subnets_without_nsg = ["GatewaySubnet"]
 
+  nva_aggregate = "10.1.0.0/23"
+
   onprem_domain    = "corp"
   cloud_domain     = "az.corp"
   azuredns         = "168.63.129.16"

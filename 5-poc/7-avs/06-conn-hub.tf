@@ -231,10 +231,37 @@ locals {
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub_default_gw_nva },
+      { network = local.hub_ars_bgp0, mask = "255.255.255.255", next_hop = local.hub_default_gw_nva },
+      { network = local.hub_ars_bgp1, mask = "255.255.255.255", next_hop = local.hub_default_gw_nva },
+      {
+        network  = cidrhost(local.nva_aggregate, 0)
+        mask     = cidrnetmask(local.nva_aggregate)
+        next_hop = local.hub_default_gw_nva
+      }
     ]
 
-    BGP_SESSIONS            = []
-    BGP_ADVERTISED_NETWORKS = []
+    BGP_SESSIONS = [
+      {
+        peer_asn      = local.hub_ars_bgp_asn
+        peer_ip       = local.hub_ars_bgp0
+        as_override   = false
+        ebgp_multihop = true
+        route_map     = {}
+      },
+      {
+        peer_asn      = local.hub_ars_bgp_asn
+        peer_ip       = local.hub_ars_bgp1
+        as_override   = false
+        ebgp_multihop = true
+        route_map     = {}
+      },
+    ]
+    BGP_ADVERTISED_NETWORKS = [
+      {
+        network = cidrhost(local.nva_aggregate, 0)
+        mask    = cidrnetmask(local.nva_aggregate)
+      },
+    ]
   })
 }
 
@@ -251,6 +278,17 @@ module "hub_nva" {
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.hub_router_init)
+}
+
+####################################################
+# ars
+####################################################
+
+resource "azurerm_route_server_bgp_connection" "hub_ars_bgp_conn" {
+  name            = "${local.hub_prefix}ars-bgp-conn"
+  route_server_id = module.hub.ars.id
+  peer_asn        = local.hub_nva_asn
+  peer_ip         = local.hub_nva_addr
 }
 
 ####################################################

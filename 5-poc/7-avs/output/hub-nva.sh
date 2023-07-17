@@ -41,7 +41,17 @@ ip access-list standard NAT_ACL
 ip nat inside source list NAT_ACL interface GigabitEthernet1 overload
 !
 ip route 0.0.0.0 0.0.0.0 10.11.1.1
+ip route 10.11.8.4 255.255.255.255 10.11.1.1
+ip route 10.11.8.5 255.255.255.255 10.11.1.1
+ip route 10.0.0.0 255.254.0.0 10.11.1.1
 !
 !
 router bgp 65000
 bgp router-id 10.11.1.9
+neighbor 10.11.8.4 remote-as 65515
+neighbor 10.11.8.4 ebgp-multihop 255
+neighbor 10.11.8.4 soft-reconfiguration inbound
+neighbor 10.11.8.5 remote-as 65515
+neighbor 10.11.8.5 ebgp-multihop 255
+neighbor 10.11.8.5 soft-reconfiguration inbound
+network 10.0.0.0 mask 255.254.0.0

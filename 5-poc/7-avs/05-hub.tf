@@ -3,10 +3,10 @@
 locals {
   #hub_vpngw_bgp0  = module.hub.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
   #hub_vpngw_bgp1  = module.hub.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
-  #hub_ars_bgp0    = tolist(module.hub.ars.virtual_router_ips)[0]
-  #hub_ars_bgp1    = tolist(module.hub.ars.virtual_router_ips)[1]
-  #hub_ars_bgp_asn = module.hub.ars.virtual_router_asn
-  hub_dns_in_ip = module.hub.private_dns_inbound_ep.ip_configurations[0].private_ip_address
+  hub_ars_bgp0    = tolist(module.hub.ars.virtual_router_ips)[0]
+  hub_ars_bgp1    = tolist(module.hub.ars.virtual_router_ips)[1]
+  hub_ars_bgp_asn = module.hub.ars.virtual_router_asn
+  hub_dns_in_ip   = module.hub.private_dns_inbound_ep.ip_configurations[0].private_ip_address
 }
 
 ####################################################
@@ -43,7 +43,7 @@ module "hub" {
       enable_private_dns_resolver = true
       enable_ergw                 = true
       enable_vpngw                = false
-      enable_ars                  = false
+      enable_ars                  = true
       enable_firewall             = false
 
       vpngw_config = [
