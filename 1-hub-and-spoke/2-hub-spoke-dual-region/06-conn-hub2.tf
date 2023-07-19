@@ -160,6 +160,8 @@ locals {
     INT_ADDR = local.hub2_nva_addr
     VPN_PSK  = local.psk
 
+    MASQUERADE = []
+
     ROUTE_MAPS = [
       {
         name   = local.hub2_router_route_map_name_nh

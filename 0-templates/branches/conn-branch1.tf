@@ -53,11 +53,11 @@ locals {
         mask     = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0])
         next_hop = local.branch1_int_default_gw
       },
-      {
-        network  = cidrhost(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0], 0)
-        mask     = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0])
-        next_hop = local.branch1_int_default_gw
-      }
+      #{
+      #  network  = cidrhost(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0], 0)
+      #  mask     = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0])
+      #  next_hop = local.branch1_int_default_gw
+      #}
     ]
 
     BGP_SESSIONS = [
@@ -82,10 +82,10 @@ locals {
         network = cidrhost(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0], 0)
         mask    = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0])
       },
-      {
-        network = cidrhost(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0], 0)
-        mask    = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0])
-      }
+      #{
+      #  network = cidrhost(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0], 0)
+      #  mask    = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main2"].address_prefixes[0])
+      #}
     ]
   })
 }
