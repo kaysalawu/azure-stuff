@@ -42,7 +42,7 @@ module "spoke1" {
       custom_data      = base64encode(local.vm_startup)
       source_image     = "ubuntu"
       dns_servers      = [local.hub1_dns_in_ip, ]
-      use_vm_extension = true
+      use_vm_extension = false
       delay_creation   = "60s"
     }
   ]
@@ -84,12 +84,13 @@ module "spoke2" {
 
   vm_config = [
     {
-      name         = local.spoke2_vm_dns_host
-      subnet       = "${local.spoke2_prefix}main"
-      private_ip   = local.spoke2_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      dns_servers  = [local.hub1_dns_in_ip, ]
+      name             = local.spoke2_vm_dns_host
+      subnet           = "${local.spoke2_prefix}main"
+      private_ip       = local.spoke2_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      use_vm_extension = false
+      dns_servers      = [local.hub1_dns_in_ip, ]
       #delay_creation = "60s"
     }
   ]
@@ -108,18 +109,13 @@ module "spoke3" {
   location        = local.spoke3_location
   storage_account = azurerm_storage_account.region1
 
-  private_dns_zone = local.spoke3_dns_zone
-  dns_zone_linked_vnets = {
-    "hub1" = { vnet = module.hub1.vnet.id, registration_enabled = false }
-  }
-  dns_zone_linked_rulesets = {
-    "hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
-  }
+  private_dns_zone         = local.spoke3_dns_zone
+  dns_zone_linked_vnets    = {}
+  dns_zone_linked_rulesets = {}
 
   nsg_config = {
-    "main"  = azurerm_network_security_group.nsg_region1_main.id
-    "appgw" = azurerm_network_security_group.nsg_region1_appgw.id
-    "ilb"   = azurerm_network_security_group.nsg_region1_default.id
+    "main" = azurerm_network_security_group.nsg_region1_main.id
+    "ilb"  = azurerm_network_security_group.nsg_region1_default.id
   }
 
   vnet_config = [
@@ -131,21 +127,22 @@ module "spoke3" {
   ]
 
   vm_config = [
-    {
-      name         = local.spoke3_vm_dns_host
-      subnet       = "${local.spoke3_prefix}main"
-      private_ip   = local.spoke3_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      dns_servers  = [local.hub1_dns_in_ip, ]
-      #delay_creation = "60s"
-    }
+    /*{
+      name             = local.spoke3_vm_dns_host
+      subnet           = "${local.spoke3_prefix}main"
+      private_ip       = local.spoke3_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      use_vm_extension = true
+      dns_servers      = [local.hub1_dns_in_ip, ]
+      delay_creation = "60s"
+    }*/
   ]
 }
 
 # ilb
 #----------------------------
-
+/*
 # internal load balancer
 
 module "spoke3_lb" {
@@ -192,4 +189,4 @@ module "spoke3_pls" {
       lb_frontend_ids = [module.spoke3_lb.frontend_ip_configuration[0].id, ]
     }
   ]
-}
+}*/

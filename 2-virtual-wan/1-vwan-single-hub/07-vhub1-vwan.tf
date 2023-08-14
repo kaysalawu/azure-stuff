@@ -1,1 +1,1 @@
-../../0-config/vwan/07-vhub1-vwan.tf
+../../0-templates/vwan/07-vhub1-vwan.tf

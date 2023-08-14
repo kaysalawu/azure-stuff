@@ -1,9 +1,7 @@
 #! /bin/bash
 
 apt update
-apt install -y wget python3-pip python3-dev \
-tcpdump fping dnsutils traceroute tcptraceroute nmap hping3 iperf3 net-tools \
-speedtest-cli
+apt install -y wget python3-pip python3-dev tcpdump fping dnsutils traceroute tcptraceroute nmap hping3 iperf3 net-tools speedtest-cli
 
 # web server
 pip3 install Flask requests
@@ -35,9 +33,9 @@ def path1():
     address = socket.gethostbyname(hostname)
     data_dict = {}
     data_dict['app'] = 'PATH1-APP'
-    data_dict['name'] = hostname
-    data_dict['address'] = address
-    data_dict['remote'] = request.remote_addr
+    data_dict['hostname'] = hostname
+    data_dict['local-ip'] = address
+    data_dict['remote-ip'] = request.remote_addr
     data_dict['headers'] = dict(request.headers)
     return data_dict
 
@@ -47,9 +45,9 @@ def path2():
     address = socket.gethostbyname(hostname)
     data_dict = {}
     data_dict['app'] = 'PATH2-APP'
-    data_dict['name'] = hostname
-    data_dict['address'] = address
-    data_dict['remote'] = request.remote_addr
+    data_dict['hostname'] = hostname
+    data_dict['local-ip'] = address
+    data_dict['remote-ip'] = request.remote_addr
     data_dict['headers'] = dict(request.headers)
     return data_dict
 

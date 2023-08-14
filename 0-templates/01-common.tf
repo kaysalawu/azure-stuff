@@ -536,11 +536,11 @@ module "branch_dns_cloud_init" {
 
 locals {
   branch_files = {
-    "output/branch-vm.sh"  = local.vm_startup
+    # "output/branch-vm.sh"  = local.vm_startup
     "output/branch-dns.sh" = local.branch_unbound_config
   }
   spoke_files = {
-    "output/spoke-vm.sh" = local.vm_startup
+    #"output/spoke-vm.sh" = local.vm_startup
   }
 }
 

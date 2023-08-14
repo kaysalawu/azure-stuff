@@ -85,6 +85,7 @@ locals {
 
     ROUTE_MAPS = []
     TUNNELS    = []
+    MASQUERADE = []
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },

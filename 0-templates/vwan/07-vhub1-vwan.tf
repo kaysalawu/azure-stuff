@@ -78,24 +78,3 @@ resource "azurerm_vpn_site" "vhub1_site_branch1" {
     }
   }
 }
-
-# branch3
-
-resource "azurerm_vpn_site" "vhub1_site_branch3" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.vhub1_prefix}site-branch3"
-  location            = local.vhub1_location
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
-  device_model        = "Azure"
-  device_vendor       = "Microsoft"
-  link {
-    name          = "${local.vhub1_prefix}site-branch3-link-0"
-    provider_name = "Microsoft"
-    ip_address    = azurerm_public_ip.branch3_nva_pip.ip_address
-    speed_in_mbps = 50
-    bgp {
-      asn             = local.branch3_nva_asn
-      peering_address = local.branch3_nva_loopback0
-    }
-  }
-}

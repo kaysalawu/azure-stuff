@@ -27,6 +27,7 @@ variable "container_args" {
 variable "container_image" {
   description = "Container image."
   type        = string
+  default     = null
 }
 
 variable "container_name" {
