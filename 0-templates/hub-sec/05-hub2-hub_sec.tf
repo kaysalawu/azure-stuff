@@ -8,7 +8,6 @@ locals {
   hub2_firewall_ip = module.hub2.firewall.ip_configuration[0].private_ip_address
   hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
   hub2_dns_in_ip   = module.hub2.private_dns_inbound_ep.ip_configurations[0].private_ip_address
-
 }
 
 ####################################################
@@ -55,8 +54,8 @@ module "hub2" {
       ]
       firewall_config = [
         {
-          sku_tier = local.firewall_sku
-          #firewall_policy_id = azurerm_firewall_policy.firewall_policy_region2.id
+          sku_tier           = local.firewall_sku
+          firewall_policy_id = azurerm_firewall_policy.firewall_policy_region2.id
         }
       ]
     }

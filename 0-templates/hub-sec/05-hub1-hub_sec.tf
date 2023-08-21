@@ -54,8 +54,8 @@ module "hub1" {
       ]
       firewall_config = [
         {
-          sku_tier = local.firewall_sku
-          #firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
+          sku_tier           = local.firewall_sku
+          firewall_policy_id = azurerm_firewall_policy.firewall_policy_region1.id
         }
       ]
     }
@@ -186,7 +186,7 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub1_cloud" {
 ####################################################
 # private endpoint
 ####################################################
-
+/*
 resource "azurerm_private_endpoint" "hub1_spoke3_pe" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "${local.hub1_prefix}spoke3-pe"
@@ -206,4 +206,4 @@ resource "azurerm_private_dns_a_record" "hub1_spoke3_pe" {
   zone_name           = local.hub1_dns_zone
   ttl                 = 300
   records             = [azurerm_private_endpoint.hub1_spoke3_pe.private_service_connection[0].private_ip_address, ]
-}
+}*/

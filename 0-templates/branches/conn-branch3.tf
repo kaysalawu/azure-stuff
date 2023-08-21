@@ -4,7 +4,6 @@
 ####################################################
 
 # router
-#----------------------------
 
 locals {
   branch3_nva_init = templatefile("../../scripts/nva-branch.sh", {

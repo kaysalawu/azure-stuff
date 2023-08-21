@@ -473,10 +473,14 @@ resource "azurerm_firewall" "azfw" {
 
 # storage account
 
+resource "random_id" "azfw" {
+  byte_length = 6
+}
+
 resource "azurerm_storage_account" "azfw" {
   for_each                 = { for k, v in var.vnet_config : k => v if v.enable_firewall }
   resource_group_name      = var.resource_group
-  name                     = lower(replace("${local.prefix}azfw", "-", ""))
+  name                     = lower(replace("${local.prefix}azfw${random_id.azfw.hex}", "-", ""))
   location                 = var.location
   account_tier             = "Standard"
   account_replication_type = "LRS"

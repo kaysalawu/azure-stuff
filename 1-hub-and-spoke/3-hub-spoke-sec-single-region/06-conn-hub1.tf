@@ -7,7 +7,6 @@
 #----------------------------
 
 # spoke1-to-hub1
-# using remote gw transit for this peering (nva bypass)
 
 resource "azurerm_virtual_network_peering" "spoke1_to_hub1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
@@ -158,6 +157,8 @@ locals {
     INT_ADDR = local.hub1_nva_addr
     VPN_PSK  = local.psk
 
+    MASQUERADE = []
+
     ROUTE_MAPS = [
       {
         name   = local.hub1_router_route_map_name_nh
@@ -197,7 +198,6 @@ module "hub1_nva" {
 }
 
 # udr
-#----------------------------
 
 module "hub1_udr_gateway" {
   source                 = "../../modules/udr"
@@ -224,7 +224,7 @@ module "hub1_udr_main" {
     local.udr_destinations_region1,
   )
 }
-
+/*
 ####################################################
 # firewall rules (classic)
 ####################################################
@@ -244,7 +244,7 @@ resource "azurerm_firewall_network_rule_collection" "hub1_azfw_net_rule" {
     destination_addresses = ["*"]
     protocols             = ["Any"]
   }
-}
+}*/
 
 ####################################################
 # output files

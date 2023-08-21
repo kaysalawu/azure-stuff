@@ -7,7 +7,6 @@
 #----------------------------
 
 # spoke1-to-hub1
-# using remote gw transit for this peering (nva bypass)
 
 resource "azurerm_virtual_network_peering" "spoke1_to_hub1_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
@@ -127,7 +126,7 @@ resource "azurerm_local_network_gateway" "hub1_branch1_lng" {
     bgp_peering_address = local.branch1_nva_loopback0
   }
 }
-
+/*
 # nat
 #----------------------------
 
@@ -202,7 +201,7 @@ resource "azurerm_virtual_network_gateway_nat_rule" "hub1_branch1_static_nat_ing
   external_mapping {
     address_space = local.hub1_nat_ranges["branch1"]["ingress-static"]
   }
-}
+}*/
 
 # lng connection
 #----------------------------
@@ -243,6 +242,8 @@ locals {
     }
     INT_ADDR = local.hub1_nva_addr
     VPN_PSK  = local.psk
+
+    MASQUERADE = []
 
     ROUTE_MAPS = [
       {
@@ -333,7 +334,6 @@ module "hub1_nva" {
 }
 
 # udr
-#----------------------------
 
 module "hub1_udr_gateway" {
   source                 = "../../modules/udr"
@@ -381,7 +381,7 @@ module "hub1_udr_region2" {
 ####################################################
 
 # network
-
+/*
 resource "azurerm_firewall_network_rule_collection" "hub1_azfw_net_rule" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "${local.hub1_prefix}azfw-net-rule"
@@ -395,7 +395,7 @@ resource "azurerm_firewall_network_rule_collection" "hub1_azfw_net_rule" {
     destination_addresses = ["*"]
     protocols             = ["Any"]
   }
-}
+}*/
 
 ####################################################
 # ars

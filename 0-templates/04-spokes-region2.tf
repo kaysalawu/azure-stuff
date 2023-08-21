@@ -109,18 +109,14 @@ module "spoke6" {
   location        = local.spoke6_location
   storage_account = azurerm_storage_account.region2
 
-  private_dns_zone = local.spoke6_dns_zone
-  dns_zone_linked_vnets = {
-    "hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
-  }
-  dns_zone_linked_rulesets = {
-    "hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
-  }
+  private_dns_zone         = local.spoke6_dns_zone
+  dns_zone_linked_vnets    = {}
+  dns_zone_linked_rulesets = {}
 
   nsg_config = {
     "main"  = azurerm_network_security_group.nsg_region2_main.id
-    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
     "ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
   }
 
   vnet_config = [

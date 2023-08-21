@@ -7,7 +7,6 @@
 #----------------------------
 
 # spoke4-to-hub2
-# using remote gw transit for this peering (nva bypass)
 
 resource "azurerm_virtual_network_peering" "spoke4_to_hub2_peering" {
   resource_group_name          = azurerm_resource_group.rg.name
@@ -250,7 +249,6 @@ module "hub2_nva" {
 }
 
 # udr
-#----------------------------
 
 module "hub2_udr_gateway" {
   source                 = "../../modules/udr"

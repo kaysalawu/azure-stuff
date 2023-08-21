@@ -35,7 +35,6 @@ server:
 forward-zone:
         name: "az.corp."
         forward-addr: 10.11.5.4
-        forward-addr: 10.22.5.4
 
 forward-zone:
         name: "."

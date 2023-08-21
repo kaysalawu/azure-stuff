@@ -4,6 +4,7 @@ locals {
   hub2_vpngw_bgp1  = module.hub2.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
   hub2_ars_bgp0    = tolist(module.hub2.ars.virtual_router_ips)[0]
   hub2_ars_bgp1    = tolist(module.hub2.ars.virtual_router_ips)[1]
+  hub1_firewall_ip = module.hub1.firewall.ip_configuration[0].private_ip_address
   hub2_ars_bgp_asn = module.hub2.ars.virtual_router_asn
   hub2_dns_in_ip   = module.hub2.private_dns_inbound_ep.ip_configurations[0].private_ip_address
 }
@@ -79,7 +80,6 @@ resource "azurerm_lb" "hub2_nva_lb" {
     private_ip_address            = local.hub2_nva_ilb_addr
     private_ip_address_allocation = "Static"
   }
-
   lifecycle {
     ignore_changes = [frontend_ip_configuration, ]
   }
