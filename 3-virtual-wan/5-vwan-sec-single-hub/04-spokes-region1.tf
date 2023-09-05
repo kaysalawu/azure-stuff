@@ -11,7 +11,7 @@ module "spoke1" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.spoke1_prefix, "-")
   location        = local.spoke1_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone         = local.spoke1_dns_zone
   dns_zone_linked_vnets    = { "hub1" = module.hub1.vnet.id }
@@ -52,7 +52,7 @@ module "spoke2" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.spoke2_prefix, "-")
   location        = local.spoke2_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone         = local.spoke2_dns_zone
   dns_zone_linked_vnets    = { "hub1" = module.hub1.vnet.id }
@@ -92,7 +92,7 @@ module "spoke3" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.spoke3_prefix, "-")
   location        = local.spoke3_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone         = local.spoke3_dns_zone
   dns_zone_linked_vnets    = { "hub1" = module.hub1.vnet.id }

@@ -17,7 +17,7 @@ module "core1" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.core1_prefix, "-")
   location        = local.core1_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone = local.core1_dns_zone
   dns_zone_linked_vnets = {
@@ -67,7 +67,7 @@ module "core2" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.core2_prefix, "-")
   location        = local.core2_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone = local.core2_dns_zone
   dns_zone_linked_vnets = {
@@ -114,7 +114,7 @@ module "yellow" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.yellow_prefix, "-")
   location        = local.yellow_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone = local.yellow_dns_zone
   dns_zone_linked_vnets = {

@@ -11,12 +11,12 @@ module "branch1" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.branch1_prefix, "-")
   location        = local.branch1_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   nsg_config = {
-    "${local.branch1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
-    "${local.branch1_prefix}int"  = azurerm_network_security_group.nsg_region1_main.id
-    "${local.branch1_prefix}ext"  = azurerm_network_security_group.nsg_region1_nva.id
+    #"${local.branch1_prefix}main" = module.common.nsg_main["region1"].id
+    #"${local.branch1_prefix}int"  = module.common.nsg_main["region1"].id
+    #"${local.branch1_prefix}ext"  = module.common.nsg_nva["region1"].id
   }
 
   vnet_config = [
@@ -35,7 +35,7 @@ module "branch1" {
       source_image     = "ubuntu"
       dns_servers      = [local.branch1_dns_addr, ]
       use_vm_extension = false
-      delay_creation   = "60s"
+      #delay_creation   = "60s"
     },
     {
       name             = "dns"

@@ -32,3 +32,9 @@ az monitor metrics alert create \
     --evaluation-frequency 1m \
     --window-size 1m \
     --severity 3
+
+
+sudo iptables -A FORWARD -j LOG --log-prefix "FORWARDED: "
+dmesg | grep "FORWARDED: "
+sudo tail -f /var/log/kern.log | grep "FORWARDED: "
+sudo iptables -D FORWARD -j LOG --log-prefix "FORWARDED: "

@@ -51,7 +51,6 @@ locals {
     { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
     { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
     { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
-    { name = (local.branch4_vm_dns), record = local.branch4_vm_addr },
   ]
   onprem_forward_zones = [
     { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },

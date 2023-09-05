@@ -10,38 +10,38 @@ module "spoke4" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.spoke4_prefix, "-")
   location        = local.spoke4_location
-  storage_account = azurerm_storage_account.region2
+  storage_account = module.common.storage_accounts["region2"]
 
   private_dns_zone = local.spoke4_dns_zone
   dns_zone_linked_vnets = {
     "hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
   }
   dns_zone_linked_rulesets = {
-    "hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
+    #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
   }
 
   nsg_config = {
-    "${local.spoke4_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
-    "${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    "${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    #"${local.spoke4_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
+    #"${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    #"${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
     {
-      address_space       = local.spoke4_address_space
-      subnets             = local.spoke4_subnets
-      subnets_nat_gateway = ["${local.spoke4_prefix}main", ]
-    },
+      address_space = local.spoke4_address_space
+      subnets       = local.spoke4_subnets
+      #subnets_nat_gateway = ["${local.spoke4_prefix}main", ]
+    }
   ]
 
   vm_config = [
     {
-      name             = local.spoke4_vm_dns_host
-      subnet           = "${local.spoke4_prefix}main"
-      private_ip       = local.spoke4_vm_addr
-      custom_data      = base64encode(local.vm_startup)
-      source_image     = "ubuntu"
-      dns_servers      = [local.hub2_dns_in_ip, ]
+      name         = local.spoke4_vm_dns_host
+      subnet       = "${local.spoke4_prefix}main"
+      private_ip   = local.spoke4_vm_addr
+      custom_data  = base64encode(local.vm_startup)
+      source_image = "ubuntu"
+      #dns_servers      = [local.hub2_dns_in_ip, ]
       use_vm_extension = true
       delay_creation   = "60s"
     }
@@ -59,20 +59,20 @@ module "spoke5" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.spoke5_prefix, "-")
   location        = local.spoke5_location
-  storage_account = azurerm_storage_account.region2
+  storage_account = module.common.storage_accounts["region2"]
 
   private_dns_zone = local.spoke5_dns_zone
   dns_zone_linked_vnets = {
     "hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
   }
   dns_zone_linked_rulesets = {
-    "hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
+    #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
   }
 
   nsg_config = {
-    "main"  = azurerm_network_security_group.nsg_region2_main.id
-    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    "ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    #"main"  = azurerm_network_security_group.nsg_region2_main.id
+    #"appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    #"ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -84,12 +84,12 @@ module "spoke5" {
 
   vm_config = [
     {
-      name             = local.spoke5_vm_dns_host
-      subnet           = "${local.spoke5_prefix}main"
-      private_ip       = local.spoke5_vm_addr
-      custom_data      = base64encode(local.vm_startup)
-      source_image     = "ubuntu"
-      dns_servers      = [local.hub2_dns_in_ip, ]
+      name         = local.spoke5_vm_dns_host
+      subnet       = "${local.spoke5_prefix}main"
+      private_ip   = local.spoke5_vm_addr
+      custom_data  = base64encode(local.vm_startup)
+      source_image = "ubuntu"
+      #dns_servers      = [local.hub2_dns_in_ip, ]
       use_vm_extension = true
       #delay_creation = "60s"
     }
@@ -107,43 +107,43 @@ module "spoke6" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.spoke6_prefix, "-")
   location        = local.spoke6_location
-  storage_account = azurerm_storage_account.region2
+  storage_account = module.common.storage_accounts["region2"]
 
   private_dns_zone         = local.spoke6_dns_zone
   dns_zone_linked_vnets    = {}
   dns_zone_linked_rulesets = {}
 
   nsg_config = {
-    "main"  = azurerm_network_security_group.nsg_region2_main.id
-    "ilb"   = azurerm_network_security_group.nsg_region2_default.id
-    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    #"main"  = azurerm_network_security_group.nsg_region2_main.id
+    #"ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    #"appgw" = azurerm_network_security_group.nsg_region2_appgw.id
   }
 
   vnet_config = [
     {
-      address_space       = local.spoke6_address_space
-      subnets             = local.spoke6_subnets
-      subnets_nat_gateway = ["${local.spoke6_prefix}main", ]
+      address_space = local.spoke6_address_space
+      subnets       = local.spoke6_subnets
+      #subnets_nat_gateway = ["${local.spoke6_prefix}main", ]
     }
   ]
 
   vm_config = [
     {
-      name             = local.spoke6_vm_dns_host
-      subnet           = "${local.spoke6_prefix}main"
-      private_ip       = local.spoke6_vm_addr
-      custom_data      = base64encode(local.vm_startup)
-      source_image     = "ubuntu"
-      dns_servers      = [local.hub2_dns_in_ip, ]
+      name         = local.spoke6_vm_dns_host
+      subnet       = "${local.spoke6_prefix}main"
+      private_ip   = local.spoke6_vm_addr
+      custom_data  = base64encode(local.vm_startup)
+      source_image = "ubuntu"
+      #dns_servers      = [local.hub2_dns_in_ip, ]
       use_vm_extension = true
-      #delay_creation = "60s"
+      #delay_creation   = "60s"
     }
   ]
 }
 
 # ilb
 #----------------------------
-
+/*
 # internal load balancer
 
 module "spoke6_lb" {
@@ -190,4 +190,4 @@ module "spoke6_pls" {
       lb_frontend_ids = [module.spoke6_lb.frontend_ip_configuration[0].id, ]
     }
   ]
-}
+}*/

@@ -23,7 +23,6 @@ variable "container_args" {
   default     = ""
 }
 
-
 variable "container_image" {
   description = "Container image."
   type        = string
@@ -73,12 +72,6 @@ variable "files" {
   default = {}
 }
 
-variable "gcp_logging" {
-  description = "Should container logs be sent to Google Cloud Logging"
-  type        = bool
-  default     = true
-}
-
 variable "run_commands" {
   description = "List of cloud-init `runcmd`s"
   type        = list(string)
@@ -93,10 +86,4 @@ variable "users" {
   }))
   default = [
   ]
-}
-
-variable "authenticate_gcr" {
-  description = "Setup docker to pull images from private GCR. Requires at least one user since the token is stored in the home of the first user defined."
-  type        = bool
-  default     = false
 }

@@ -274,7 +274,7 @@ module "hub_nva" {
   enable_public_ip     = true
   subnet               = module.hub.subnets["${local.hub_prefix}nva"].id
   private_ip           = local.hub_nva_addr
-  storage_account      = azurerm_storage_account.region1
+  storage_account      = module.common.storage_accounts["region1"]
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.hub_router_init)

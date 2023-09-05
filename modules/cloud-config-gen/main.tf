@@ -10,7 +10,6 @@ locals {
     files             = local.files
     run_commands      = var.run_commands
     users             = var.users
-    authenticate_gcr  = var.authenticate_gcr
   }))
   files = {
     for path, attrs in var.files : path => {

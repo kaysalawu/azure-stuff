@@ -1,6 +1,6 @@
 
 output "vnet" {
-  value = azurerm_virtual_network.this[0]
+  value = azurerm_virtual_network.this
 }
 
 output "subnets" {

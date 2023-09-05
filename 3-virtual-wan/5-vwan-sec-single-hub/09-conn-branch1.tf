@@ -106,7 +106,7 @@ module "branch1_nva" {
   private_ip_ext       = local.branch1_nva_ext_addr
   private_ip_int       = local.branch1_nva_int_addr
   public_ip            = azurerm_public_ip.branch1_nva_pip.id
-  storage_account      = azurerm_storage_account.region1
+  storage_account      = module.common.storage_accounts["region1"]
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.branch1_nva_init)

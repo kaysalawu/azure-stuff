@@ -13,7 +13,7 @@ module "branch1" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.branch1_prefix, "-")
   location        = local.branch1_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   nsg_subnets = {
     "main" = azurerm_network_security_group.nsg_region1_main.id

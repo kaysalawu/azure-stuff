@@ -18,7 +18,7 @@ module "hub" {
   resource_group  = azurerm_resource_group.rg.name
   prefix          = trimsuffix(local.hub_prefix, "-")
   location        = local.hub_location
-  storage_account = azurerm_storage_account.region1
+  storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone = local.hub_dns_zone
   dns_zone_linked_vnets = {

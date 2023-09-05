@@ -114,7 +114,6 @@ variable "private_dns_zone" {
   default     = ""
 }
 
-
 variable "source_image_reference" {
   description = "source image reference"
   type        = map(any)

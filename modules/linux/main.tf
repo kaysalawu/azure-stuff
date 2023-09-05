@@ -79,11 +79,11 @@ resource "azurerm_linux_virtual_machine" "this" {
   disable_password_authentication = false
 
   lifecycle {
-    ignore_changes = [
+    /*ignore_changes = [
       identity,
       secure_boot_enabled,
       tags,
-    ]
+    ]*/
   }
   timeouts {
     create = "60m"
