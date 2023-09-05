@@ -91,6 +91,7 @@ locals {
       STATIC_ROUTES = [
         { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
         { network = local.vhub1_router_bgp_ip0, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
+        { network = local.vhub1_router_bgp_ip1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
         {
           network  = split("/", local.spoke2_address_space[0])[0]
           mask     = cidrnetmask(local.spoke2_address_space[0])
@@ -125,41 +126,65 @@ locals {
       ]
     }
   ))
-  hub1_linux_nva_init = templatefile("../../scripts/linux-nva.sh", merge(
-    {
-      TARGETS = local.vm_script_targets_region1
-      IPTABLES_RULES = [
-        "iptables -t nat -A POSTROUTING -d 10.0.0.0/8 -j ACCEPT",
-        "iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -j ACCEPT",
-        "iptables -t nat -A POSTROUTING -d 192.168.0.0/16 -j ACCEPT",
-        "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-      ]
-      QUAGGA_ZEBRA_CONF = templatefile("../../scripts/quagga/zebra.conf", merge(
-        local.hub1_nva_vars,
-        { INTERFACE = "eth0" }
-      ))
-      QUAGGA_BGPD_CONF = templatefile("../../scripts/quagga/bgpd.conf", merge(
-        local.hub1_nva_vars,
-        {
-          BGP_SESSIONS = [
-            {
-              peer_asn      = local.vhub1_bgp_asn
-              peer_ip       = local.vhub1_router_bgp_ip0
-              ebgp_multihop = true
-              route_map     = {}
-            },
-            {
-              peer_asn      = local.vhub1_bgp_asn
-              peer_ip       = local.vhub1_router_bgp_ip1
-              ebgp_multihop = true
-              route_map     = {}
-            },
-          ]
-          BGP_ADVERTISED_NETWORKS = [
-            local.spoke2_address_space[0]
-          ]
-        }
-      ))
+  hub1_linux_nva_init = templatefile("../../scripts/linux-nva.sh", merge(local.hub1_nva_vars, {
+    TARGETS = local.vm_script_targets_region1
+    IPTABLES_RULES = [
+      "iptables -t nat -A POSTROUTING -d 10.0.0.0/8 -j ACCEPT",
+      "iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -j ACCEPT",
+      "iptables -t nat -A POSTROUTING -d 192.168.0.0/16 -j ACCEPT",
+      "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+    ]
+    ROUTE_MAPS = [
+      {
+        name   = local.hub1_router_route_map_name_nh
+        action = "permit"
+        rule   = 100
+        commands = [
+          "match ip address prefix-list all",
+          "set ip next-hop ${local.hub1_nva_ilb_addr}"
+        ]
+      }
+    ]
+    TUNNELS = []
+    QUAGGA_ZEBRA_CONF = templatefile("../../scripts/quagga/zebra.conf", merge(
+      local.hub1_nva_vars,
+      {
+        INTERFACE = "eth0"
+        STATIC_ROUTES = [
+          { prefix = "0.0.0.0/0", next_hop = local.hub1_default_gw_nva },
+          { prefix = "${local.vhub1_router_bgp_ip0}/32", next_hop = local.hub1_default_gw_nva },
+          { prefix = local.spoke2_address_space[0], next_hop = local.hub1_default_gw_nva },
+        ]
+      }
+    ))
+    QUAGGA_BGPD_CONF = templatefile("../../scripts/quagga/bgpd.conf", merge(
+      local.hub1_nva_vars,
+      {
+        BGP_SESSIONS = [
+          {
+            peer_asn      = local.vhub1_bgp_asn
+            peer_ip       = local.vhub1_router_bgp_ip0
+            ebgp_multihop = true
+            route_map = {
+              #name      = local.hub1_router_route_map_name_nh
+              #direction = "out"
+            }
+          },
+          {
+            peer_asn      = local.vhub1_bgp_asn
+            peer_ip       = local.vhub1_router_bgp_ip1
+            ebgp_multihop = true
+            route_map = {
+              #name      = local.hub1_router_route_map_name_nh
+              #direction = "out"
+            }
+          },
+        ]
+        BGP_ADVERTISED_PREFIXES = [
+          local.spoke2_address_space[0]
+        ]
+      }
+    ))
     }
   ))
 }

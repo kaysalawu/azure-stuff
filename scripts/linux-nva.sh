@@ -41,6 +41,10 @@ iptables -P INPUT ACCEPT
 iptables -P OUTPUT ACCEPT
 
 # Iptables rules
+iptables -t nat -A POSTROUTING -d 10.0.0.0/8 -j ACCEPT
+iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -j ACCEPT
+iptables -t nat -A POSTROUTING -d 192.168.0.0/16 -j ACCEPT
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 %{~ for rule in IPTABLES_RULES }
 ${rule}
 %{~ endfor }

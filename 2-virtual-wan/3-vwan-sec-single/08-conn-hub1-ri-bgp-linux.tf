@@ -52,7 +52,6 @@ module "spoke2_udr_main" {
   destinations = concat(
     ["0.0.0.0/0"],
     local.udr_destinations_region1,
-    local.udr_destinations_region2
   )
 }
 
@@ -73,10 +72,9 @@ locals {
     INT_ADDR = local.hub1_nva_addr
     VPN_PSK  = local.psk
   }
-  hub1_cisco_nva_init = templatefile("../../scripts/nva-hub.sh", merge(
-    local.hub1_nva_vars,
-    {
-    MASQUERADE = []
+  hub1_linux_nva_init = templatefile("../../scripts/linux-nva.sh", merge(local.hub1_nva_vars, {
+    TARGETS        = local.vm_script_targets_region1
+    IPTABLES_RULES = []
     ROUTE_MAPS = [
       {
         name   = local.hub1_router_route_map_name_nh
@@ -89,58 +87,64 @@ locals {
       }
     ]
     TUNNELS = []
-    STATIC_ROUTES = [
-      { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
-      { network = local.vhub1_router_bgp_ip0, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
-      { network = local.vhub1_router_bgp_ip1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
+    QUAGGA_ZEBRA_CONF = templatefile("../../scripts/quagga/zebra.conf", merge(
+      local.hub1_nva_vars,
       {
-        network  = split("/", local.spoke2_address_space[0])[0]
-        mask     = cidrnetmask(local.spoke2_address_space[0])
-        next_hop = local.hub1_default_gw_nva
-      },
-    ]
-    BGP_SESSIONS = [
-      {
-        peer_asn      = local.vhub1_bgp_asn
-        peer_ip       = local.vhub1_router_bgp_ip0
-        ebgp_multihop = true
-        route_map = {
-          #name      = local.hub1_router_route_map_name_nh
-          #direction = "out"
-        }
-      },
-      {
-        peer_asn      = local.vhub1_bgp_asn
-        peer_ip       = local.vhub1_router_bgp_ip1
-        ebgp_multihop = true
-        route_map = {
-          #name      = local.hub1_router_route_map_name_nh
-          #direction = "out"
-        }
-      },
-    ]
-    BGP_ADVERTISED_NETWORKS = [
-      {
-        network = split("/", local.spoke2_address_space[0])[0]
-        mask    = cidrnetmask(local.spoke2_address_space[0])
+        INTERFACE = "eth0"
+        STATIC_ROUTES = [
+          { prefix = "0.0.0.0/0", next_hop = local.hub1_default_gw_nva },
+          { prefix = "${local.vhub1_router_bgp_ip0}/32", next_hop = local.hub1_default_gw_nva },
+          { prefix = local.spoke2_address_space[0], next_hop = local.hub1_default_gw_nva },
+        ]
       }
-    ]
-  })
+    ))
+    QUAGGA_BGPD_CONF = templatefile("../../scripts/quagga/bgpd.conf", merge(
+      local.hub1_nva_vars,
+      {
+        BGP_SESSIONS = [
+          {
+            peer_asn      = local.vhub1_bgp_asn
+            peer_ip       = local.vhub1_router_bgp_ip0
+            ebgp_multihop = true
+            route_map = {
+              #name      = local.hub1_router_route_map_name_nh
+              #direction = "out"
+            }
+          },
+          {
+            peer_asn      = local.vhub1_bgp_asn
+            peer_ip       = local.vhub1_router_bgp_ip1
+            ebgp_multihop = true
+            route_map = {
+              #name      = local.hub1_router_route_map_name_nh
+              #direction = "out"
+            }
+          },
+        ]
+        BGP_ADVERTISED_PREFIXES = [
+          local.spoke2_address_space[0]
+        ]
+      }
+    ))
+    }
+  ))
 }
 
 module "hub1_nva" {
-  source               = "../../modules/csr-hub"
+  source               = "../../modules/linux"
   resource_group       = azurerm_resource_group.rg.name
+  prefix               = ""
   name                 = "${local.hub1_prefix}nva"
   location             = local.hub1_location
-  enable_ip_forwarding = true
-  enable_public_ip     = true
   subnet               = module.hub1.subnets["${local.hub1_prefix}nva"].id
   private_ip           = local.hub1_nva_addr
+  enable_ip_forwarding = true
+  enable_public_ip     = true
+  source_image         = "ubuntu"
   storage_account      = module.common.storage_accounts["region1"]
   admin_username       = local.username
   admin_password       = local.password
-  custom_data          = base64encode(local.hub1_nva_init)
+  custom_data          = base64encode(local.hub1_linux_nva_init)
 }
 
 # udr
@@ -156,7 +160,6 @@ module "hub1_udr_main" {
   destinations = concat(
     ["0.0.0.0/0"],
     local.udr_destinations_region1,
-    local.udr_destinations_region2
   )
 }
 
@@ -231,15 +234,13 @@ resource "azurerm_virtual_hub_connection" "spoke1_vnet_conn" {
   internet_security_enabled = true
 
   routing {
-    associated_route_table_id = azurerm_virtual_hub_route_table.vhub1_custom.id
+    associated_route_table_id = data.azurerm_virtual_hub_route_table.vhub1_default.id
     propagated_route_table {
       labels = [
-        #"default",
-        "none"
+        "default"
       ]
       route_table_ids = [
-        #module.vhub1.virtual_hub.default_route_table_id,
-        #azurerm_virtual_hub_route_table.vhub1_custom.id,
+        data.azurerm_virtual_hub_route_table.vhub1_default.id
       ]
     }
     dynamic "static_vnet_route" {
@@ -256,18 +257,7 @@ resource "azurerm_virtual_hub_connection" "spoke1_vnet_conn" {
 # hub1
 
 locals {
-  vhub1_hub1_vnet_conn_routes = [
-    /*{
-      name                = "spoke2"
-      address_prefixes    = local.spoke2_address_space
-      next_hop_ip_address = local.hub1_nva_ilb_addr
-    },
-    {
-      name                = "zscaler"
-      address_prefixes    = ["${local.hub1_vm_addr}/32"]
-      next_hop_ip_address = local.hub1_nva_ilb_addr
-    }*/
-  ]
+  vhub1_hub1_vnet_conn_routes = []
 }
 
 resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
@@ -276,15 +266,13 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
   remote_virtual_network_id = module.hub1.vnet.id
 
   routing {
-    associated_route_table_id = azurerm_virtual_hub_route_table.vhub1_custom.id
+    associated_route_table_id = data.azurerm_virtual_hub_route_table.vhub1_default.id
     propagated_route_table {
       labels = [
-        #"default",
-        "none"
+        "default"
       ]
       route_table_ids = [
-        #module.vhub1.virtual_hub.default_route_table_id,
-        #azurerm_virtual_hub_route_table.vhub1_custom.id,
+        data.azurerm_virtual_hub_route_table.vhub1_default.id
       ]
     }
     dynamic "static_vnet_route" {
@@ -299,33 +287,17 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
 }
 
 ####################################################
-# bgp connections
-####################################################
-
-# hub1
-/*
-resource "azurerm_virtual_hub_bgp_connection" "vhub1_hub1_bgp_conn" {
-  name           = "${local.vhub1_prefix}hub1-bgp-conn"
-  virtual_hub_id = module.vhub1.virtual_hub.id
-  peer_asn       = local.hub1_nva_asn
-  peer_ip        = local.hub1_nva_addr
-
-  virtual_network_connection_id = azurerm_virtual_hub_connection.hub1_vnet_conn.id
-}*/
-
-####################################################
 # vhub static routes
 ####################################################
 
 locals {
   vhub1_default_rt_static_routes = {
-    default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
+    #default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
     #rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub1.firewall.id }
-    #spoke2  = { destinations = local.spoke2_address_space, next_hop = azurerm_virtual_hub_connection.hub1_vnet_conn.id }
-    #zscaler = { destinations = ["${local.hub1_vm_addr}/32"], next_hop = azurerm_virtual_hub_connection.hub1_vnet_conn.id }
+    #zscaler = { destinations = ["${local.spoke2_vm_addr}/32"], next_hop = azurerm_virtual_hub_connection.hub1_vnet_conn.id }
   }
   vhub1_custom_rt_static_routes = {
-    default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
+    #default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
     #rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub1.firewall.id }
   }
 }
@@ -351,12 +323,27 @@ resource "azurerm_virtual_hub_route_table_route" "vhub1_custom_rt_static_routes"
 }
 
 ####################################################
+# bgp connections
+####################################################
+
+# hub1
+
+resource "azurerm_virtual_hub_bgp_connection" "vhub1_hub1_bgp_conn" {
+  name           = "${local.vhub1_prefix}hub1-bgp-conn"
+  virtual_hub_id = module.vhub1.virtual_hub.id
+  peer_asn       = local.hub1_nva_asn
+  peer_ip        = local.hub1_nva_addr
+
+  virtual_network_connection_id = azurerm_virtual_hub_connection.hub1_vnet_conn.id
+}
+
+####################################################
 # output files
 ####################################################
 
 locals {
   hub1_files = {
-    "output/hub1-nva.sh" = local.hub1_nva_init
+    "output/hub1-linux-nva.sh" = local.hub1_linux_nva_init
   }
 }
 
@@ -365,5 +352,4 @@ resource "local_file" "hub1_files" {
   filename = each.key
   content  = each.value
 }
-
 

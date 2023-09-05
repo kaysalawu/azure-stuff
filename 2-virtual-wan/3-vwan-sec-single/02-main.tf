@@ -1,3 +1,10 @@
+####################################################
+# Lab
+####################################################
+
+locals {
+  prefix = "Vwan25"
+}
 
 ####################################################
 # providers
@@ -66,8 +73,6 @@ module "common" {
 #----------------------------
 
 locals {
-  prefix = "Vwan25"
-
   hub1_nva_asn   = "65010"
   hub1_vpngw_asn = "65011"
   hub1_ergw_asn  = "65012"
@@ -81,8 +86,14 @@ locals {
     { name = "spoke2 ", dns = local.spoke2_vm_dns, ip = local.spoke2_vm_addr },
     { name = "spoke3 ", dns = local.spoke3_vm_dns, ip = local.spoke3_vm_addr, ping = false },
   ]
+  vm_script_targets_misc = [
+    { name = "internet", dns = "icanhazip.com", ip = "icanhazip.com" },
+  ]
   vm_startup = templatefile("../../scripts/server.sh", {
-    TARGETS = concat(local.vm_script_targets_region1)
+    TARGETS = concat(
+      local.vm_script_targets_region1,
+      local.vm_script_targets_misc,
+    )
   })
   branch_unbound_config = templatefile("../../scripts/unbound.sh", {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
