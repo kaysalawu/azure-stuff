@@ -25,9 +25,9 @@ module "onprem" {
 
   vnet_config = [
     {
-      address_space = local.onprem_address_space
-      subnets       = local.onprem_subnets
-      enable_ergw   = true
+      address_space     = local.onprem_address_space
+      subnets           = local.onprem_subnets
+      enable_er_gateway = true
     }
   ]
 

@@ -23,11 +23,11 @@ module "branch1" {
 
   vnet_config = [
     {
-      address_space = local.branch1_address_space
-      subnets       = local.branch1_subnets
-      dns_servers   = [local.branch1_dns_addr, ]
-      enable_vpngw  = false
-      enable_ergw   = true
+      address_space      = local.branch1_address_space
+      subnets            = local.branch1_subnets
+      dns_servers        = [local.branch1_dns_addr, ]
+      enable_vpn_gateway = false
+      enable_er_gateway  = true
     }
   ]
 

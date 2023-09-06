@@ -19,6 +19,20 @@ resource "azurerm_virtual_hub" "vhub2" {
   address_prefix      = local.vhub2_address_prefix
 }
 
+resource "null_resource" "vhub2" {
+  provisioner "local-exec" {
+    command = <<EOT
+      az network vhub update \
+      --resource-group ${azurerm_resource_group.rg.name} \
+      --name ${local.vhub2_prefix}hub \
+      --hub-routing-preference ASPath
+    EOT
+  }
+  depends_on = [
+    azurerm_virtual_hub.vhub2
+  ]
+}
+
 # vpngw
 #----------------------------
 
@@ -41,20 +55,6 @@ resource "azurerm_vpn_gateway" "vhub2" {
   }
 }
 
-resource "null_resource" "vhub2" {
-  provisioner "local-exec" {
-    command = <<EOT
-      az network vhub update \
-      --resource-group ${azurerm_resource_group.rg.name} \
-      --name ${local.vhub2_prefix}hub \
-      --hub-routing-preference ASPath
-    EOT
-  }
-  depends_on = [
-    azurerm_virtual_hub.vhub2
-  ]
-}
-
 # vpn-site
 #----------------------------
 
@@ -75,27 +75,6 @@ resource "azurerm_vpn_site" "vhub2_site_branch1" {
     bgp {
       asn             = local.branch1_nva_asn
       peering_address = local.branch1_nva_loopback0
-    }
-  }
-}
-
-# branch3
-
-resource "azurerm_vpn_site" "vhub2_site_branch3" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.vhub2_prefix}site-branch3"
-  location            = local.vhub2_location
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
-  device_model        = "Azure"
-  device_vendor       = "Microsoft"
-  link {
-    name          = "${local.vhub2_prefix}site-branch3-link-0"
-    provider_name = "Microsoft"
-    ip_address    = azurerm_public_ip.branch3_nva_pip.ip_address
-    speed_in_mbps = 50
-    bgp {
-      asn             = local.branch3_nva_asn
-      peering_address = local.branch3_nva_loopback0
     }
   }
 }

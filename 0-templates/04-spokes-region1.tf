@@ -46,6 +46,7 @@ module "spoke1" {
       delay_creation   = "60s"
     }
   ]
+  depends_on = [module.vhub1, ]
 }
 
 ####################################################
@@ -94,6 +95,7 @@ module "spoke2" {
       #delay_creation = "60s"
     }
   ]
+  depends_on = [module.hub1]
 }
 
 ####################################################

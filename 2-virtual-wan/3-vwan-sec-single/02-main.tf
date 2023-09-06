@@ -3,7 +3,7 @@
 ####################################################
 
 locals {
-  prefix = "Vwan25"
+  prefix = "Vwan23"
 }
 
 ####################################################
@@ -29,24 +29,39 @@ terraform {
 ####################################################
 
 locals {
-  firewall_sku = "Basic"
-
   regions = {
     region1 = local.region1
   }
+  udr_destinations = concat(
+    ["0.0.0.0/0"],
+    local.udr_destinations_region1,
+  )
+
+  firewall_sku = "Basic"
 
   hub1_features = {
     enable_private_dns_resolver = true
     enable_ars                  = false
-    enable_vpngw                = false
-    enable_ergw                 = false
-    enable_firewall             = false
+    enable_vpn_gateway          = false
+    enable_er_gateway           = false
+
+    security = {
+      enable_firewall    = true
+      firewall_sku       = local.firewall_sku
+      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+    }
   }
 
   vhub1_features = {
     enable_er_gateway      = false
     enable_s2s_vpn_gateway = true
     enable_p2s_vpn_gateway = false
+
+    security = {
+      enable_firewall    = true
+      firewall_sku       = local.firewall_sku
+      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+    }
   }
 }
 
@@ -77,6 +92,7 @@ locals {
   hub1_vpngw_asn = "65011"
   hub1_ergw_asn  = "65012"
   hub1_ars_asn   = "65515"
+  #mypip         = chomp(data.http.mypip.response_body)
 
   vm_script_targets_region1 = [
     { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },
@@ -89,11 +105,12 @@ locals {
   vm_script_targets_misc = [
     { name = "internet", dns = "icanhazip.com", ip = "icanhazip.com" },
   ]
+  vm_script_targets = concat(
+    local.vm_script_targets_region1,
+    local.vm_script_targets_misc,
+  )
   vm_startup = templatefile("../../scripts/server.sh", {
-    TARGETS = concat(
-      local.vm_script_targets_region1,
-      local.vm_script_targets_misc,
-    )
+    TARGETS = local.vm_script_targets
   })
   branch_unbound_config = templatefile("../../scripts/unbound.sh", {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records

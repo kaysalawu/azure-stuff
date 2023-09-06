@@ -38,7 +38,7 @@ module "core1" {
       address_space       = local.core1_address_space
       subnets             = local.core1_subnets
       subnets_nat_gateway = ["${local.core1_prefix}main", ]
-      enable_ergw         = true
+      enable_er_gateway   = true
     }
   ]
 

@@ -25,6 +25,7 @@ resource "azurerm_virtual_hub" "this" {
 # s2s
 
 resource "azurerm_vpn_gateway" "this" {
+  count               = var.enable_s2s_vpn_gateway ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${var.prefix}vpngw"
   location            = var.location
@@ -46,12 +47,13 @@ resource "azurerm_vpn_gateway" "this" {
 #----------------------------
 
 resource "azurerm_firewall" "this" {
+  count               = var.security_config[0].enable_firewall ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${var.prefix}azfw"
   location            = var.location
   sku_tier            = "Standard"
   sku_name            = "AZFW_Hub"
-  firewall_policy_id  = var.firewall_config[0].firewall_policy_id
+  firewall_policy_id  = var.security_config[0].firewall_policy_id
   virtual_hub {
     virtual_hub_id  = azurerm_virtual_hub.this.id
     public_ip_count = 1
@@ -61,8 +63,9 @@ resource "azurerm_firewall" "this" {
 # diagnostic setting
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
+  count                      = var.security_config[0].enable_firewall ? 1 : 0
   name                       = "${var.prefix}azfw"
-  target_resource_id         = azurerm_firewall.this.id
+  target_resource_id         = azurerm_firewall.this[0].id
   log_analytics_workspace_id = var.log_analytics_workspace_id
   storage_account_id         = var.storage_account_id
 

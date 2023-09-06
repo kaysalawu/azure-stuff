@@ -44,8 +44,10 @@ variable "bgp_config" {
   default = []
 }
 
-variable "firewall_config" {
+variable "security_config" {
   type = list(object({
+    enable_firewall    = optional(bool, false)
+    firewall_sku       = optional(string, "Basic")
     firewall_policy_id = optional(string, null)
   }))
   default = []

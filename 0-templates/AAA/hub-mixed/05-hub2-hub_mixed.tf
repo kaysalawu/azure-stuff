@@ -35,8 +35,8 @@ module "hub2" {
       address_space               = local.hub2_address_space
       subnets                     = local.hub2_subnets
       enable_private_dns_resolver = true
-      enable_ergw                 = false
-      enable_vpngw                = true
+      enable_er_gateway           = false
+      enable_vpn_gateway          = true
       enable_ars                  = false
       enable_firewall             = false
 

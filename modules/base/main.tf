@@ -230,7 +230,7 @@ resource "azurerm_route_server" "ars" {
 #----------------------------
 
 resource "azurerm_public_ip" "vpngw_pip0" {
-  count               = var.vnet_config[0].enable_vpngw ? 1 : 0
+  count               = var.vnet_config[0].enable_vpn_gateway ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}vpngw-pip0"
   location            = var.location
@@ -243,7 +243,7 @@ resource "azurerm_public_ip" "vpngw_pip0" {
 }
 
 resource "azurerm_public_ip" "vpngw_pip1" {
-  count               = var.vnet_config[0].enable_vpngw ? 1 : 0
+  count               = var.vnet_config[0].enable_vpn_gateway ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}vpngw-pip1"
   location            = var.location
@@ -256,13 +256,13 @@ resource "azurerm_public_ip" "vpngw_pip1" {
 }
 
 resource "azurerm_virtual_network_gateway" "vpngw" {
-  count               = var.vnet_config[0].enable_vpngw ? 1 : 0
+  count               = var.vnet_config[0].enable_vpn_gateway ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}vpngw"
   location            = var.location
   type                = "Vpn"
   vpn_type            = "RouteBased"
-  sku                 = var.vnet_config[0].vpngw_config[0].sku
+  sku                 = var.vnet_config[0].vpn_gateway_sku
   enable_bgp          = true
   active_active       = true
 
@@ -280,14 +280,14 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
   }
 
   bgp_settings {
-    asn = var.vnet_config[0].vpngw_config[0].asn
+    asn = var.vnet_config[0].vpn_gateway_asn
     peering_addresses {
       ip_configuration_name = "${local.prefix}ip-config0"
-      apipa_addresses       = try(var.vnet_config[0].vpngw_config.ip_config0_apipa_addresses, ["169.254.21.1"])
+      apipa_addresses       = try(var.vnet_config.ip_config0_apipa_addresses, ["169.254.21.1"])
     }
     peering_addresses {
       ip_configuration_name = "${local.prefix}ip-config1"
-      apipa_addresses       = try(var.vnet_config[0].vpngw_config.ip_config1_apipa_addresses, ["169.254.21.5"])
+      apipa_addresses       = try(var.vnet_config.ip_config1_apipa_addresses, ["169.254.21.5"])
     }
   }
   timeouts {
@@ -299,7 +299,7 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
 #----------------------------
 
 resource "azurerm_public_ip" "ergw_pip" {
-  count               = var.vnet_config[0].enable_ergw ? 1 : 0
+  count               = var.vnet_config[0].enable_er_gateway ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}ergw-pip0"
   location            = var.location
@@ -311,7 +311,7 @@ resource "azurerm_public_ip" "ergw_pip" {
 }
 
 resource "azurerm_virtual_network_gateway" "ergw" {
-  count               = var.vnet_config[0].enable_ergw ? 1 : 0
+  count               = var.vnet_config[0].enable_er_gateway ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}ergw"
   location            = var.location
@@ -414,28 +414,27 @@ resource "azurerm_firewall" "azfw" {
 # storage account
 
 resource "random_id" "azfw" {
-  byte_length = 6
+  count       = var.vnet_config[0].enable_firewall ? 1 : 0
+  byte_length = 4
 }
 
 resource "azurerm_storage_account" "azfw" {
-  for_each                 = { for k, v in var.vnet_config : k => v if v.enable_firewall }
+  count                    = var.vnet_config[0].enable_firewall ? 1 : 0
   resource_group_name      = var.resource_group
-  name                     = lower(replace("${local.prefix}azfw${random_id.azfw.hex}", "-", ""))
+  name                     = lower(replace("${local.prefix}azfw${random_id.azfw[0].hex}", "-", ""))
   location                 = var.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
 
-
 # diagnostic setting
 
 resource "azurerm_monitor_diagnostic_setting" "azfw" {
-  for_each = { for k, v in var.vnet_config : k => v if v.enable_firewall }
-  #name                       = "${local.prefix}vnet${each.key}-azfw-diag"
+  count                      = var.vnet_config[0].enable_firewall ? 1 : 0
   name                       = "${local.prefix}azfw-diag"
-  target_resource_id         = azurerm_firewall.azfw[each.key].id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.azfw[each.key].id
-  storage_account_id         = azurerm_storage_account.azfw[each.key].id
+  target_resource_id         = azurerm_firewall.azfw[0].id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.azfw[0].id
+  storage_account_id         = azurerm_storage_account.azfw[0].id
 
   dynamic "metric" {
     for_each = var.metric_categories_firewall

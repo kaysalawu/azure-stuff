@@ -40,16 +40,11 @@ module "hub2" {
 
       enable_private_dns_resolver = local.hub2_features.enable_private_dns_resolver
       enable_ars                  = local.hub2_features.enable_ars
-      enable_vpngw                = local.hub2_features.enable_vpngw
-      enable_ergw                 = local.hub2_features.enable_ergw
-      enable_firewall             = local.hub2_features.enable_firewall
+      enable_vpn_gateway          = local.hub2_features.enable_vpn_gateway
+      enable_er_gateway           = local.hub2_features.enable_er_gateway
 
-      vpngw_config = [
-        {
-          sku = "VpnGw2AZ"
-          asn = local.hub2_vpngw_asn
-        }
-      ]
+      vpn_gateway_sku = "VpnGw2AZ"
+      vpn_gateway_asn = local.hub2_vpngw_asn
     }
   ]
 

@@ -94,6 +94,7 @@ module "spoke5" {
       #delay_creation = "60s"
     }
   ]
+  depends_on = [module.hub2, ]
 }
 
 ####################################################

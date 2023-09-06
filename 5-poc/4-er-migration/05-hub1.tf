@@ -27,8 +27,8 @@ module "hub1" {
       address_space               = local.hub1_address_space
       subnets                     = local.hub1_subnets
       enable_private_dns_resolver = true
-      enable_ergw                 = true
-      enable_vpngw                = false
+      enable_er_gateway           = true
+      enable_vpn_gateway          = false
       enable_ars                  = false
 
       vpngw_config = [

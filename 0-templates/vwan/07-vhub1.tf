@@ -17,15 +17,16 @@ module "vhub1" {
   bgp_config = [
     {
       asn                   = local.vhub1_bgp_asn
-      peer_weight           = 0
       instance_0_custom_ips = [local.vhub1_vpngw_bgp_apipa_0]
       instance_1_custom_ips = [local.vhub1_vpngw_bgp_apipa_1]
     }
   ]
 
-  firewall_config = [
+  security_config = [
     {
-      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+      enable_firewall    = local.vhub1_features.security.enable_firewall
+      firewall_sku       = local.vhub1_features.security.firewall_sku
+      firewall_policy_id = local.vhub1_features.security.firewall_policy_id
     }
   ]
 }
@@ -43,6 +44,7 @@ data "azurerm_virtual_hub_route_table" "vhub1_none" {
 }
 
 resource "azurerm_virtual_hub_route_table" "vhub1_custom" {
+  count          = local.vhub1_features.security.use_routing_intent ? 0 : 1
   name           = "custom"
   virtual_hub_id = module.vhub1.virtual_hub.id
   labels         = ["custom"]

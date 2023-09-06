@@ -21,9 +21,9 @@ module "branch2" {
 
   vnet_config = [
     {
-      address_space = local.branch2_address_space
-      subnets       = local.branch2_subnets
-      enable_ergw   = true
+      address_space     = local.branch2_address_space
+      subnets           = local.branch2_subnets
+      enable_er_gateway = true
     }
   ]
 

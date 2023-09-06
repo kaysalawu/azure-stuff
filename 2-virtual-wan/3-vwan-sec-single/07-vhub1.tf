@@ -1,1 +1,1 @@
-../../0-templates/07-vhub1.tf
+../../0-templates/vwan/07-vhub1.tf

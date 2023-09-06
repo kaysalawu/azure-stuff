@@ -21,11 +21,11 @@ module "branch2" {
 
   vnet_config = [
     {
-      address_space = local.branch2_address_space
-      subnets       = local.branch2_subnets
-      dns_servers   = [local.branch2_dns_addr, ]
-      enable_vpngw  = false
-      enable_ergw   = true
+      address_space      = local.branch2_address_space
+      subnets            = local.branch2_subnets
+      dns_servers        = [local.branch2_dns_addr, ]
+      enable_vpn_gateway = false
+      enable_er_gateway  = true
     }
   ]
 

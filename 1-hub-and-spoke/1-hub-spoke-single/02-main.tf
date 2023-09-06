@@ -27,8 +27,8 @@ locals {
   hub1_features = {
     enable_private_dns_resolver = true
     enable_ars                  = false
-    enable_vpngw                = true
-    enable_ergw                 = false
+    enable_vpn_gateway          = true
+    enable_er_gateway           = false
     enable_firewall             = true
   }
 }

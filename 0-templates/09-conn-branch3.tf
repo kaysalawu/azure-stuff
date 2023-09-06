@@ -22,10 +22,10 @@ locals {
           address = cidrhost(local.branch3_nva_tun_range0, 1)
           mask    = cidrnetmask(local.branch3_nva_tun_range0)
           source  = local.branch3_nva_ext_addr
-          dest    = local.vhub2_vpngw_pip0
+          dest    = local.vhub2_vpngw_public_ip0
         },
         ipsec = {
-          peer_ip = local.vhub2_vpngw_pip0
+          peer_ip = local.vhub2_vpngw_public_ip0
           psk     = local.psk
         }
       },
@@ -35,10 +35,10 @@ locals {
           address = cidrhost(local.branch3_nva_tun_range1, 1)
           mask    = cidrnetmask(local.branch3_nva_tun_range1)
           source  = local.branch3_nva_ext_addr
-          dest    = local.vhub2_vpngw_pip1
+          dest    = local.vhub2_vpngw_public_ip1
         },
         ipsec = {
-          peer_ip = local.vhub2_vpngw_pip1
+          peer_ip = local.vhub2_vpngw_public_ip1
           psk     = local.psk
         }
       },
@@ -46,8 +46,8 @@ locals {
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.branch3_ext_default_gw },
-      { network = local.vhub2_vpngw_bgp0, mask = "255.255.255.255", next_hop = "Tunnel0" },
-      { network = local.vhub2_vpngw_bgp1, mask = "255.255.255.255", next_hop = "Tunnel1" },
+      { network = local.vhub2_vpngw_bgp_ip0, mask = "255.255.255.255", next_hop = "Tunnel0" },
+      { network = local.vhub2_vpngw_bgp_ip1, mask = "255.255.255.255", next_hop = "Tunnel1" },
       {
         network  = cidrhost(local.branch3_subnets["${local.branch3_prefix}main"].address_prefixes[0], 0)
         mask     = cidrnetmask(local.branch3_subnets["${local.branch3_prefix}main"].address_prefixes[0])
@@ -58,14 +58,14 @@ locals {
     BGP_SESSIONS = [
       {
         peer_asn        = local.vhub2_bgp_asn,
-        peer_ip         = local.vhub2_vpngw_bgp0,
+        peer_ip         = local.vhub2_vpngw_bgp_ip0,
         source_loopback = true
         ebgp_multihop   = true
         route_map       = {}
       },
       {
         peer_asn        = local.vhub2_bgp_asn
-        peer_ip         = local.vhub2_vpngw_bgp1
+        peer_ip         = local.vhub2_vpngw_bgp_ip1
         source_loopback = true
         ebgp_multihop   = true
         route_map       = {}
@@ -95,7 +95,7 @@ module "branch3_nva" {
   private_ip_ext       = local.branch3_nva_ext_addr
   private_ip_int       = local.branch3_nva_int_addr
   public_ip            = azurerm_public_ip.branch3_nva_pip.id
-  storage_account      = azurerm_storage_account.region2
+  storage_account      = module.common.storage_accounts["region2"]
   admin_username       = local.username
   admin_password       = local.password
   custom_data          = base64encode(local.branch3_nva_init)

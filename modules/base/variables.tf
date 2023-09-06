@@ -76,20 +76,18 @@ variable "vnet_config" {
     dns_servers                 = optional(list(string))
     enable_private_dns_resolver = optional(bool, false)
     enable_ars                  = optional(bool, false)
-    enable_vpngw                = optional(bool, false)
-    enable_ergw                 = optional(bool, false)
-    enable_firewall             = optional(bool, false)
+    enable_er_gateway           = optional(bool, false)
     subnets_nat_gateway         = optional(list(string), [])
-    firewall_config = optional(list(object({
-      sku_tier           = optional(string, "Basic")
-      firewall_policy_id = optional(string, null)
-    })))
-    vpngw_config = optional(list(object({
-      sku                        = optional(string, "VpnGw2AZ")
-      asn                        = string
-      ip_config0_apipa_addresses = optional(list(string), ["169.254.21.1"])
-      ip_config1_apipa_addresses = optional(list(string), ["169.254.21.5"])
-    })))
+
+    enable_firewall    = optional(bool, false)
+    firewall_sku       = optional(string, "Basic")
+    firewall_policy_id = optional(string, null)
+
+    enable_vpn_gateway                     = optional(bool, false)
+    vpn_gateway_sku                        = optional(string, "VpnGw2AZ")
+    vpn_gateway_asn                        = optional(string, 65515)
+    vpn_gateway_ip_config0_apipa_addresses = optional(list(string), ["169.254.21.1"])
+    vpn_gateway_ip_config1_apipa_addresses = optional(list(string), ["169.254.21.5"])
   }))
   default = []
 }
