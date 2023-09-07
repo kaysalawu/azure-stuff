@@ -17,7 +17,7 @@ module "onprem" {
   location        = local.onprem_location
   storage_account = module.common.storage_accounts["region1"]
 
-  nsg_config = {
+  nsg_subnet_map = {
     "${local.onprem_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
     "${local.onprem_prefix}int"  = azurerm_network_security_group.nsg_region1_main.id
     "${local.onprem_prefix}ext"  = azurerm_network_security_group.nsg_region1_nva.id

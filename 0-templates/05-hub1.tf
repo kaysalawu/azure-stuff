@@ -27,7 +27,7 @@ module "hub1" {
     #"hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     #"${local.hub1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
     #"${local.hub1_prefix}nva"  = azurerm_network_security_group.nsg_region1_nva.id
     #"${local.hub1_prefix}ilb"  = azurerm_network_security_group.nsg_region1_default.id

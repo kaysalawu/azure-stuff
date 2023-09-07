@@ -25,7 +25,7 @@ locals {
   onprem_domain = "corp.net"
   cloud_domain  = "az.corp.net"
 
-  rfc1918_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  private_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
   branch_unbound_config = templatefile("../../scripts/unbound.sh", {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records

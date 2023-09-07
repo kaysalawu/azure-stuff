@@ -46,7 +46,7 @@ resource "azurerm_subnet" "this" {
 #----------------------------
 
 resource "azurerm_subnet_network_security_group_association" "this" {
-  for_each                  = var.nsg_config
+  for_each                  = var.nsg_subnet_map
   subnet_id                 = [for k, v in azurerm_subnet.this : v.id if length(regexall("${each.key}", k)) > 0][0]
   network_security_group_id = each.value
   timeouts {
@@ -176,7 +176,7 @@ module "vm" {
   source_image     = each.value.source_image
   use_vm_extension = each.value.use_vm_extension
   custom_data      = each.value.custom_data
-  enable_public_ip = each.value.public_ip == null ? false : true
+  enable_public_ip = each.value.enable_public_ip
   dns_servers      = each.value.dns_servers
   storage_account  = var.storage_account
   admin_username   = var.admin_username

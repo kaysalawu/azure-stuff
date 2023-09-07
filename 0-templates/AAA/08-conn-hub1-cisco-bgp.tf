@@ -373,12 +373,12 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
 locals {
   vhub1_default_rt_static_routes = {
     default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
-    rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub1.firewall.id }
+    rfc1918 = { destinations = local.private_prefixes, next_hop = module.vhub1.firewall.id }
     #zscaler = { destinations = ["${local.spoke2_vm_addr}/32"], next_hop = azurerm_virtual_hub_connection.hub1_vnet_conn.id }
   }
   vhub1_custom_rt_static_routes = {
     default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
-    rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub1.firewall.id }
+    rfc1918 = { destinations = local.private_prefixes, next_hop = module.vhub1.firewall.id }
   }
 }
 

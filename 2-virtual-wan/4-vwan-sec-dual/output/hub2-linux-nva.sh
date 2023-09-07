@@ -121,22 +121,11 @@ log file /var/log/quagga/bgpd.log informational
 router bgp 65020
   bgp router-id 10.22.1.9
   neighbor 192.168.22.68 remote-as 65515
-
   neighbor 192.168.22.68 ebgp-multihop 255
   neighbor 192.168.22.68 soft-reconfiguration inbound
-
-
-
-
   neighbor 192.168.22.69 remote-as 65515
-
   neighbor 192.168.22.69 ebgp-multihop 255
   neighbor 192.168.22.69 soft-reconfiguration inbound
-
-
-
-
-
   network 10.5.0.0/16
 !
   address-family ipv6

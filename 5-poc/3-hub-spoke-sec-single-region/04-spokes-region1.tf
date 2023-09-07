@@ -20,7 +20,7 @@ module "spoke1" {
     "hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     "${local.spoke1_prefix}main"  = azurerm_network_security_group.nsg_region1_main.id
     "${local.spoke1_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     "${local.spoke1_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
@@ -66,7 +66,7 @@ module "spoke2" {
     "hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     "main"  = azurerm_network_security_group.nsg_region1_main.id
     "appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     "ilb"   = azurerm_network_security_group.nsg_region1_default.id
@@ -111,7 +111,7 @@ module "spoke3" {
     "hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     "main"  = azurerm_network_security_group.nsg_region1_main.id
     "appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     "ilb"   = azurerm_network_security_group.nsg_region1_default.id

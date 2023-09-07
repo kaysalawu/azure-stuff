@@ -123,8 +123,9 @@ echo -e "\n trace ip ...\n"
 %{ for target in TARGETS ~}
 %{~ if try(target.ping, true) ~}
 %{~ if try(target.ip, "") != "" ~}
-traceroute ${target.ip}
-echo -e "${target.name}\n"
+echo -e "\n${target.name}"
+echo -e "-------------------------------------"
+timeout 8 tracepath ${target.ip}
 %{ endif ~}
 %{ endif ~}
 %{ endfor ~}

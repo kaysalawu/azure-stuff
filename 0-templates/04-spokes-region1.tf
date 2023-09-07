@@ -1,4 +1,8 @@
 
+locals {
+  spoke3_vm_public_ip = module.spoke3.vm_public_ip[local.spoke3_vm_dns_host]
+}
+
 ####################################################
 # spoke1
 ####################################################
@@ -20,10 +24,10 @@ module "spoke1" {
     #"hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_config = {
-    #"${local.spoke1_prefix}main"  = azurerm_network_security_group.nsg_region1_main.id
-    #"${local.spoke1_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
-    #"${local.spoke1_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
+  nsg_subnet_map = {
+    "${local.spoke1_prefix}main"  = azurerm_network_security_group.nsg_region1_main.id
+    "${local.spoke1_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
+    "${local.spoke1_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
   }
 
   vnet_config = [
@@ -70,10 +74,10 @@ module "spoke2" {
     #"hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
   }
 
-  nsg_config = {
-    #"main"  = azurerm_network_security_group.nsg_region1_main.id
-    #"appgw" = azurerm_network_security_group.nsg_region1_appgw.id
-    #"ilb"   = azurerm_network_security_group.nsg_region1_default.id
+  nsg_subnet_map = {
+    "${local.spoke2_prefix}main"  = azurerm_network_security_group.nsg_region1_main.id
+    "${local.spoke2_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
+    "${local.spoke2_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
   }
 
   vnet_config = [
@@ -115,10 +119,10 @@ module "spoke3" {
   dns_zone_linked_vnets    = {}
   dns_zone_linked_rulesets = {}
 
-  nsg_config = {
-    #"main"  = azurerm_network_security_group.nsg_region1_main.id
-    #"ilb"   = azurerm_network_security_group.nsg_region1_default.id
-    #"appgw" = azurerm_network_security_group.nsg_region1_appgw.id
+  nsg_subnet_map = {
+    "${local.spoke3_prefix}main"  = azurerm_network_security_group.nsg_region1_main.id
+    "${local.spoke3_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
+    "${local.spoke3_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
   }
 
   vnet_config = [
@@ -131,11 +135,12 @@ module "spoke3" {
 
   vm_config = [
     {
-      name         = local.spoke3_vm_dns_host
-      subnet       = "${local.spoke3_prefix}main"
-      private_ip   = local.spoke3_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
+      name             = local.spoke3_vm_dns_host
+      subnet           = "${local.spoke3_prefix}main"
+      private_ip       = local.spoke3_vm_addr
+      enable_public_ip = true
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
       #dns_servers      = [local.hub1_dns_in_ip, ]
       use_vm_extension = true
       #delay_creation   = "60s"

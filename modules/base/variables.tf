@@ -56,7 +56,7 @@ variable "dns_zone_linked_vnets" {
   default     = {}
 }
 
-variable "nsg_config" {
+variable "nsg_subnet_map" {
   description = "subnets to associate to nsg"
   type        = map(any)
   default     = {}
@@ -101,7 +101,7 @@ variable "vm_config" {
     zone                 = optional(string, null)
     size                 = optional(string, "Standard_B1s")
     private_ip           = optional(string, null)
-    public_ip            = optional(string, null)
+    enable_public_ip     = optional(bool, false)
     custom_data          = optional(string, null)
     enable_ip_forwarding = optional(bool, false)
     use_vm_extension     = optional(bool, false)

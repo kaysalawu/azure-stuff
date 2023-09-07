@@ -25,7 +25,7 @@ locals {
   onprem_domain    = "corp"
   cloud_domain     = "az.corp"
   azuredns         = "168.63.129.16"
-  rfc1918_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  private_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10"]
 
   udr_destinations_region1 = [
     local.spoke1_address_space[0],

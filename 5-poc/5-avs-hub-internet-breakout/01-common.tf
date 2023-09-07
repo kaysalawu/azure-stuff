@@ -62,7 +62,7 @@ resource "azurerm_network_security_rule" "nsg_region1_main_inbound_allow_all" {
   direction                   = "Inbound"
   access                      = "Allow"
   priority                    = 100
-  source_address_prefixes     = local.rfc1918_prefixes
+  source_address_prefixes     = local.private_prefixes
   source_port_range           = "*"
   destination_address_prefix  = "*"
   destination_port_range      = "*"
@@ -92,7 +92,7 @@ resource "azurerm_network_security_rule" "nsg_region1_main_outbound_allow_rfc191
   direction                   = "Outbound"
   access                      = "Allow"
   priority                    = 100
-  source_address_prefixes     = local.rfc1918_prefixes
+  source_address_prefixes     = local.private_prefixes
   source_port_range           = "*"
   destination_address_prefix  = "*"
   destination_port_range      = "*"
@@ -115,7 +115,7 @@ resource "azurerm_network_security_rule" "nsg_region1_nva_inbound_allow_rfc1918"
   direction                   = "Inbound"
   access                      = "Allow"
   priority                    = 100
-  source_address_prefixes     = local.rfc1918_prefixes
+  source_address_prefixes     = local.private_prefixes
   source_port_range           = "*"
   destination_address_prefix  = "*"
   destination_port_range      = "*"
@@ -132,7 +132,7 @@ resource "azurerm_network_security_rule" "nsg_region1_nva_outbound_allow_rfc1918
   priority                     = 100
   source_address_prefix        = "*"
   source_port_range            = "*"
-  destination_address_prefixes = local.rfc1918_prefixes
+  destination_address_prefixes = local.private_prefixes
   destination_port_range       = "*"
   protocol                     = "*"
   description                  = "Outbound Allow RFC1918"
@@ -232,7 +232,7 @@ resource "azurerm_network_security_rule" "nsg_region2_main_inbound_allow_all" {
   direction                   = "Inbound"
   access                      = "Allow"
   priority                    = 100
-  source_address_prefixes     = local.rfc1918_prefixes
+  source_address_prefixes     = local.private_prefixes
   source_port_range           = "*"
   destination_address_prefix  = "*"
   destination_port_range      = "*"
@@ -262,7 +262,7 @@ resource "azurerm_network_security_rule" "nsg_region2_main_outbound_allow_rfc191
   direction                   = "Outbound"
   access                      = "Allow"
   priority                    = 100
-  source_address_prefixes     = local.rfc1918_prefixes
+  source_address_prefixes     = local.private_prefixes
   source_port_range           = "*"
   destination_address_prefix  = "*"
   destination_port_range      = "*"
@@ -285,7 +285,7 @@ resource "azurerm_network_security_rule" "nsg_region2_nva_inbound_allow_rfc1918"
   direction                   = "Inbound"
   access                      = "Allow"
   priority                    = 100
-  source_address_prefixes     = local.rfc1918_prefixes
+  source_address_prefixes     = local.private_prefixes
   source_port_range           = "*"
   destination_address_prefix  = "*"
   destination_port_range      = "*"
@@ -302,7 +302,7 @@ resource "azurerm_network_security_rule" "nsg_region2_nva_outbound_allow_rfc1918
   priority                     = 100
   source_address_prefix        = "*"
   source_port_range            = "*"
-  destination_address_prefixes = local.rfc1918_prefixes
+  destination_address_prefixes = local.private_prefixes
   destination_port_range       = "*"
   protocol                     = "*"
   description                  = "Outbound Allow RFC1918"

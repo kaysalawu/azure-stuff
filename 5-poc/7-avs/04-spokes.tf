@@ -27,7 +27,7 @@ module "core1" {
     "hub" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     "${local.core1_prefix}main"  = azurerm_network_security_group.nsg_region1_main.id
     "${local.core1_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     "${local.core1_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
@@ -77,7 +77,7 @@ module "core2" {
     "hub" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     "main"  = azurerm_network_security_group.nsg_region1_main.id
     "appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     "ilb"   = azurerm_network_security_group.nsg_region1_default.id
@@ -124,7 +124,7 @@ module "yellow" {
     "hub" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub_onprem.id
   }
 
-  nsg_config = {
+  nsg_subnet_map = {
     "main"  = azurerm_network_security_group.nsg_region1_main.id
     "appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     "ilb"   = azurerm_network_security_group.nsg_region1_default.id

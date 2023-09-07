@@ -20,10 +20,10 @@ module "spoke4" {
     #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
   }
 
-  nsg_config = {
-    #"${local.spoke4_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
-    #"${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    #"${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+  nsg_subnet_map = {
+    "${local.spoke4_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
+    "${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    "${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -69,10 +69,10 @@ module "spoke5" {
     #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
   }
 
-  nsg_config = {
-    #"main"  = azurerm_network_security_group.nsg_region2_main.id
-    #"appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    #"ilb"   = azurerm_network_security_group.nsg_region2_default.id
+  nsg_subnet_map = {
+    "main"  = azurerm_network_security_group.nsg_region2_main.id
+    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    "ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -114,10 +114,10 @@ module "spoke6" {
   dns_zone_linked_vnets    = {}
   dns_zone_linked_rulesets = {}
 
-  nsg_config = {
-    #"main"  = azurerm_network_security_group.nsg_region2_main.id
-    #"ilb"   = azurerm_network_security_group.nsg_region2_default.id
-    #"appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+  nsg_subnet_map = {
+    "main"  = azurerm_network_security_group.nsg_region2_main.id
+    "ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
   }
 
   vnet_config = [

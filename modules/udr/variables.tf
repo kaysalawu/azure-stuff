@@ -26,5 +26,6 @@ variable "next_hop_type" {
 }
 
 variable "next_hop_in_ip_address" {
-  type = string
+  type    = string
+  default = null
 }

@@ -13,7 +13,7 @@ module "branch1" {
   location        = local.branch1_location
   storage_account = module.common.storage_accounts["region1"]
 
-  nsg_config = {
+  nsg_subnet_map = {
     "${local.branch1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
     "${local.branch1_prefix}int"  = azurerm_network_security_group.nsg_region1_main.id
     "${local.branch1_prefix}ext"  = azurerm_network_security_group.nsg_region1_nva.id

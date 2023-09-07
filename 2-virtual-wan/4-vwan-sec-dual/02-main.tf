@@ -3,7 +3,8 @@
 ####################################################
 
 locals {
-  prefix = "Vwan24"
+  prefix       = "Vwan24"
+  my_public_ip = chomp(data.http.my_public_ip.response_body)
 }
 
 ####################################################
@@ -101,6 +102,12 @@ resource "azurerm_resource_group" "rg" {
   location = local.default_region
 }
 
+# my public ip
+
+data "http" "my_public_ip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
 ####################################################
 # common resources
 ####################################################
@@ -145,7 +152,7 @@ locals {
     { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
   ]
   vm_script_targets_misc = [
-    { name = "internet", dns = "icanhazip.com", ip = "icanhazip.com" },
+    { name = "internet", dns = "icanhazip.com", ip = "104.18.114.97" },
   ]
   vm_script_targets = concat(
     local.vm_script_targets_region1,
@@ -177,6 +184,91 @@ locals {
     { zone = ".", targets = [local.azuredns, ] },
   ]
   onprem_redirected_hosts = []
+}
+
+####################################################
+# nsg
+####################################################
+
+# region1
+#----------------------------
+
+# nsg
+
+resource "azurerm_network_security_group" "nsg_region1_main" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region1}-main"
+  location            = local.region1
+}
+
+resource "azurerm_network_security_group" "nsg_region1_nva" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region1}-nva"
+  location            = local.region1
+}
+
+resource "azurerm_network_security_group" "nsg_region1_appgw" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region1}-appgw"
+  location            = local.region1
+}
+
+resource "azurerm_network_security_group" "nsg_region1_default" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region1}-default"
+  location            = local.region1
+}
+
+# rules
+
+locals {
+  nsg_region1_main_rules = {
+    "allow-public-web"  = { priority = 100, direction = "Inbound", src = ["0.0.0.0/0", ], protocol = "Tcp", destination_port = "80" }
+    "allow-public-icmp" = { priority = 110, direction = "Inbound", src = ["0.0.0.0/0", ], protocol = "Icmp" }
+  }
+}
+
+resource "azurerm_network_security_rule" "nsg_region1_main" {
+  for_each                    = local.nsg_region1_main_rules
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.nsg_region1_main.name
+  name                        = each.key
+  direction                   = each.value.direction
+  access                      = "Allow"
+  priority                    = each.value.priority
+  source_address_prefixes     = each.value.src
+  source_port_range           = "*"
+  destination_address_prefix  = "*"
+  destination_port_range      = try(each.value.destination_port, "*")
+  protocol                    = each.value.protocol
+  description                 = each.key
+}
+
+# region2
+#----------------------------
+
+resource "azurerm_network_security_group" "nsg_region2_main" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region2}-main"
+  location            = local.region2
+}
+
+resource "azurerm_network_security_group" "nsg_region2_nva" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region2}-nva"
+  location            = local.region2
+}
+
+resource "azurerm_network_security_group" "nsg_region2_appgw" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region2}-appgw"
+  location            = local.region2
+}
+
+resource "azurerm_network_security_group" "nsg_region2_default" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.prefix}-nsg-${local.region2}-default"
+  location            = local.region2
 }
 
 ####################################################
@@ -213,6 +305,11 @@ resource "azurerm_firewall_policy" "firewall_policy" {
   threat_intelligence_mode = "Alert"
   sku                      = local.firewall_sku
 
+  private_ip_ranges = concat(
+    local.private_prefixes,
+    ["${local.spoke3_vm_public_ip}/32", ]
+  )
+
   #dns {
   #  proxy_enabled = true
   #}
@@ -230,7 +327,7 @@ module "fw_policy_rule_collection_group" {
     {
       name     = "network-rc"
       priority = 100
-      action   = "Deny"
+      action   = "Allow"
       rule = [
         {
           name                  = "network-rc-any-to-any"

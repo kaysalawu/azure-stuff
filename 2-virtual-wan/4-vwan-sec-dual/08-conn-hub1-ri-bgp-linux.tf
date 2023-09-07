@@ -92,6 +92,7 @@ locals {
         STATIC_ROUTES = [
           { prefix = "0.0.0.0/0", next_hop = local.hub1_default_gw_nva },
           { prefix = "${local.vhub1_router_bgp_ip0}/32", next_hop = local.hub1_default_gw_nva },
+          { prefix = "${local.vhub1_router_bgp_ip1}/32", next_hop = local.hub1_default_gw_nva },
           { prefix = local.spoke2_address_space[0], next_hop = local.hub1_default_gw_nva },
         ]
       }
@@ -120,7 +121,8 @@ locals {
           },
         ]
         BGP_ADVERTISED_PREFIXES = [
-          local.spoke2_address_space[0]
+          local.spoke2_address_space[0],
+          "${local.spoke3_vm_public_ip}/32"
         ]
       }
     ))
@@ -157,6 +159,17 @@ module "hub1_udr_main" {
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
   destinations           = local.udr_destinations
   depends_on             = [module.hub1]
+}
+
+module "hub1_udr_nva" {
+  source         = "../../modules/udr"
+  resource_group = azurerm_resource_group.rg.name
+  prefix         = "${local.hub1_prefix}nva"
+  location       = local.hub1_location
+  subnet_id      = module.hub1.subnets["${local.hub1_prefix}nva"].id
+  next_hop_type  = "Internet"
+  destinations   = ["${local.spoke3_vm_public_ip}/32", ]
+  depends_on     = [module.hub1]
 }
 
 ####################################################
@@ -268,6 +281,7 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
   name                      = "${local.vhub1_prefix}hub1-vnet-conn"
   virtual_hub_id            = module.vhub1.virtual_hub.id
   remote_virtual_network_id = module.hub1.vnet.id
+  internet_security_enabled = false
 
   # only enable routing if routing inetent is not used
   dynamic "routing" {
@@ -301,12 +315,12 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
 locals {
   vhub1_default_rt_static_routes = {
     #default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
-    #rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub1.firewall.id }
+    #rfc1918 = { destinations = local.private_prefixes, next_hop = module.vhub1.firewall.id }
     #zscaler = { destinations = ["${local.spoke2_vm_addr}/32"], next_hop = azurerm_virtual_hub_connection.hub1_vnet_conn.id }
   }
   vhub1_custom_rt_static_routes = {
     #default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub1.firewall.id }
-    #rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub1.firewall.id }
+    #rfc1918 = { destinations = local.private_prefixes, next_hop = module.vhub1.firewall.id }
   }
 }
 

@@ -13,7 +13,7 @@ module "branch3" {
   location        = local.branch3_location
   storage_account = module.common.storage_accounts["region2"]
 
-  nsg_config = {
+  nsg_subnet_map = {
     #"${local.branch3_prefix}main" = module.common.nsg_main["region2"].id
     #"${local.branch3_prefix}int"  = module.common.nsg_main["region2"].id
     #"${local.branch3_prefix}ext"  = module.common.nsg_nva["region2"].id

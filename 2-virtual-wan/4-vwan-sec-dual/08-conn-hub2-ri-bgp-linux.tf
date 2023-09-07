@@ -163,41 +163,41 @@ module "hub2_udr_main" {
 # vpn-site connection
 ####################################################
 
-# branch1
+# branch3
 #----------------------------
 
-# branch1
+# branch3
 
-resource "azurerm_vpn_site" "vhub2_site_branch1" {
+resource "azurerm_vpn_site" "vhub2_site_branch3" {
   resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.vhub2_prefix}site-branch1"
+  name                = "${local.vhub2_prefix}site-branch3"
   location            = azurerm_virtual_wan.vwan.location
   virtual_wan_id      = azurerm_virtual_wan.vwan.id
   device_model        = "Azure"
   device_vendor       = "Microsoft"
   link {
-    name          = "${local.vhub2_prefix}site-branch1-link-0"
+    name          = "${local.vhub2_prefix}site-branch3-link-0"
     provider_name = "Microsoft"
-    ip_address    = azurerm_public_ip.branch1_nva_pip.ip_address
+    ip_address    = azurerm_public_ip.branch3_nva_pip.ip_address
     speed_in_mbps = 50
     bgp {
-      asn             = local.branch1_nva_asn
-      peering_address = local.branch1_nva_loopback0
+      asn             = local.branch3_nva_asn
+      peering_address = local.branch3_nva_loopback0
     }
   }
 }
 
-resource "azurerm_vpn_gateway_connection" "vhub2_site_branch1_conn" {
-  name                      = "${local.vhub2_prefix}site-branch1-conn"
+resource "azurerm_vpn_gateway_connection" "vhub2_site_branch3_conn" {
+  name                      = "${local.vhub2_prefix}site-branch3-conn"
   vpn_gateway_id            = module.vhub2.vpn_gateway.id
-  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_branch1.id
+  remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_branch3.id
   internet_security_enabled = false
 
   vpn_link {
-    name             = "${local.vhub2_prefix}site-branch1-conn-vpn-link-0"
+    name             = "${local.vhub2_prefix}site-branch3-conn-vpn-link-0"
     bgp_enabled      = true
     shared_key       = local.psk
-    vpn_site_link_id = azurerm_vpn_site.vhub2_site_branch1.link[0].id
+    vpn_site_link_id = azurerm_vpn_site.vhub2_site_branch3.link[0].id
   }
 
   # only enable routing if routing inetent is not used
@@ -301,12 +301,12 @@ resource "azurerm_virtual_hub_connection" "hub2_vnet_conn" {
 locals {
   vhub2_default_rt_static_routes = {
     #default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub2.firewall.id }
-    #rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub2.firewall.id }
+    #rfc1918 = { destinations = local.private_prefixes, next_hop = module.vhub2.firewall.id }
     #zscaler = { destinations = ["${local.spoke5_vm_addr}/32"], next_hop = azurerm_virtual_hub_connection.hub2_vnet_conn.id }
   }
   vhub2_custom_rt_static_routes = {
     #default = { destinations = ["0.0.0.0/0"], next_hop = module.vhub2.firewall.id }
-    #rfc1918 = { destinations = local.rfc1918_prefixes, next_hop = module.vhub2.firewall.id }
+    #rfc1918 = { destinations = local.private_prefixes, next_hop = module.vhub2.firewall.id }
   }
 }
 
