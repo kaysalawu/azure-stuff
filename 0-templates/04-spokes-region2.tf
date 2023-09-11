@@ -1,4 +1,8 @@
 
+locals {
+  spoke6_vm_public_ip = module.spoke6.vm_public_ip[local.spoke6_vm_dns_host]
+}
+
 ####################################################
 # spoke4
 ####################################################
@@ -21,9 +25,9 @@ module "spoke4" {
   }
 
   nsg_subnet_map = {
-    "${local.spoke4_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
-    "${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    "${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "${local.spoke4_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
+    #"${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    #"${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -45,6 +49,9 @@ module "spoke4" {
       use_vm_extension = true
       delay_creation   = "60s"
     }
+  ]
+  depends_on = [
+    module.vhub2,
   ]
 }
 
@@ -70,9 +77,9 @@ module "spoke5" {
   }
 
   nsg_subnet_map = {
-    "main"  = azurerm_network_security_group.nsg_region2_main.id
-    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    "ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "${local.spoke5_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
+    #"${local.spoke5_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    #"${local.spoke5_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -94,7 +101,9 @@ module "spoke5" {
       #delay_creation = "60s"
     }
   ]
-  depends_on = [module.hub2, ]
+  depends_on = [
+    module.hub2,
+  ]
 }
 
 ####################################################
@@ -115,9 +124,9 @@ module "spoke6" {
   dns_zone_linked_rulesets = {}
 
   nsg_subnet_map = {
-    "main"  = azurerm_network_security_group.nsg_region2_main.id
-    "ilb"   = azurerm_network_security_group.nsg_region2_default.id
-    "appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    "${local.spoke6_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
+    "${local.spoke6_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    "${local.spoke6_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [
@@ -130,11 +139,12 @@ module "spoke6" {
 
   vm_config = [
     {
-      name         = local.spoke6_vm_dns_host
-      subnet       = "${local.spoke6_prefix}main"
-      private_ip   = local.spoke6_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
+      name             = local.spoke6_vm_dns_host
+      subnet           = "${local.spoke6_prefix}main"
+      private_ip       = local.spoke6_vm_addr
+      enable_public_ip = true
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
       #dns_servers      = [local.hub2_dns_in_ip, ]
       use_vm_extension = true
       #delay_creation   = "60s"
@@ -144,7 +154,7 @@ module "spoke6" {
 
 # ilb
 #----------------------------
-/*
+
 # internal load balancer
 
 module "spoke6_lb" {
@@ -167,8 +177,8 @@ module "spoke6_lb" {
   backends = [
     {
       name                  = module.spoke6.vm[local.spoke6_vm_dns_host].name
-      ip_configuration_name = module.spoke6.interface[local.spoke6_vm_dns_host].ip_configuration[0].name
-      network_interface_id  = module.spoke6.interface[local.spoke6_vm_dns_host].id
+      ip_configuration_name = module.spoke6.vm_interface[local.spoke6_vm_dns_host].ip_configuration[0].name
+      network_interface_id  = module.spoke6.vm_interface[local.spoke6_vm_dns_host].id
     }
   ]
 }
@@ -191,4 +201,4 @@ module "spoke6_pls" {
       lb_frontend_ids = [module.spoke6_lb.frontend_ip_configuration[0].id, ]
     }
   ]
-}*/
+}

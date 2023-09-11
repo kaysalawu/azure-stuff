@@ -92,6 +92,7 @@ locals {
         STATIC_ROUTES = [
           { prefix = "0.0.0.0/0", next_hop = local.hub2_default_gw_nva },
           { prefix = "${local.vhub2_router_bgp_ip0}/32", next_hop = local.hub2_default_gw_nva },
+          { prefix = "${local.vhub2_router_bgp_ip1}/32", next_hop = local.hub2_default_gw_nva },
           { prefix = local.spoke5_address_space[0], next_hop = local.hub2_default_gw_nva },
         ]
       }
@@ -120,7 +121,8 @@ locals {
           },
         ]
         BGP_ADVERTISED_PREFIXES = [
-          local.spoke5_address_space[0]
+          local.spoke5_address_space[0],
+          "${local.spoke6_vm_public_ip}/32"
         ]
       }
     ))
@@ -159,6 +161,17 @@ module "hub2_udr_main" {
   depends_on             = [module.hub2]
 }
 
+module "hub2_udr_nva" {
+  source         = "../../modules/udr"
+  resource_group = azurerm_resource_group.rg.name
+  prefix         = "${local.hub2_prefix}nva"
+  location       = local.hub2_location
+  subnet_id      = module.hub2.subnets["${local.hub2_prefix}nva"].id
+  next_hop_type  = "Internet"
+  destinations   = ["${local.spoke6_vm_public_ip}/32", ]
+  depends_on     = [module.hub2]
+}
+
 ####################################################
 # vpn-site connection
 ####################################################
@@ -191,7 +204,7 @@ resource "azurerm_vpn_gateway_connection" "vhub2_site_branch3_conn" {
   name                      = "${local.vhub2_prefix}site-branch3-conn"
   vpn_gateway_id            = module.vhub2.vpn_gateway.id
   remote_vpn_site_id        = azurerm_vpn_site.vhub2_site_branch3.id
-  internet_security_enabled = false
+  internet_security_enabled = true
 
   vpn_link {
     name             = "${local.vhub2_prefix}site-branch3-conn-vpn-link-0"
@@ -200,7 +213,7 @@ resource "azurerm_vpn_gateway_connection" "vhub2_site_branch3_conn" {
     vpn_site_link_id = azurerm_vpn_site.vhub2_site_branch3.link[0].id
   }
 
-  # only enable routing if routing inetent is not used
+  # only enable routing if routing intent is not used
   dynamic "routing" {
     for_each = local.vhub2_features.security.use_routing_intent ? [] : [1]
     content {
@@ -233,7 +246,7 @@ resource "azurerm_virtual_hub_connection" "spoke4_vnet_conn" {
   remote_virtual_network_id = module.spoke4.vnet.id
   internet_security_enabled = true
 
-  # only enable routing if routing inetent is not used
+  # only enable routing if routing intent is not used
   dynamic "routing" {
     for_each = local.vhub2_features.security.use_routing_intent ? [] : [1]
     content {
@@ -268,8 +281,9 @@ resource "azurerm_virtual_hub_connection" "hub2_vnet_conn" {
   name                      = "${local.vhub2_prefix}hub2-vnet-conn"
   virtual_hub_id            = module.vhub2.virtual_hub.id
   remote_virtual_network_id = module.hub2.vnet.id
+  internet_security_enabled = false
 
-  # only enable routing if routing inetent is not used
+  # only enable routing if routing intent is not used
   dynamic "routing" {
     for_each = local.vhub2_features.security.use_routing_intent ? [] : [1]
     content {

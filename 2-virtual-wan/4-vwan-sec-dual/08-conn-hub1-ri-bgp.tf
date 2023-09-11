@@ -204,7 +204,7 @@ resource "azurerm_vpn_gateway_connection" "vhub1_site_branch1_conn" {
   name                      = "${local.vhub1_prefix}site-branch1-conn"
   vpn_gateway_id            = module.vhub1.vpn_gateway.id
   remote_vpn_site_id        = azurerm_vpn_site.vhub1_site_branch1.id
-  internet_security_enabled = false
+  internet_security_enabled = true
 
   vpn_link {
     name             = "${local.vhub1_prefix}site-branch1-conn-vpn-link-0"
@@ -213,7 +213,7 @@ resource "azurerm_vpn_gateway_connection" "vhub1_site_branch1_conn" {
     vpn_site_link_id = azurerm_vpn_site.vhub1_site_branch1.link[0].id
   }
 
-  # only enable routing if routing inetent is not used
+  # only enable routing if routing intent is not used
   dynamic "routing" {
     for_each = local.vhub1_features.security.use_routing_intent ? [] : [1]
     content {
@@ -246,7 +246,7 @@ resource "azurerm_virtual_hub_connection" "spoke1_vnet_conn" {
   remote_virtual_network_id = module.spoke1.vnet.id
   internet_security_enabled = true
 
-  # only enable routing if routing inetent is not used
+  # only enable routing if routing intent is not used
   dynamic "routing" {
     for_each = local.vhub1_features.security.use_routing_intent ? [] : [1]
     content {
@@ -283,7 +283,7 @@ resource "azurerm_virtual_hub_connection" "hub1_vnet_conn" {
   remote_virtual_network_id = module.hub1.vnet.id
   internet_security_enabled = false
 
-  # only enable routing if routing inetent is not used
+  # only enable routing if routing intent is not used
   dynamic "routing" {
     for_each = local.vhub1_features.security.use_routing_intent ? [] : [1]
     content {

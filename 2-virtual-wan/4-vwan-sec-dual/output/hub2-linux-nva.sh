@@ -108,6 +108,7 @@ line vty
 !
 ip route 0.0.0.0/0 10.22.1.1
 ip route 192.168.22.68/32 10.22.1.1
+ip route 192.168.22.69/32 10.22.1.1
 ip route 10.5.0.0/16 10.22.1.1
 !
 
@@ -127,6 +128,7 @@ router bgp 65020
   neighbor 192.168.22.69 ebgp-multihop 255
   neighbor 192.168.22.69 soft-reconfiguration inbound
   network 10.5.0.0/16
+  network 20.238.56.219/32
 !
   address-family ipv6
   exit-address-family

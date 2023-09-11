@@ -15,6 +15,10 @@ output "vm" {
   value = { for k, v in module.vm : k => v.vm }
 }
 
+output "vm_interface" {
+  value = { for k, v in module.vm : k => v.interface }
+}
+
 output "vm_public_ip" {
   value = { for k, v in module.vm : k => v.vm.public_ip_address }
 }
