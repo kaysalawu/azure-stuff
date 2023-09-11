@@ -71,6 +71,7 @@ module "spoke5_udr_main" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
+    ["0.0.0.0/0"],
     local.udr_destinations_region1,
     local.udr_destinations_region2
   )
@@ -156,6 +157,7 @@ module "hub2_udr_main" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
+    ["0.0.0.0/0"],
     local.udr_destinations_region1,
     local.udr_destinations_region2
   )

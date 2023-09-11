@@ -3,7 +3,7 @@
 ####################################################
 
 locals {
-  prefix       = "Vwan22"
+  prefix       = "Hs12"
   my_public_ip = chomp(data.http.my_public_ip.response_body)
 }
 
@@ -35,7 +35,6 @@ locals {
     region2 = local.region2
   }
   udr_destinations = concat(
-    ["0.0.0.0/0"],
     local.udr_destinations_region1,
     local.udr_destinations_region2,
   )
@@ -45,45 +44,27 @@ locals {
   hub1_features = {
     enable_private_dns_resolver = true
     enable_ars                  = false
-    enable_vpn_gateway          = false
+    enable_vpn_gateway          = true
     enable_er_gateway           = false
 
-    enable_firewall    = false
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+    security = {
+      enable_firewall    = false
+      firewall_sku       = local.firewall_sku
+      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+    }
   }
 
   hub2_features = {
     enable_private_dns_resolver = true
     enable_ars                  = false
-    enable_vpn_gateway          = false
+    enable_vpn_gateway          = true
     enable_er_gateway           = false
 
-    enable_firewall    = false
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
-  }
-
-  vhub1_features = {
-    enable_er_gateway      = false
-    enable_s2s_vpn_gateway = true
-    enable_p2s_vpn_gateway = false
-
-    enable_firewall    = false
-    use_routing_intent = true
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
-  }
-
-  vhub2_features = {
-    enable_er_gateway      = false
-    enable_s2s_vpn_gateway = true
-    enable_p2s_vpn_gateway = false
-
-    enable_firewall    = true
-    use_routing_intent = true
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
+    security = {
+      enable_firewall    = false
+      firewall_sku       = local.firewall_sku
+      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
+    }
   }
 }
 
@@ -116,14 +97,14 @@ module "common" {
 #----------------------------
 
 locals {
-  hub1_nva_asn   = "65010"
-  hub1_vpngw_asn = "65011"
-  hub1_ergw_asn  = "65012"
+  hub1_nva_asn   = "65000"
+  hub1_vpngw_asn = "65515"
+  hub1_ergw_asn  = "65515"
   hub1_ars_asn   = "65515"
 
-  hub2_nva_asn   = "65020"
-  hub2_vpngw_asn = "65021"
-  hub2_ergw_asn  = "65022"
+  hub2_nva_asn   = "65000"
+  hub2_vpngw_asn = "65515"
+  hub2_ergw_asn  = "65515"
   hub2_ars_asn   = "65515"
   #mypip         = chomp(data.http.mypip.response_body)
 
@@ -282,58 +263,3 @@ resource "azurerm_public_ip" "branch3_nva_pip" {
   sku                 = "Standard"
   allocation_method   = "Static"
 }
-
-####################################################
-# firewall policy
-####################################################
-
-# policy
-
-resource "azurerm_firewall_policy" "firewall_policy" {
-  for_each                 = local.regions
-  resource_group_name      = azurerm_resource_group.rg.name
-  name                     = "${local.prefix}-fw-policy-${each.key}"
-  location                 = each.value
-  threat_intelligence_mode = "Alert"
-  sku                      = local.firewall_sku
-
-  private_ip_ranges = concat(
-    local.private_prefixes,
-    [
-      "${local.spoke3_vm_public_ip}/32",
-      "${local.spoke6_vm_public_ip}/32",
-    ]
-  )
-
-  #dns {
-  #  proxy_enabled = true
-  #}
-}
-
-# collection
-/*
-module "fw_policy_rule_collection_group" {
-  for_each           = local.regions
-  source             = "../../modules/fw-policy"
-  prefix             = local.prefix
-  firewall_policy_id = azurerm_firewall_policy.firewall_policy[each.key].id
-
-  network_rule_collection = [
-    {
-      name     = "network-rc"
-      priority = 100
-      action   = "Allow"
-      rule = [
-        {
-          name                  = "network-rc-any-to-any"
-          source_addresses      = ["*"]
-          destination_addresses = ["*"]
-          protocols             = ["Any"]
-          destination_ports     = ["*"]
-        }
-      ]
-    }
-  ]
-  application_rule_collection = []
-  nat_rule_collection         = []
-}*/

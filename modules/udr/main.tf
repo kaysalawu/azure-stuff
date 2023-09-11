@@ -19,12 +19,11 @@ resource "azurerm_subnet_route_table_association" "this" {
 # routes
 
 resource "azurerm_route" "this" {
-  for_each               = var.destinations
+  count                  = length(var.destinations)
   resource_group_name    = var.resource_group
-  name                   = "${var.prefix}-route-${replace(replace(each.value, ".", "-"), "/", "_")}"
+  name                   = "${var.prefix}-route-${replace(replace(tolist(var.destinations)[count.index], ".", "-"), "/", "_")}"
   route_table_name       = azurerm_route_table.this.name
-  address_prefix         = each.value
+  address_prefix         = tolist(var.destinations)[count.index]
   next_hop_type          = var.next_hop_type
   next_hop_in_ip_address = var.next_hop_in_ip_address
 }
-

@@ -379,8 +379,8 @@ resource "azurerm_firewall" "azfw" {
   resource_group_name = var.resource_group
   location            = var.location
   sku_name            = "AZFW_VNet"
-  sku_tier            = try(var.vnet_config[0].firewall_config[0].sku_tier, "Basic")
-  firewall_policy_id  = try(var.vnet_config[0].firewall_config[0].firewall_policy_id, null)
+  sku_tier            = try(var.vnet_config[0].firewall_sku, "Basic")
+  firewall_policy_id  = try(var.vnet_config[0].firewall_policy_id, null)
 
   ip_configuration {
     name                 = "${local.prefix}ip-config"

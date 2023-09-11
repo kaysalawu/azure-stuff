@@ -18,7 +18,7 @@ module "spoke4" {
 
   private_dns_zone = local.spoke4_dns_zone
   dns_zone_linked_vnets = {
-    "hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
+    #"hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
   }
   dns_zone_linked_rulesets = {
     #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
@@ -40,18 +40,14 @@ module "spoke4" {
 
   vm_config = [
     {
-      name         = local.spoke4_vm_dns_host
-      subnet       = "${local.spoke4_prefix}main"
-      private_ip   = local.spoke4_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      #dns_servers      = [local.hub2_dns_in_ip, ]
-      use_vm_extension = true
-      delay_creation   = "60s"
+      name             = local.spoke4_vm_dns_host
+      subnet           = "${local.spoke4_prefix}main"
+      private_ip       = local.spoke4_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      use_vm_extension = false
+      #delay_creation   = "60s"
     }
-  ]
-  depends_on = [
-    module.vhub2,
   ]
 }
 
@@ -70,7 +66,7 @@ module "spoke5" {
 
   private_dns_zone = local.spoke5_dns_zone
   dns_zone_linked_vnets = {
-    "hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
+    #"hub2" = { vnet = module.hub2.vnet.id, registration_enabled = false }
   }
   dns_zone_linked_rulesets = {
     #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
@@ -91,18 +87,14 @@ module "spoke5" {
 
   vm_config = [
     {
-      name         = local.spoke5_vm_dns_host
-      subnet       = "${local.spoke5_prefix}main"
-      private_ip   = local.spoke5_vm_addr
-      custom_data  = base64encode(local.vm_startup)
-      source_image = "ubuntu"
-      #dns_servers      = [local.hub2_dns_in_ip, ]
-      use_vm_extension = true
-      #delay_creation = "60s"
+      name             = local.spoke5_vm_dns_host
+      subnet           = "${local.spoke5_prefix}main"
+      private_ip       = local.spoke5_vm_addr
+      custom_data      = base64encode(local.vm_startup)
+      source_image     = "ubuntu"
+      use_vm_extension = false
+      delay_creation   = "180s"
     }
-  ]
-  depends_on = [
-    module.hub2,
   ]
 }
 
@@ -145,8 +137,7 @@ module "spoke6" {
       enable_public_ip = true
       custom_data      = base64encode(local.vm_startup)
       source_image     = "ubuntu"
-      #dns_servers      = [local.hub2_dns_in_ip, ]
-      use_vm_extension = true
+      use_vm_extension = false
       #delay_creation   = "60s"
     }
   ]

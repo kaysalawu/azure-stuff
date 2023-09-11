@@ -35,7 +35,7 @@ module "branch3" {
       source_image     = "ubuntu"
       dns_servers      = [local.branch3_dns_addr, ]
       use_vm_extension = false
-      #delay_creation   = "60s"
+      delay_creation   = "180s"
     },
     {
       name             = "dns"

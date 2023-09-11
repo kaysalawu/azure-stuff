@@ -35,12 +35,14 @@ data "azurerm_virtual_hub_route_table" "vhub1_default" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "defaultRouteTable"
   virtual_hub_name    = module.vhub1.virtual_hub.name
+  depends_on          = [module.vhub1]
 }
 
 data "azurerm_virtual_hub_route_table" "vhub1_none" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "noneRouteTable"
   virtual_hub_name    = module.vhub1.virtual_hub.name
+  depends_on          = [module.vhub1]
 }
 
 resource "azurerm_virtual_hub_route_table" "vhub1_custom" {
