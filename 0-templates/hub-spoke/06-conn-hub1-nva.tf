@@ -1,3 +1,11 @@
+locals {
+  hub1_bgp_asn       = module.hub1.vpngw.bgp_settings[0].asn
+  hub1_vpngw_bgp_ip0 = module.hub1.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
+  hub1_vpngw_bgp_ip1 = module.hub1.vpngw.bgp_settings[0].peering_addresses[1].default_addresses[0]
+  hub1_ars_bgp0      = tolist(module.hub1.ars.virtual_router_ips)[0]
+  hub1_ars_bgp1      = tolist(module.hub1.ars.virtual_router_ips)[1]
+  hub1_ars_bgp_asn   = module.hub1.ars.virtual_router_asn
+}
 
 ####################################################
 # spoke1
@@ -118,8 +126,8 @@ module "spoke2_udr_main" {
 #----------------------------
 
 locals {
-  hub1_router_route_map_name_nh = "NEXT-HOP"
-  hub1_router_init = templatefile("../../scripts/nva-hub.sh", {
+  hub1_cisco_nva_route_map_name_nh = "NEXT-HOP"
+  hub1_cisco_nva_init = templatefile("../../scripts/nva-hub.sh", {
     LOCAL_ASN = local.hub1_nva_asn
     LOOPBACK0 = local.hub1_nva_loopback0
     LOOPBACKS = {
@@ -132,7 +140,7 @@ locals {
 
     ROUTE_MAPS = [
       {
-        name   = local.hub1_router_route_map_name_nh
+        name   = local.hub1_cisco_nva_route_map_name_nh
         action = "permit"
         rule   = 100
         commands = [
@@ -173,8 +181,8 @@ locals {
         as_override   = true
         ebgp_multihop = true
         route_map = {
-          name      = local.hub1_router_route_map_name_nh
-          direction = "out"
+          #name      = local.hub1_cisco_nva_route_map_name_nh
+          #direction = "out"
         }
       },
       {
@@ -183,8 +191,8 @@ locals {
         as_override   = true
         ebgp_multihop = true
         route_map = {
-          name      = local.hub1_router_route_map_name_nh
-          direction = "out"
+          #name      = local.hub1_cisco_nva_route_map_name_nh
+          #direction = "out"
         }
       },
       {
@@ -214,7 +222,7 @@ module "hub1_nva" {
   storage_account      = module.common.storage_accounts["region1"]
   admin_username       = local.username
   admin_password       = local.password
-  custom_data          = base64encode(local.hub1_router_init)
+  custom_data          = base64encode(local.hub1_cisco_nva_init)
 }
 
 # udr
@@ -228,6 +236,7 @@ module "hub1_udr_gateway" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
   destinations           = local.udr_destinations
+  depends_on             = [module.hub1, ]
 }
 
 module "hub1_udr_main" {
@@ -242,15 +251,17 @@ module "hub1_udr_main" {
     ["0.0.0.0/0"],
     local.udr_destinations
   )
-  depends_on = [module.hub1]
+  depends_on = [module.hub1, ]
 }
 
 ####################################################
 # vpn-site connection
 ####################################################
 
-# branch1
+# lng
 #----------------------------
+
+# branch1
 
 resource "azurerm_local_network_gateway" "hub1_branch1_lng" {
   resource_group_name = azurerm_resource_group.rg.name
@@ -266,6 +277,8 @@ resource "azurerm_local_network_gateway" "hub1_branch1_lng" {
 
 # lng connection
 #----------------------------
+
+# branch1
 
 resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
   resource_group_name        = azurerm_resource_group.rg.name
@@ -299,7 +312,7 @@ resource "azurerm_route_server_bgp_connection" "hub1_ars_bgp_conn" {
 
 locals {
   hub1_files = {
-    "output/hub1-linux-nva.sh" = local.hub1_linux_nva_init
+    "output/hub1-cisco-nva.sh" = local.hub1_cisco_nva_init
   }
 }
 

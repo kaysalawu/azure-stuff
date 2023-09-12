@@ -1,1 +1,0 @@
-../../0-templates/hub-spoke/dual/08-conn-branch1-azfw.tf

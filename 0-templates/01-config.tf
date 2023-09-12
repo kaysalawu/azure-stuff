@@ -30,7 +30,7 @@ locals {
   udr_azure_destinations_region1 = [
     local.spoke1_address_space[0],
     local.spoke2_address_space[0],
-    local.hub1_address_space[0],
+    local.hub1_subnets["${local.hub1_prefix}main"].address_prefixes[0],
   ]
 
   udr_onprem_destinations_region1 = [
@@ -40,7 +40,7 @@ locals {
   udr_azure_destinations_region2 = [
     local.spoke4_address_space[0],
     local.spoke5_address_space[0],
-    local.hub2_address_space[0],
+    local.hub2_subnets["${local.hub2_prefix}main"].address_prefixes[0],
   ]
 
   udr_onprem_destinations_region2 = [

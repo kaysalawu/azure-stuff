@@ -44,6 +44,7 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke1_peering" {
 }
 
 # udr
+#----------------------------
 
 module "spoke1_udr_main" {
   source                 = "../../modules/udr"
@@ -98,6 +99,7 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
 }
 
 # udr
+#----------------------------
 
 module "spoke2_udr_main" {
   source                 = "../../modules/udr"
