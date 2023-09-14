@@ -17,6 +17,9 @@ resource "azurerm_virtual_hub" "this" {
   location            = var.location
   virtual_wan_id      = var.virtual_wan_id
   address_prefix      = var.address_prefix
+  timeouts {
+    create = "60m"
+  }
 }
 
 # vpngw
@@ -41,6 +44,9 @@ resource "azurerm_vpn_gateway" "this" {
       custom_ips = var.bgp_config[0].instance_1_custom_ips
     }
   }
+  timeouts {
+    create = "60m"
+  }
 }
 
 # firewall
@@ -57,6 +63,9 @@ resource "azurerm_firewall" "this" {
   virtual_hub {
     virtual_hub_id  = azurerm_virtual_hub.this.id
     public_ip_count = 1
+  }
+  timeouts {
+    create = "60m"
   }
 }
 
@@ -81,5 +90,8 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     content {
       category = enabled_log.value
     }
+  }
+  timeouts {
+    create = "60m"
   }
 }

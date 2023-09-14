@@ -35,9 +35,10 @@ locals {
     region2 = local.region2
   }
   udr_destinations = concat(
-    ["0.0.0.0/0"],
-    local.udr_destinations_region1,
-    local.udr_destinations_region2,
+    local.udr_azure_destinations_region1,
+    local.udr_onprem_destinations_region1,
+    local.udr_azure_destinations_region2,
+    local.udr_onprem_destinations_region2,
   )
 
   firewall_sku = "Basic"

@@ -1,9 +1,9 @@
 
 locals {
   prefix = var.prefix == "" ? "" : join("-", [var.prefix, ""])
-  subnets_with_nat = [
+  subnet_ids_with_nat = [
     for x in var.vnet_config[0].subnets : azurerm_subnet.this[x].id
-    if contains(var.vnet_config[0].subnets_nat_gateway, x)
+    if contains(var.vnet_config[0].subnet_names_nat_gateway, x)
   ]
 }
 
@@ -38,8 +38,8 @@ resource "azurerm_subnet" "this" {
       }
     }
   }
-  private_endpoint_network_policies_enabled     = length(regexall("pls", each.key)) > 0 ? false : true #TODO: replace regex with subnet_key
-  private_link_service_network_policies_enabled = length(regexall("pls", each.key)) > 0 ? false : true #TODO: replace regex with subnet_key
+  private_endpoint_network_policies_enabled     = try(each.value.address_prefixes.enable_private_endpoint_policies[0], false)
+  private_link_service_network_policies_enabled = try(each.value.address_prefixes.enable_private_link_policies[0], false)
 }
 
 # nsg
@@ -102,7 +102,7 @@ resource "azurerm_private_dns_resolver_inbound_endpoint" "this" {
   location                = var.location
   ip_configurations {
     private_ip_allocation_method = "Dynamic"
-    subnet_id                    = [for k, v in azurerm_subnet.this : v.id if length(regexall("dns-in", k)) > 0][0] # TODO: replace regex with subnet_key
+    subnet_id                    = azurerm_subnet.this[var.vnet_config[0].private_dns_inbound_subnet_name].id
   }
   timeouts {
     create = "60m"
@@ -114,7 +114,7 @@ resource "azurerm_private_dns_resolver_outbound_endpoint" "this" {
   name                    = "${local.prefix}dns-out"
   private_dns_resolver_id = azurerm_private_dns_resolver.this[0].id
   location                = var.location
-  subnet_id               = [for k, v in azurerm_subnet.this : v.id if length(regexall("dns-out", k)) > 0][0] # TODO: replace regex with subnet_key
+  subnet_id               = azurerm_subnet.this[var.vnet_config[0].private_dns_outbound_subnet_name].id
   timeouts {
     create = "60m"
   }
@@ -124,7 +124,7 @@ resource "azurerm_private_dns_resolver_outbound_endpoint" "this" {
 #----------------------------
 
 resource "azurerm_public_ip" "nat" {
-  count               = length(var.vnet_config[0].subnets_nat_gateway) > 0 ? 1 : 0
+  count               = length(var.vnet_config[0].subnet_names_nat_gateway) > 0 ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}natgw"
   location            = var.location
@@ -136,7 +136,7 @@ resource "azurerm_public_ip" "nat" {
 }
 
 resource "azurerm_nat_gateway" "nat" {
-  count               = length(var.vnet_config[0].subnets_nat_gateway) > 0 ? 1 : 0
+  count               = length(var.vnet_config[0].subnet_names_nat_gateway) > 0 ? 1 : 0
   resource_group_name = var.resource_group
   name                = "${local.prefix}natgw"
   location            = var.location
@@ -147,7 +147,7 @@ resource "azurerm_nat_gateway" "nat" {
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "nat" {
-  count                = length(var.vnet_config[0].subnets_nat_gateway) > 0 ? 1 : 0
+  count                = length(var.vnet_config[0].subnet_names_nat_gateway) > 0 ? 1 : 0
   nat_gateway_id       = azurerm_nat_gateway.nat[0].id
   public_ip_address_id = azurerm_public_ip.nat[0].id
   timeouts {
@@ -156,7 +156,7 @@ resource "azurerm_nat_gateway_public_ip_association" "nat" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "nat" {
-  for_each       = toset(local.subnets_with_nat)
+  for_each       = toset(local.subnet_ids_with_nat)
   nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
   subnet_id      = each.value
 }

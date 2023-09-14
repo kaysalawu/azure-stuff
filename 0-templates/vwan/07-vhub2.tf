@@ -24,9 +24,9 @@ module "vhub2" {
 
   security_config = [
     {
-      enable_firewall    = local.vhub2_features.security.enable_firewall
-      firewall_sku       = local.vhub2_features.security.firewall_sku
-      firewall_policy_id = local.vhub2_features.security.firewall_policy_id
+      enable_firewall    = local.vhub2_features.enable_firewall
+      firewall_sku       = local.vhub2_features.firewall_sku
+      firewall_policy_id = local.vhub2_features.firewall_policy_id
     }
   ]
 }
@@ -44,7 +44,7 @@ data "azurerm_virtual_hub_route_table" "vhub2_none" {
 }
 
 resource "azurerm_virtual_hub_route_table" "vhub2_custom" {
-  count          = local.vhub2_features.security.use_routing_intent ? 0 : 1
+  count          = local.vhub2_features.use_routing_intent ? 0 : 1
   name           = "custom"
   virtual_hub_id = module.vhub2.virtual_hub.id
   labels         = ["custom"]

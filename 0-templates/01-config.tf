@@ -92,8 +92,8 @@ locals {
     ("${local.hub1_prefix}main")      = { address_prefixes = ["10.11.0.0/24"] }
     ("${local.hub1_prefix}nva")       = { address_prefixes = ["10.11.1.0/24"] }
     ("${local.hub1_prefix}ilb")       = { address_prefixes = ["10.11.2.0/24"] }
-    ("${local.hub1_prefix}pls")       = { address_prefixes = ["10.11.3.0/24"] }
-    ("${local.hub1_prefix}pep")       = { address_prefixes = ["10.11.4.0/24"] }
+    ("${local.hub1_prefix}pls")       = { address_prefixes = ["10.11.3.0/24"], enable_private_link_policies = [true] }
+    ("${local.hub1_prefix}pep")       = { address_prefixes = ["10.11.4.0/24"], enable_private_endpoint_policies = [true] }
     ("${local.hub1_prefix}dns-in")    = { address_prefixes = ["10.11.5.0/24"], delegate = ["dns"] }
     ("${local.hub1_prefix}dns-out")   = { address_prefixes = ["10.11.6.0/24"], delegate = ["dns"] }
     ("GatewaySubnet")                 = { address_prefixes = ["10.11.7.0/24"] }
@@ -134,8 +134,8 @@ locals {
     ("${local.hub2_prefix}main")      = { address_prefixes = ["10.22.0.0/24"] }
     ("${local.hub2_prefix}nva")       = { address_prefixes = ["10.22.1.0/24"] }
     ("${local.hub2_prefix}ilb")       = { address_prefixes = ["10.22.2.0/24"] }
-    ("${local.hub2_prefix}pls")       = { address_prefixes = ["10.22.3.0/24"] }
-    ("${local.hub2_prefix}pep")       = { address_prefixes = ["10.22.4.0/24"] }
+    ("${local.hub2_prefix}pls")       = { address_prefixes = ["10.22.3.0/24"], enable_private_link_service_network_policies = [true] }
+    ("${local.hub2_prefix}pep")       = { address_prefixes = ["10.22.4.0/24"], enable_private_endpoint_network_policies = [true] }
     ("${local.hub2_prefix}dns-in")    = { address_prefixes = ["10.22.5.0/24"], delegate = ["dns"] }
     ("${local.hub2_prefix}dns-out")   = { address_prefixes = ["10.22.6.0/24"], delegate = ["dns"] }
     ("GatewaySubnet")                 = { address_prefixes = ["10.22.7.0/24"] }

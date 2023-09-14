@@ -3,7 +3,6 @@ locals {
   prefix = var.prefix == "" ? "${var.name}" : join("-", [var.prefix, var.name, ""])
 }
 
-
 # public ip
 
 resource "azurerm_public_ip" "this" {

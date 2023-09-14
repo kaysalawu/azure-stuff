@@ -40,6 +40,7 @@ resource "azurerm_virtual_network_peering" "hub1_to_spoke2_peering" {
 }
 
 # udr
+#----------------------------
 
 module "spoke2_udr_main" {
   source                 = "../../modules/udr"
@@ -49,8 +50,11 @@ module "spoke2_udr_main" {
   subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations           = local.udr_destinations
-  depends_on             = [module.hub1]
+  destinations = concat(
+    ["0.0.0.0/0"],
+    local.udr_destinations
+  )
+  depends_on = [module.hub1]
 }
 
 ####################################################
@@ -176,7 +180,7 @@ module "hub1_udr_nva" {
 # vpn-site connection
 ####################################################
 
-# branch1
+# sites
 #----------------------------
 
 # branch1

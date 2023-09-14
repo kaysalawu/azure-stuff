@@ -6,7 +6,7 @@
 # router
 
 locals {
-  branch3_nva_init = templatefile("../../scripts/nva-branch.sh", {
+  branch3_nva_init = templatefile("../../scripts/cisco-branch.sh", {
     LOCAL_ASN = local.branch3_nva_asn
     LOOPBACK0 = local.branch3_nva_loopback0
     LOOPBACKS = {}

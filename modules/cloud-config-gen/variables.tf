@@ -1,4 +1,10 @@
 
+variable "packages" {
+  description = "List of packages"
+  type        = list(string)
+  default     = []
+}
+
 variable "boot_commands" {
   description = "List of cloud-init `bootcmd`s"
   type        = list(string)

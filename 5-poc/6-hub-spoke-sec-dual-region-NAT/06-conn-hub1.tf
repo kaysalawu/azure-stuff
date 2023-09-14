@@ -235,7 +235,7 @@ resource "azurerm_virtual_network_gateway_connection" "hub1_branch1_lng" {
 
 locals {
   hub1_router_route_map_name_nh = "NEXT-HOP"
-  hub1_router_init = templatefile("../../scripts/nva-hub.sh", {
+  hub1_router_init = templatefile("../../scripts/cisco-hub.sh", {
     LOCAL_ASN = local.hub1_nva_asn
     LOOPBACK0 = local.hub1_nva_loopback0
     LOOPBACKS = {

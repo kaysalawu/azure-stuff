@@ -35,9 +35,10 @@ locals {
     region2 = local.region2
   }
   udr_destinations = concat(
-    ["0.0.0.0/0"],
-    local.udr_destinations_region1,
-    local.udr_destinations_region2,
+    local.udr_azure_destinations_region1,
+    local.udr_onprem_destinations_region1,
+    local.udr_azure_destinations_region2,
+    local.udr_onprem_destinations_region2,
   )
 
   firewall_sku = "Basic"
@@ -48,11 +49,9 @@ locals {
     enable_vpn_gateway          = false
     enable_er_gateway           = false
 
-    security = {
-      enable_firewall    = true
-      firewall_sku       = local.firewall_sku
-      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
-    }
+    enable_firewall    = false
+    firewall_sku       = local.firewall_sku
+    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
   }
 
   hub2_features = {
@@ -61,11 +60,9 @@ locals {
     enable_vpn_gateway          = false
     enable_er_gateway           = false
 
-    security = {
-      enable_firewall    = true
-      firewall_sku       = local.firewall_sku
-      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
-    }
+    enable_firewall    = false
+    firewall_sku       = local.firewall_sku
+    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
   }
 
   vhub1_features = {

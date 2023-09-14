@@ -72,7 +72,7 @@ locals {
     INT_ADDR = local.hub1_nva_addr
     VPN_PSK  = local.psk
   }
-  hub1_cisco_nva_init = templatefile("../../scripts/nva-hub.sh", merge(
+  hub1_cisco_nva_init = templatefile("../../scripts/cisco-hub.sh", merge(
     local.hub1_nva_vars,
     {
       MASQUERADE = []

@@ -77,7 +77,11 @@ variable "vnet_config" {
     enable_private_dns_resolver = optional(bool, false)
     enable_ars                  = optional(bool, false)
     enable_er_gateway           = optional(bool, false)
-    subnets_nat_gateway         = optional(list(string), [])
+    subnet_names_nat_gateway    = optional(list(string), [])
+    subnet_names_private_dns    = optional(list(string), [])
+
+    private_dns_inbound_subnet_name  = optional(string, null)
+    private_dns_outbound_subnet_name = optional(string, null)
 
     enable_firewall    = optional(bool, false)
     firewall_sku       = optional(string, "Basic")

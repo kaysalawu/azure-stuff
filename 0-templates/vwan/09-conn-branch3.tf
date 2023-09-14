@@ -6,14 +6,25 @@
 # router
 
 locals {
-  branch3_nva_init = templatefile("../../scripts/nva-branch.sh", {
+  branch3_nva_route_map_name_nh = "NEXT-HOP"
+  branch3_nva_init = templatefile("../../scripts/cisco-branch.sh", {
     LOCAL_ASN = local.branch3_nva_asn
     LOOPBACK0 = local.branch3_nva_loopback0
     LOOPBACKS = {}
     EXT_ADDR  = local.branch3_nva_ext_addr
     VPN_PSK   = local.psk
 
-    ROUTE_MAPS = []
+    ROUTE_MAPS = [
+      {
+        name   = local.branch3_nva_route_map_name_nh
+        action = "permit"
+        rule   = 100
+        commands = [
+          "match ip address prefix-list all",
+          "set as-path prepend ${local.branch3_nva_asn} ${local.branch3_nva_asn} ${local.branch3_nva_asn}"
+        ]
+      }
+    ]
 
     TUNNELS = [
       {
@@ -129,3 +140,4 @@ resource "local_file" "branch3_files" {
   filename = each.key
   content  = each.value
 }
+

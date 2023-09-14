@@ -43,7 +43,7 @@ module "branch3" {
       private_ip       = local.branch3_dns_addr
       custom_data      = base64encode(local.branch_unbound_config)
       source_image     = "debian"
-      use_vm_extension = true
+      use_vm_extension = false
     }
   ]
 }

@@ -86,7 +86,7 @@ module "spoke5_udr_main" {
 
 locals {
   hub2_router_route_map_name_nh = "NEXT-HOP"
-  hub2_router_init = templatefile("../../scripts/nva-hub.sh", {
+  hub2_router_init = templatefile("../../scripts/cisco-hub.sh", {
     LOCAL_ASN = local.hub2_nva_asn
     LOOPBACK0 = local.hub2_nva_loopback0
     LOOPBACKS = {

@@ -1,1 +1,0 @@
-../../0-templates/hub-spoke/05-hub1.tf

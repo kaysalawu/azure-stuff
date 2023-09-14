@@ -78,54 +78,6 @@ resource "azurerm_network_security_group" "nsg_main" {
   location            = each.value
 }
 
-resource "azurerm_network_security_rule" "nsg_main_inbound_allow_all" {
-  for_each                    = var.regions
-  resource_group_name         = var.resource_group
-  network_security_group_name = azurerm_network_security_group.nsg_main[each.key].name
-  name                        = "inbound-allow-all"
-  direction                   = "Inbound"
-  access                      = "Allow"
-  priority                    = 100
-  source_address_prefixes     = local.private_prefixes
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_range      = "*"
-  protocol                    = "*"
-  description                 = "Inbound Allow RFC1918"
-}
-
-resource "azurerm_network_security_rule" "nsg_main_inbound_allow_web_external" {
-  for_each                    = var.regions
-  resource_group_name         = var.resource_group
-  network_security_group_name = azurerm_network_security_group.nsg_main[each.key].name
-  name                        = "inbound-allow-web-external"
-  direction                   = "Inbound"
-  access                      = "Allow"
-  priority                    = 110
-  source_address_prefix       = "0.0.0.0/0"
-  source_port_range           = "*"
-  destination_address_prefix  = "VirtualNetwork"
-  destination_port_ranges     = ["80", "8080", "443"]
-  protocol                    = "Tcp"
-  description                 = "Allow inbound web traffic"
-}
-
-resource "azurerm_network_security_rule" "nsg_main_outbound_allow_rfc1918" {
-  for_each                    = var.regions
-  resource_group_name         = var.resource_group
-  network_security_group_name = azurerm_network_security_group.nsg_main[each.key].name
-  name                        = "outbound-allow-rfc1918"
-  direction                   = "Outbound"
-  access                      = "Allow"
-  priority                    = 100
-  source_address_prefixes     = local.private_prefixes
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_range      = "*"
-  protocol                    = "*"
-  description                 = "Outbound Allow RFC1918"
-}
-
 # nva
 #----------------------------
 
@@ -134,70 +86,6 @@ resource "azurerm_network_security_group" "nsg_nva" {
   resource_group_name = var.resource_group
   name                = "${var.prefix}-nsg-${each.value}-nva"
   location            = each.value
-}
-
-resource "azurerm_network_security_rule" "nsg_nva_inbound_allow_rfc1918" {
-  for_each                    = var.regions
-  resource_group_name         = var.resource_group
-  network_security_group_name = azurerm_network_security_group.nsg_nva[each.key].name
-  name                        = "inbound-allow-rfc1918"
-  direction                   = "Inbound"
-  access                      = "Allow"
-  priority                    = 100
-  source_address_prefixes     = local.private_prefixes
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_range      = "*"
-  protocol                    = "*"
-  description                 = "Inbound Allow RFC1918"
-}
-
-resource "azurerm_network_security_rule" "nsg_nva_outbound_allow_rfc1918" {
-  for_each                     = var.regions
-  resource_group_name          = var.resource_group
-  network_security_group_name  = azurerm_network_security_group.nsg_nva[each.key].name
-  name                         = "outbound-allow-rfc1918"
-  direction                    = "Outbound"
-  access                       = "Allow"
-  priority                     = 100
-  source_address_prefix        = "*"
-  source_port_range            = "*"
-  destination_address_prefixes = local.private_prefixes
-  destination_port_range       = "*"
-  protocol                     = "*"
-  description                  = "Outbound Allow RFC1918"
-}
-
-resource "azurerm_network_security_rule" "nsg_nva_inbound_allow_ipsec" {
-  for_each                    = var.regions
-  resource_group_name         = var.resource_group
-  network_security_group_name = azurerm_network_security_group.nsg_nva[each.key].name
-  name                        = "inbound-allow-ipsec"
-  direction                   = "Inbound"
-  access                      = "Allow"
-  priority                    = 110
-  source_address_prefix       = "*"
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_ranges     = ["500", "4500"]
-  protocol                    = "Udp"
-  description                 = "Inbound Allow UDP 500, 4500"
-}
-
-resource "azurerm_network_security_rule" "nsg_nva_outbound_allow_ipsec" {
-  for_each                    = var.regions
-  resource_group_name         = var.resource_group
-  network_security_group_name = azurerm_network_security_group.nsg_nva[each.key].name
-  name                        = "outbound-allow-ipsec"
-  direction                   = "Outbound"
-  access                      = "Allow"
-  priority                    = 110
-  source_address_prefix       = "*"
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_ranges     = ["500", "4500"]
-  protocol                    = "Udp"
-  description                 = "Outbound Allow UDP 500, 4500"
 }
 
 # appgw

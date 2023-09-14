@@ -204,7 +204,7 @@ module "hub_udr_main" {
 
 locals {
   hub_router_route_map_name_nh = "NEXT-HOP"
-  hub_router_init = templatefile("../../scripts/nva-hub.sh", {
+  hub_router_init = templatefile("../../scripts/cisco-hub.sh", {
     LOCAL_ASN = local.hub_nva_asn
     LOOPBACK0 = local.hub_nva_loopback0
     LOOPBACKS = {

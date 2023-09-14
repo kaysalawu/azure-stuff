@@ -25,7 +25,7 @@ module "spoke4" {
   }
 
   nsg_subnet_map = {
-    "${local.spoke4_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
+    #"${local.spoke4_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
     #"${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
     #"${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
@@ -116,9 +116,9 @@ module "spoke6" {
   dns_zone_linked_rulesets = {}
 
   nsg_subnet_map = {
-    "${local.spoke6_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
-    "${local.spoke6_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    "${local.spoke6_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    #"${local.spoke6_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
+    #"${local.spoke6_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
+    #"${local.spoke6_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
   }
 
   vnet_config = [

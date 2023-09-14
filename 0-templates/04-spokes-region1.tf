@@ -25,7 +25,7 @@ module "spoke1" {
   }
 
   nsg_subnet_map = {
-    "${local.spoke1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
+    #"${local.spoke1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
     #"${local.spoke1_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     #"${local.spoke1_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
   }
@@ -73,7 +73,7 @@ module "spoke2" {
   }
 
   nsg_subnet_map = {
-    "${local.spoke2_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
+    #"${local.spoke2_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
     #"${local.spoke2_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     #"${local.spoke2_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
   }
@@ -116,7 +116,7 @@ module "spoke3" {
   dns_zone_linked_rulesets = {}
 
   nsg_subnet_map = {
-    "${local.spoke3_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
+    #"${local.spoke3_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
     #"${local.spoke3_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
     #"${local.spoke3_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
   }
