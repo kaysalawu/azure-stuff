@@ -28,22 +28,21 @@ module "branch3" {
 
   vm_config = [
     {
-      name             = "vm1"
-      subnet           = "${local.branch3_prefix}main"
-      private_ip       = local.branch3_vm_addr
-      custom_data      = base64encode(local.vm_startup)
-      source_image     = "ubuntu"
-      dns_servers      = [local.branch3_dns_addr, ]
-      use_vm_extension = false
-      delay_creation   = "180s"
+      name           = "vm1"
+      subnet         = "${local.branch3_prefix}main"
+      private_ip     = local.branch3_vm_addr
+      custom_data    = base64encode(local.vm_startup)
+      source_image   = "ubuntu"
+      dns_servers    = [local.branch3_dns_addr, ]
+      delay_creation = "150s"
     },
     {
       name             = "dns"
       subnet           = "${local.branch3_prefix}main"
       private_ip       = local.branch3_dns_addr
-      custom_data      = base64encode(local.branch_unbound_config)
+      custom_data      = base64encode(local.branch_unbound_startup)
       source_image     = "debian"
-      use_vm_extension = false
+      use_vm_extension = true
     }
   ]
 }

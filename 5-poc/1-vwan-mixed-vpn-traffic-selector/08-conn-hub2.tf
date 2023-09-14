@@ -71,8 +71,8 @@ module "spoke5_udr_main" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
-    local.udr_destinations_region1,
-    local.udr_destinations_region2
+    local.main_udr_destinations_region1,
+    local.main_udr_destinations_region2
   )
 }
 
@@ -142,8 +142,8 @@ module "hub2_udr_vpngw" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
-    local.udr_destinations_region1,
-    local.udr_destinations_region2
+    local.main_udr_destinations_region1,
+    local.main_udr_destinations_region2
   )
 }
 
@@ -156,8 +156,8 @@ module "hub2_udr_main" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
-    local.udr_destinations_region1,
-    local.udr_destinations_region2
+    local.main_udr_destinations_region1,
+    local.main_udr_destinations_region2
   )
 }
 

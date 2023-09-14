@@ -15,7 +15,7 @@ module "branch1_udr_gateway" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
   destinations = concat(
-    local.udr_destinations_region1
+    local.main_udr_destinations_region1
   )
 }
 
@@ -28,7 +28,7 @@ module "hub1_udr_main" {
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
   destinations = concat(
-    local.udr_destinations_region1
+    local.main_udr_destinations_region1
   )
 }
 

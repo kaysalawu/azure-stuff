@@ -3,7 +3,7 @@
 ####################################################
 
 locals {
-  prefix       = "Hs11"
+  prefix       = "Hs11d"
   my_public_ip = chomp(data.http.my_public_ip.response_body)
 }
 
@@ -33,10 +33,15 @@ locals {
   regions = {
     region1 = local.region1
   }
-  udr_destinations = concat(
+  main_udr_destinations = concat(
+    ["0.0.0.0/0"],
     local.udr_azure_destinations_region1,
     local.udr_onprem_destinations_region1,
   )
+  gateway_udr_destinations = concat(
+    local.udr_azure_destinations_region1,
+  )
+  firewall_udr_destinations = []
 
   firewall_sku = "Basic"
 

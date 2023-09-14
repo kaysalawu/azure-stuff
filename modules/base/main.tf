@@ -93,6 +93,10 @@ resource "azurerm_private_dns_resolver" "this" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_private_dns_resolver_inbound_endpoint" "this" {
@@ -133,6 +137,10 @@ resource "azurerm_public_ip" "nat" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_nat_gateway" "nat" {
@@ -144,6 +152,10 @@ resource "azurerm_nat_gateway" "nat" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "nat" {
@@ -188,6 +200,8 @@ module "vm" {
     azurerm_nat_gateway.nat,
     azurerm_nat_gateway_public_ip_association.nat,
     azurerm_subnet_nat_gateway_association.nat,
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
   ]
 }
 
@@ -204,6 +218,10 @@ resource "azurerm_public_ip" "ars_pip" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_route_server" "ars" {
@@ -240,6 +258,10 @@ resource "azurerm_public_ip" "vpngw_pip0" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_public_ip" "vpngw_pip1" {
@@ -253,6 +275,10 @@ resource "azurerm_public_ip" "vpngw_pip1" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_virtual_network_gateway" "vpngw" {
@@ -308,6 +334,10 @@ resource "azurerm_public_ip" "ergw_pip" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 resource "azurerm_virtual_network_gateway" "ergw" {
@@ -355,6 +385,10 @@ resource "azurerm_public_ip" "fw_pip" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 # firewall management public ip
@@ -369,6 +403,10 @@ resource "azurerm_public_ip" "fw_mgt_pip" {
   timeouts {
     create = "60m"
   }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
 }
 
 # firewall
@@ -395,20 +433,19 @@ resource "azurerm_firewall" "azfw" {
   timeouts {
     create = "60m"
   }
-  depends_on = [
-    azurerm_public_ip.fw_mgt_pip,
-    azurerm_public_ip.fw_pip,
-    azurerm_subnet.this,
-    azurerm_virtual_network_gateway.vpngw,
-    azurerm_virtual_network_gateway.ergw,
-    azurerm_route_server.ars
-  ]
   lifecycle {
     ignore_changes = [
       ip_configuration,
       management_ip_configuration,
     ]
   }
+  depends_on = [
+    azurerm_public_ip.fw_mgt_pip,
+    azurerm_public_ip.fw_pip,
+    azurerm_virtual_network_gateway.vpngw,
+    azurerm_virtual_network_gateway.ergw,
+    azurerm_route_server.ars
+  ]
 }
 
 # storage account
@@ -450,13 +487,12 @@ resource "azurerm_monitor_diagnostic_setting" "azfw" {
       category = enabled_log.value
     }
   }
+  timeouts {
+    create = "60m"
+  }
   depends_on = [
     azurerm_firewall.azfw,
     azurerm_log_analytics_workspace.azfw,
     azurerm_storage_account.azfw,
-    azurerm_subnet.this,
   ]
-  timeouts {
-    create = "60m"
-  }
 }

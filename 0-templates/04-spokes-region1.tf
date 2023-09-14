@@ -25,9 +25,9 @@ module "spoke1" {
   }
 
   nsg_subnet_map = {
-    #"${local.spoke1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
-    #"${local.spoke1_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
-    #"${local.spoke1_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
+    "${local.spoke1_prefix}main"  = module.common.nsg_main["region1"].id
+    "${local.spoke1_prefix}appgw" = module.common.nsg_appgw["region1"].id
+    "${local.spoke1_prefix}ilb"   = module.common.nsg_default["region1"].id
   }
 
   vnet_config = [
@@ -48,6 +48,9 @@ module "spoke1" {
       use_vm_extension = false
       delay_creation   = "120s"
     }
+  ]
+  depends_on = [
+    module.common,
   ]
 }
 
@@ -73,9 +76,9 @@ module "spoke2" {
   }
 
   nsg_subnet_map = {
-    #"${local.spoke2_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
-    #"${local.spoke2_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
-    #"${local.spoke2_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
+    "${local.spoke2_prefix}main"  = module.common.nsg_main["region1"].id
+    "${local.spoke2_prefix}appgw" = module.common.nsg_appgw["region1"].id
+    "${local.spoke2_prefix}ilb"   = module.common.nsg_default["region1"].id
   }
 
   vnet_config = [
@@ -95,6 +98,9 @@ module "spoke2" {
       use_vm_extension = false
       delay_creation   = "120s"
     }
+  ]
+  depends_on = [
+    module.common,
   ]
 }
 
@@ -116,9 +122,9 @@ module "spoke3" {
   dns_zone_linked_rulesets = {}
 
   nsg_subnet_map = {
-    #"${local.spoke3_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
-    #"${local.spoke3_prefix}appgw" = azurerm_network_security_group.nsg_region1_appgw.id
-    #"${local.spoke3_prefix}ilb"   = azurerm_network_security_group.nsg_region1_default.id
+    "${local.spoke3_prefix}main"  = module.common.nsg_main["region1"].id
+    "${local.spoke3_prefix}appgw" = module.common.nsg_appgw["region1"].id
+    "${local.spoke3_prefix}ilb"   = module.common.nsg_default["region1"].id
   }
 
   vnet_config = [
@@ -141,8 +147,11 @@ module "spoke3" {
       #delay_creation   = "60s"
     }
   ]
+  depends_on = [
+    module.common,
+  ]
 }
-
+/*
 # ilb
 #----------------------------
 
@@ -192,4 +201,4 @@ module "spoke3_pls" {
       lb_frontend_ids = [module.spoke3_lb.frontend_ip_configuration[0].id, ]
     }
   ]
-}
+}*/

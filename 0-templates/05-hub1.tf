@@ -11,7 +11,6 @@ module "hub1" {
   storage_account = module.common.storage_accounts["region1"]
 
   private_dns_zone = local.hub1_dns_zone
-
   dns_zone_linked_vnets = {
     #"spoke1" = { vnet = module.spoke1.vnet.id, registration_enabled = false }
     #"spoke2" = { vnet = module.spoke2.vnet.id, registration_enabled = false }
@@ -21,9 +20,9 @@ module "hub1" {
   }
 
   nsg_subnet_map = {
-    #"${local.hub1_prefix}main" = azurerm_network_security_group.nsg_region1_main.id
-    #"${local.hub1_prefix}nva"  = azurerm_network_security_group.nsg_region1_nva.id
-    #"${local.hub1_prefix}ilb"  = azurerm_network_security_group.nsg_region1_default.id
+    "${local.hub1_prefix}main" = module.common.nsg_main["region1"].id
+    "${local.hub1_prefix}nva"  = module.common.nsg_nva["region1"].id
+    "${local.hub1_prefix}ilb"  = module.common.nsg_default["region1"].id
   }
 
   vnet_config = [

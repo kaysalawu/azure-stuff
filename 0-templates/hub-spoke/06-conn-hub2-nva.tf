@@ -58,7 +58,7 @@ module "spoke4_udr_main" {
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
     ["0.0.0.0/0"],
-    local.udr_destinations
+    local.main_udr_destinations
   )
   depends_on = [module.hub2]
 }
@@ -113,7 +113,7 @@ module "spoke5_udr_main" {
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
     ["0.0.0.0/0"],
-    local.udr_destinations
+    local.main_udr_destinations
   )
   depends_on = [module.hub2]
 }
@@ -235,7 +235,7 @@ module "hub2_udr_gateway" {
   subnet_id              = module.hub2.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
-  destinations           = local.udr_destinations
+  destinations           = local.main_udr_destinations
   depends_on             = [module.hub2, ]
 }
 
@@ -249,7 +249,7 @@ module "hub2_udr_main" {
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations = concat(
     ["0.0.0.0/0"],
-    local.udr_destinations
+    local.main_udr_destinations
   )
   depends_on = [module.hub2, ]
 }

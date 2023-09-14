@@ -54,11 +54,8 @@ module "spoke1_udr_main" {
   subnet_id              = module.spoke1.subnets["${local.spoke1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_firewall_ip
-  destinations = concat(
-    ["0.0.0.0/0"],
-    local.udr_destinations
-  )
-  depends_on = [module.hub1]
+  destinations           = local.main_udr_destinations
+  depends_on             = [module.hub1]
 }
 
 ####################################################
@@ -109,11 +106,8 @@ module "spoke2_udr_main" {
   subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_firewall_ip
-  destinations = concat(
-    ["0.0.0.0/0"],
-    local.udr_destinations
-  )
-  depends_on = [module.hub1]
+  destinations           = local.main_udr_destinations
+  depends_on             = [module.hub1]
 }
 
 ####################################################
@@ -130,7 +124,7 @@ module "hub1_udr_gateway" {
   subnet_id              = module.hub1.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_firewall_ip
-  destinations           = local.udr_destinations
+  destinations           = local.gateway_udr_destinations
   depends_on             = [module.hub1, ]
 }
 
@@ -142,11 +136,8 @@ module "hub1_udr_main" {
   subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_firewall_ip
-  destinations = concat(
-    ["0.0.0.0/0"],
-    local.udr_destinations
-  )
-  depends_on = [module.hub1, ]
+  destinations           = local.main_udr_destinations
+  depends_on             = [module.hub1, ]
 }
 
 ####################################################
