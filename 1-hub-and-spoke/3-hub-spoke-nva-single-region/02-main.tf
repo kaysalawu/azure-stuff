@@ -3,7 +3,7 @@
 ####################################################
 
 locals {
-  prefix       = "Hs14g"
+  prefix       = "Hs13"
   my_public_ip = chomp(data.http.my_public_ip.response_body)
 }
 
@@ -32,44 +32,25 @@ terraform {
 locals {
   regions = {
     region1 = local.region1
-    region2 = local.region2
   }
   main_udr_destinations = concat(
     local.udr_azure_destinations_region1,
     local.udr_onprem_destinations_region1,
-    local.udr_azure_destinations_region2,
-    local.udr_onprem_destinations_region2,
   )
   hub1_gateway_udr_destinations = concat(
     local.udr_azure_destinations_region1,
-    local.udr_azure_destinations_region2,
-  )
-  hub2_gateway_udr_destinations = concat(
-    local.udr_azure_destinations_region1,
-    local.udr_azure_destinations_region2,
   )
   firewall_sku = "Basic"
 
   hub1_features = {
     enable_private_dns_resolver = true
-    enable_ars                  = true
+    enable_ars                  = false
     enable_vpn_gateway          = true
     enable_er_gateway           = false
 
     enable_firewall    = false
     firewall_sku       = local.firewall_sku
     firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
-  }
-
-  hub2_features = {
-    enable_private_dns_resolver = true
-    enable_ars                  = true
-    enable_vpn_gateway          = true
-    enable_er_gateway           = false
-
-    enable_firewall    = false
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
   }
 }
 
@@ -106,11 +87,6 @@ locals {
   hub1_vpngw_asn = "65515"
   hub1_ergw_asn  = "65515"
   hub1_ars_asn   = "65515"
-
-  hub2_nva_asn   = "65000"
-  hub2_vpngw_asn = "65515"
-  hub2_ergw_asn  = "65515"
-  hub2_ars_asn   = "65515"
   #mypip         = chomp(data.http.mypip.response_body)
 
   vm_script_targets_region1 = [
@@ -121,20 +97,11 @@ locals {
     { name = "spoke2 ", dns = local.spoke2_vm_dns, ip = local.spoke2_vm_addr },
     { name = "spoke3 ", dns = local.spoke3_vm_dns, ip = local.spoke3_vm_addr, ping = false },
   ]
-  vm_script_targets_region2 = [
-    { name = "branch3", dns = local.branch3_vm_dns, ip = local.branch3_vm_addr },
-    { name = "hub2   ", dns = local.hub2_vm_dns, ip = local.hub2_vm_addr },
-    { name = "hub2-pe", dns = local.hub2_pep_dns, ping = false },
-    { name = "spoke4 ", dns = local.spoke4_vm_dns, ip = local.spoke4_vm_addr },
-    { name = "spoke5 ", dns = local.spoke5_vm_dns, ip = local.spoke5_vm_addr },
-    { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
-  ]
   vm_script_targets_misc = [
     { name = "internet", dns = "icanhazip.com", ip = "icanhazip.com" },
   ]
   vm_script_targets = concat(
     local.vm_script_targets_region1,
-    local.vm_script_targets_region2,
     local.vm_script_targets_misc,
   )
   vm_startup = templatefile("../../scripts/server.sh", {
@@ -160,7 +127,7 @@ locals {
     { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
   ]
   onprem_forward_zones = [
-    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, local.hub2_dns_in_addr], },
+    { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, ] },
     { zone = ".", targets = [local.azuredns, ] },
   ]
   onprem_redirected_hosts = []
@@ -168,7 +135,7 @@ locals {
 
 module "unbound" {
   source   = "../../modules/cloud-config-gen"
-  packages = ["tcpdump", "bind9-utils", "dnsutils", "net-tools", "unbound"]
+  packages = ["tcpdump", "dnsutils", "net-tools", "unbound"]
   files = {
     "/var/log/unbound"          = { owner = "root", permissions = "0755", content = "" }
     "/etc/unbound/unbound.conf" = { owner = "root", permissions = "0640", content = local.branch_unbound_conf }
@@ -235,33 +202,6 @@ resource "azurerm_network_security_rule" "nsg_region1_main" {
   destination_port_range      = try(each.value.destination_port, "*")
   protocol                    = each.value.protocol
   description                 = each.key
-}
-
-# region2
-#----------------------------
-
-resource "azurerm_network_security_group" "nsg_region2_main" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-main"
-  location            = local.region2
-}
-
-resource "azurerm_network_security_group" "nsg_region2_nva" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-nva"
-  location            = local.region2
-}
-
-resource "azurerm_network_security_group" "nsg_region2_appgw" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-appgw"
-  location            = local.region2
-}
-
-resource "azurerm_network_security_group" "nsg_region2_default" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-default"
-  location            = local.region2
 }*/
 
 ####################################################

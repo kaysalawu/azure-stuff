@@ -1,11 +1,11 @@
 Section: IOS configuration
 
-crypto ikev2 proposal AZURE-IKE-PROPOSAL 
+crypto ikev2 proposal AZURE-IKE-PROPOSAL
 encryption aes-cbc-256
 integrity sha1
 group 2
 !
-crypto ikev2 policy AZURE-IKE-PROFILE 
+crypto ikev2 policy AZURE-IKE-PROFILE
 proposal AZURE-IKE-PROPOSAL
 match address local ${EXT_ADDR}
 !
@@ -19,7 +19,7 @@ pre-shared-key ${v.ipsec.psk}
 crypto ikev2 profile AZURE-IKE-PROPOSAL
 match address local ${EXT_ADDR}
 %{~ for v in TUNNELS }
-match identity remote address ${v.ipsec.peer_ip} 255.255.255.255 
+match identity remote address ${v.ipsec.peer_ip} 255.255.255.255
 %{~ endfor }
 authentication remote pre-share
 authentication local pre-share
@@ -27,11 +27,11 @@ keyring local AZURE-KEYRING
 lifetime 28800
 dpd 10 5 on-demand
 !
-crypto ipsec transform-set AZURE-IPSEC-TRANSFORM-SET esp-gcm 256 
+crypto ipsec transform-set AZURE-IPSEC-TRANSFORM-SET esp-gcm 256
 mode tunnel
 !
 crypto ipsec profile AZURE-IPSEC-PROFILE
-set transform-set AZURE-IPSEC-TRANSFORM-SET 
+set transform-set AZURE-IPSEC-TRANSFORM-SET
 set ikev2-profile AZURE-IKE-PROPOSAL
 set security-association lifetime seconds 3600
 !

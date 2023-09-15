@@ -53,12 +53,40 @@ locals {
           psk     = local.psk
         }
       },
+      {
+        ike = {
+          name    = "Tunnel2"
+          address = cidrhost(local.branch1_nva_tun_range2, 1)
+          mask    = cidrnetmask(local.branch1_nva_tun_range2)
+          source  = local.branch1_nva_ext_addr
+          dest    = module.hub2.vpngw_public_ip0
+        },
+        ipsec = {
+          peer_ip = module.hub2.vpngw_public_ip0
+          psk     = local.psk
+        }
+      },
+      {
+        ike = {
+          name    = "Tunnel3"
+          address = cidrhost(local.branch1_nva_tun_range3, 1)
+          mask    = cidrnetmask(local.branch1_nva_tun_range3)
+          source  = local.branch1_nva_ext_addr
+          dest    = module.hub2.vpngw_public_ip1
+        },
+        ipsec = {
+          peer_ip = module.hub2.vpngw_public_ip1
+          psk     = local.psk
+        }
+      },
     ]
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.branch1_ext_default_gw },
       { network = local.hub1_vpngw_bgp_ip0, mask = "255.255.255.255", next_hop = "Tunnel0" },
       { network = local.hub1_vpngw_bgp_ip1, mask = "255.255.255.255", next_hop = "Tunnel1" },
+      { network = local.hub2_vpngw_bgp_ip0, mask = "255.255.255.255", next_hop = "Tunnel2" },
+      { network = local.hub2_vpngw_bgp_ip1, mask = "255.255.255.255", next_hop = "Tunnel3" },
       {
         network  = cidrhost(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0], 0)
         mask     = cidrnetmask(local.branch1_subnets["${local.branch1_prefix}main"].address_prefixes[0])
@@ -77,6 +105,20 @@ locals {
       {
         peer_asn        = local.hub1_bgp_asn
         peer_ip         = local.hub1_vpngw_bgp_ip1
+        source_loopback = true
+        ebgp_multihop   = true
+        route_map       = {}
+      },
+      {
+        peer_asn        = local.hub2_bgp_asn,
+        peer_ip         = local.hub2_vpngw_bgp_ip0,
+        source_loopback = true
+        ebgp_multihop   = true
+        route_map       = {}
+      },
+      {
+        peer_asn        = local.hub2_bgp_asn
+        peer_ip         = local.hub2_vpngw_bgp_ip1
         source_loopback = true
         ebgp_multihop   = true
         route_map       = {}
