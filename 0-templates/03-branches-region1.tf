@@ -14,9 +14,9 @@ module "branch1" {
   storage_account = module.common.storage_accounts["region1"]
 
   nsg_subnet_map = {
-    "${local.branch1_prefix}main" = module.common.nsg_main["region1"].id
-    "${local.branch1_prefix}int"  = module.common.nsg_main["region1"].id
-    "${local.branch1_prefix}ext"  = module.common.nsg_nva["region1"].id
+    #"${local.branch1_prefix}main" = module.common.nsg_main["region1"].id
+    #"${local.branch1_prefix}int"  = module.common.nsg_main["region1"].id
+    #"${local.branch1_prefix}ext"  = module.common.nsg_nva["region1"].id
   }
 
   vnet_config = [

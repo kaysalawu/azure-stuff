@@ -45,4 +45,7 @@ module "branch3" {
       use_vm_extension = true
     }
   ]
+  depends_on = [
+    module.common,
+  ]
 }

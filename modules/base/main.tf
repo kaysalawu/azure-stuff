@@ -205,45 +205,6 @@ module "vm" {
   ]
 }
 
-# route server
-#----------------------------
-
-resource "azurerm_public_ip" "ars_pip" {
-  count               = var.vnet_config[0].enable_ars ? 1 : 0
-  resource_group_name = var.resource_group
-  name                = "${local.prefix}ars-pip"
-  location            = var.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-  timeouts {
-    create = "60m"
-  }
-  depends_on = [
-    azurerm_subnet.this,
-    azurerm_subnet_network_security_group_association.this,
-  ]
-}
-
-resource "azurerm_route_server" "ars" {
-  count                            = var.vnet_config[0].enable_ars ? 1 : 0
-  resource_group_name              = var.resource_group
-  name                             = "${local.prefix}ars"
-  location                         = var.location
-  sku                              = "Standard"
-  public_ip_address_id             = azurerm_public_ip.ars_pip[0].id
-  subnet_id                        = azurerm_subnet.this["RouteServerSubnet"].id
-  branch_to_branch_traffic_enabled = true
-
-  lifecycle {
-    ignore_changes = [
-      subnet_id
-    ]
-  }
-  timeouts {
-    create = "60m"
-  }
-}
-
 # vpngw
 #----------------------------
 
@@ -361,6 +322,49 @@ resource "azurerm_virtual_network_gateway" "ergw" {
   }
 }
 
+# route server
+#----------------------------
+
+resource "azurerm_public_ip" "ars_pip" {
+  count               = var.vnet_config[0].enable_ars ? 1 : 0
+  resource_group_name = var.resource_group
+  name                = "${local.prefix}ars-pip"
+  location            = var.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+  timeouts {
+    create = "60m"
+  }
+  depends_on = [
+    azurerm_subnet.this,
+    azurerm_subnet_network_security_group_association.this,
+  ]
+}
+
+resource "azurerm_route_server" "ars" {
+  count                            = var.vnet_config[0].enable_ars ? 1 : 0
+  resource_group_name              = var.resource_group
+  name                             = "${local.prefix}ars"
+  location                         = var.location
+  sku                              = "Standard"
+  public_ip_address_id             = azurerm_public_ip.ars_pip[0].id
+  subnet_id                        = azurerm_subnet.this["RouteServerSubnet"].id
+  branch_to_branch_traffic_enabled = true
+
+  lifecycle {
+    ignore_changes = [
+      subnet_id
+    ]
+  }
+  timeouts {
+    create = "60m"
+  }
+  depends_on = [
+    azurerm_virtual_network_gateway.vpngw,
+    azurerm_virtual_network_gateway.ergw,
+  ]
+}
+
 # azure firewall
 #----------------------------
 
@@ -442,9 +446,9 @@ resource "azurerm_firewall" "azfw" {
   depends_on = [
     azurerm_public_ip.fw_mgt_pip,
     azurerm_public_ip.fw_pip,
+    azurerm_route_server.ars,
     azurerm_virtual_network_gateway.vpngw,
     azurerm_virtual_network_gateway.ergw,
-    azurerm_route_server.ars
   ]
 }
 

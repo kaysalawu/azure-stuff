@@ -1,6 +1,6 @@
 
 locals {
-  private_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  private_prefixes = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10"]
 }
 
 ####################################################
@@ -78,6 +78,22 @@ resource "azurerm_network_security_group" "nsg_main" {
   location            = each.value
 }
 
+resource "azurerm_network_security_rule" "nsg_main_private" {
+  for_each                    = var.regions
+  resource_group_name         = var.resource_group
+  network_security_group_name = azurerm_network_security_group.nsg_main[each.key].name
+  name                        = "inbound-private"
+  direction                   = "Inbound"
+  access                      = "Allow"
+  priority                    = 100
+  source_address_prefixes     = local.private_prefixes
+  source_port_range           = "*"
+  destination_address_prefix  = "*"
+  destination_port_range      = "*"
+  protocol                    = "*"
+  description                 = "Allow all private prefixes"
+}
+
 # nva
 #----------------------------
 
@@ -86,6 +102,54 @@ resource "azurerm_network_security_group" "nsg_nva" {
   resource_group_name = var.resource_group
   name                = "${var.prefix}-nsg-${each.value}-nva"
   location            = each.value
+}
+
+resource "azurerm_network_security_rule" "nsg_nva_private" {
+  for_each                    = var.regions
+  resource_group_name         = var.resource_group
+  network_security_group_name = azurerm_network_security_group.nsg_nva[each.key].name
+  name                        = "inbound-private"
+  direction                   = "Inbound"
+  access                      = "Allow"
+  priority                    = 140
+  source_address_prefixes     = local.private_prefixes
+  source_port_range           = "*"
+  destination_address_prefix  = "*"
+  destination_port_range      = "*"
+  protocol                    = "*"
+  description                 = "Allow all private prefixes"
+}
+
+resource "azurerm_network_security_rule" "nsg_nva_inbound_allow_ipsec" {
+  for_each                    = var.regions
+  resource_group_name         = var.resource_group
+  network_security_group_name = azurerm_network_security_group.nsg_nva[each.key].name
+  name                        = "inbound-allow-ipsec"
+  direction                   = "Inbound"
+  access                      = "Allow"
+  priority                    = 150
+  source_address_prefix       = "*"
+  source_port_range           = "*"
+  destination_address_prefix  = "*"
+  destination_port_ranges     = ["500", "4500"]
+  protocol                    = "Udp"
+  description                 = "Inbound Allow UDP 500, 4500"
+}
+
+resource "azurerm_network_security_rule" "nsg_nva_outbound_allow_ipsec" {
+  for_each                    = var.regions
+  resource_group_name         = var.resource_group
+  network_security_group_name = azurerm_network_security_group.nsg_nva[each.key].name
+  name                        = "outbound-allow-ipsec"
+  direction                   = "Outbound"
+  access                      = "Allow"
+  priority                    = 160
+  source_address_prefix       = "*"
+  source_port_range           = "*"
+  destination_address_prefix  = "*"
+  destination_port_ranges     = ["500", "4500"]
+  protocol                    = "Udp"
+  description                 = "Outbound Allow UDP 500, 4500"
 }
 
 # appgw
@@ -105,7 +169,7 @@ resource "azurerm_network_security_rule" "nsg_appgw_inbound_allow_appgw_v2sku" {
   name                        = "inbound-allow-appgw-v2sku"
   direction                   = "Inbound"
   access                      = "Allow"
-  priority                    = 100
+  priority                    = 200
   source_address_prefix       = "GatewayManager"
   source_port_range           = "*"
   destination_address_prefix  = "*"
@@ -121,7 +185,7 @@ resource "azurerm_network_security_rule" "nsg_appgw_inbound_allow_web_external" 
   name                        = "inbound-allow-web-external"
   direction                   = "Inbound"
   access                      = "Allow"
-  priority                    = 110
+  priority                    = 210
   source_address_prefix       = "0.0.0.0/0"
   source_port_range           = "*"
   destination_address_prefix  = "VirtualNetwork"

@@ -124,7 +124,7 @@ module "hub1_udr_gateway" {
   subnet_id              = module.hub1.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_firewall_ip
-  destinations           = local.gateway_udr_destinations
+  destinations           = local.hub1_gateway_udr_destinations
   depends_on             = [module.hub1, ]
 }
 

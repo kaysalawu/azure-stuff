@@ -124,7 +124,7 @@ module "hub2_udr_gateway" {
   subnet_id              = module.hub2.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub2_firewall_ip
-  destinations           = local.main_udr_destinations
+  destinations           = local.hub2_gateway_udr_destinations
   depends_on             = [module.hub2, ]
 }
 
@@ -147,20 +147,6 @@ module "hub2_udr_main" {
 # lng
 #----------------------------
 
-# branch3
-
-resource "azurerm_local_network_gateway" "hub2_branch3_lng" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.hub2_prefix}branch3-lng"
-  location            = local.hub2_location
-  gateway_address     = azurerm_public_ip.branch3_nva_pip.ip_address
-  address_space       = ["${local.branch3_nva_loopback0}/32", ]
-  bgp_settings {
-    asn                 = local.branch3_nva_asn
-    bgp_peering_address = local.branch3_nva_loopback0
-  }
-}
-
 # branch1
 
 resource "azurerm_local_network_gateway" "hub2_branch1_lng" {
@@ -172,6 +158,20 @@ resource "azurerm_local_network_gateway" "hub2_branch1_lng" {
   bgp_settings {
     asn                 = local.branch1_nva_asn
     bgp_peering_address = local.branch1_nva_loopback0
+  }
+}
+
+# branch3
+
+resource "azurerm_local_network_gateway" "hub2_branch3_lng" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub2_prefix}branch3-lng"
+  location            = local.hub2_location
+  gateway_address     = azurerm_public_ip.branch3_nva_pip.ip_address
+  address_space       = ["${local.branch3_nva_loopback0}/32", ]
+  bgp_settings {
+    asn                 = local.branch3_nva_asn
+    bgp_peering_address = local.branch3_nva_loopback0
   }
 }
 

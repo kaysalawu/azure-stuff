@@ -25,9 +25,9 @@ module "spoke4" {
   }
 
   nsg_subnet_map = {
-    #"${local.spoke4_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
-    #"${local.spoke4_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    #"${local.spoke4_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "${local.spoke4_prefix}main"  = module.common.nsg_main["region2"].id
+    "${local.spoke4_prefix}appgw" = module.common.nsg_appgw["region2"].id
+    "${local.spoke4_prefix}ilb"   = module.common.nsg_default["region2"].id
   }
 
   vnet_config = [
@@ -46,8 +46,11 @@ module "spoke4" {
       custom_data      = base64encode(local.vm_startup)
       source_image     = "ubuntu"
       use_vm_extension = false
-      #delay_creation   = "60s"
+      delay_creation   = "120s"
     }
+  ]
+  depends_on = [
+    module.common,
   ]
 }
 
@@ -73,9 +76,9 @@ module "spoke5" {
   }
 
   nsg_subnet_map = {
-    "${local.spoke5_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
-    #"${local.spoke5_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    #"${local.spoke5_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "${local.spoke5_prefix}main"  = module.common.nsg_main["region2"].id
+    "${local.spoke5_prefix}appgw" = module.common.nsg_appgw["region2"].id
+    "${local.spoke5_prefix}ilb"   = module.common.nsg_default["region2"].id
   }
 
   vnet_config = [
@@ -93,8 +96,11 @@ module "spoke5" {
       custom_data      = base64encode(local.vm_startup)
       source_image     = "ubuntu"
       use_vm_extension = false
-      delay_creation   = "180s"
+      delay_creation   = "120s"
     }
+  ]
+  depends_on = [
+    module.common,
   ]
 }
 
@@ -116,9 +122,9 @@ module "spoke6" {
   dns_zone_linked_rulesets = {}
 
   nsg_subnet_map = {
-    #"${local.spoke6_prefix}main"  = azurerm_network_security_group.nsg_region2_main.id
-    #"${local.spoke6_prefix}appgw" = azurerm_network_security_group.nsg_region2_appgw.id
-    #"${local.spoke6_prefix}ilb"   = azurerm_network_security_group.nsg_region2_default.id
+    "${local.spoke6_prefix}main"  = module.common.nsg_main["region2"].id
+    "${local.spoke6_prefix}appgw" = module.common.nsg_appgw["region2"].id
+    "${local.spoke6_prefix}ilb"   = module.common.nsg_default["region2"].id
   }
 
   vnet_config = [
@@ -141,8 +147,11 @@ module "spoke6" {
       #delay_creation   = "60s"
     }
   ]
+  depends_on = [
+    module.common,
+  ]
 }
-
+/*
 # ilb
 #----------------------------
 
@@ -192,4 +201,4 @@ module "spoke6_pls" {
       lb_frontend_ids = [module.spoke6_lb.frontend_ip_configuration[0].id, ]
     }
   ]
-}
+}*/

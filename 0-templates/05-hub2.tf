@@ -20,9 +20,9 @@ module "hub2" {
   }
 
   nsg_subnet_map = {
-    #"${local.hub2_prefix}main" = azurerm_network_security_group.nsg_region2_main.id
-    #"${local.hub2_prefix}nva"  = azurerm_network_security_group.nsg_region2_nva.id
-    #"${local.hub2_prefix}ilb"  = azurerm_network_security_group.nsg_region2_default.id
+    "${local.hub2_prefix}main" = module.common.nsg_main["region2"].id
+    "${local.hub2_prefix}nva"  = module.common.nsg_nva["region2"].id
+    "${local.hub2_prefix}ilb"  = module.common.nsg_default["region2"].id
   }
 
   vnet_config = [
@@ -33,6 +33,9 @@ module "hub2" {
       enable_firewall    = local.hub2_features.enable_firewall
       firewall_sku       = local.hub2_features.firewall_sku
       firewall_policy_id = local.hub2_features.firewall_policy_id
+
+      private_dns_inbound_subnet_name  = "${local.hub2_prefix}dns-in"
+      private_dns_outbound_subnet_name = "${local.hub2_prefix}dns-out"
 
       enable_private_dns_resolver = local.hub2_features.enable_private_dns_resolver
       enable_ars                  = local.hub2_features.enable_ars
@@ -74,11 +77,11 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "hub2_onprem" {
   domain_name               = "${local.onprem_domain}."
   enabled                   = true
   target_dns_servers {
-    ip_address = local.branch1_dns_addr
+    ip_address = local.branch3_dns_addr
     port       = 53
   }
   target_dns_servers {
-    ip_address = local.branch3_dns_addr
+    ip_address = local.branch1_dns_addr
     port       = 53
   }
 }

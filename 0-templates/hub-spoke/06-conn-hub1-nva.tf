@@ -56,11 +56,8 @@ module "spoke1_udr_main" {
   subnet_id              = module.spoke1.subnets["${local.spoke1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = concat(
-    ["0.0.0.0/0"],
-    local.main_udr_destinations
-  )
-  depends_on = [module.hub1]
+  destinations           = local.main_udr_destinations
+  depends_on             = [module.hub1]
 }
 
 ####################################################
@@ -111,11 +108,8 @@ module "spoke2_udr_main" {
   subnet_id              = module.spoke2.subnets["${local.spoke2_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = concat(
-    ["0.0.0.0/0"],
-    local.main_udr_destinations
-  )
-  depends_on = [module.hub1]
+  destinations           = local.main_udr_destinations
+  depends_on             = [module.hub1]
 }
 
 ####################################################
@@ -168,10 +162,10 @@ locals {
 
     STATIC_ROUTES = [
       { network = "0.0.0.0", mask = "0.0.0.0", next_hop = local.hub1_default_gw_nva },
-      { network = local.hub1_ars_bgp0, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
-      { network = local.hub1_ars_bgp1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
       { network = local.hub2_nva_loopback0, mask = "255.255.255.255", next_hop = "Tunnel0" },
       { network = local.hub2_nva_addr, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
+      { network = local.hub1_ars_bgp0, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
+      { network = local.hub1_ars_bgp1, mask = "255.255.255.255", next_hop = local.hub1_default_gw_nva },
     ]
 
     BGP_SESSIONS = [
@@ -181,8 +175,8 @@ locals {
         as_override   = true
         ebgp_multihop = true
         route_map = {
-          #name      = local.hub1_cisco_nva_route_map_name_nh
-          #direction = "out"
+          name      = local.hub1_cisco_nva_route_map_name_nh
+          direction = "out"
         }
       },
       {
@@ -191,8 +185,8 @@ locals {
         as_override   = true
         ebgp_multihop = true
         route_map = {
-          #name      = local.hub1_cisco_nva_route_map_name_nh
-          #direction = "out"
+          name      = local.hub1_cisco_nva_route_map_name_nh
+          direction = "out"
         }
       },
       {
@@ -226,7 +220,7 @@ module "hub1_nva" {
 }
 
 # udr
-
+/*
 module "hub1_udr_gateway" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
@@ -235,7 +229,7 @@ module "hub1_udr_gateway" {
   subnet_id              = module.hub1.subnets["GatewaySubnet"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations           = local.main_udr_destinations
+  destinations           = local.hub1_gateway_udr_destinations
   depends_on             = [module.hub1, ]
 }
 
@@ -247,12 +241,9 @@ module "hub1_udr_main" {
   subnet_id              = module.hub1.subnets["${local.hub1_prefix}main"].id
   next_hop_type          = "VirtualAppliance"
   next_hop_in_ip_address = local.hub1_nva_ilb_addr
-  destinations = concat(
-    ["0.0.0.0/0"],
-    local.main_udr_destinations
-  )
-  depends_on = [module.hub1, ]
-}
+  destinations           = local.main_udr_destinations
+  depends_on             = [module.hub1, ]
+}*/
 
 ####################################################
 # internal lb
