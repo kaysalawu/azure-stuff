@@ -40,6 +40,14 @@ locals {
     local.udr_azure_destinations_region2,
     local.udr_onprem_destinations_region2,
   )
+  hub1_gateway_udr_destinations = concat(
+    local.udr_azure_destinations_region1,
+    local.udr_azure_destinations_region2,
+  )
+  hub2_gateway_udr_destinations = concat(
+    local.udr_azure_destinations_region1,
+    local.udr_azure_destinations_region2,
+  )
   firewall_sku = "Basic"
 
   hub1_features = {

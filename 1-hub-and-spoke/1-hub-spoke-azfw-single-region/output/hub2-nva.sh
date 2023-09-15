@@ -34,10 +34,32 @@ ip address 10.22.2.99 255.255.255.255
 !
 !
 ip route 0.0.0.0 0.0.0.0 10.22.1.1
+ip route 10.22.8.4 255.255.255.255 10.22.1.1
+ip route 10.22.8.5 255.255.255.255 10.22.1.1
+ip route 10.11.11.11 255.255.255.255 Tunnel0
+ip route 10.11.1.9 255.255.255.255 10.22.1.1
+ip route 10.10.0.0 255.255.0.0 10.22.1.1
+ip route 10.11.0.0 255.255.0.0 10.22.1.1
+ip route 10.1.0.0 255.255.0.0 10.22.1.1
+ip route 10.2.0.0 255.255.0.0 10.22.1.1
 !
 route-map NEXT-HOP permit 100
 match ip address prefix-list all
 set ip next-hop 10.22.2.99
 !
-router bgp 65020
+router bgp 65000
 bgp router-id 10.22.1.9
+neighbor 10.22.8.4 remote-as 65515
+neighbor 10.22.8.4 ebgp-multihop 255
+neighbor 10.22.8.4 soft-reconfiguration inbound
+neighbor 10.22.8.4 as-override
+neighbor 10.22.8.4 route-map NEXT-HOP out
+neighbor 10.22.8.5 remote-as 65515
+neighbor 10.22.8.5 ebgp-multihop 255
+neighbor 10.22.8.5 soft-reconfiguration inbound
+neighbor 10.22.8.5 as-override
+neighbor 10.22.8.5 route-map NEXT-HOP out
+network 10.10.0.0 mask 255.255.0.0
+network 10.11.0.0 mask 255.255.0.0
+network 10.1.0.0 mask 255.255.0.0
+network 10.2.0.0 mask 255.255.0.0

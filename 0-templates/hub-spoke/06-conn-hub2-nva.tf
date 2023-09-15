@@ -130,8 +130,6 @@ locals {
     INT_ADDR = local.hub2_nva_addr
     VPN_PSK  = local.psk
 
-    MASQUERADE = []
-
     ROUTE_MAPS = [
       {
         name   = local.hub2_cisco_nva_route_map_name_nh
@@ -220,7 +218,7 @@ module "hub2_nva" {
 }
 
 # udr
-/*
+
 module "hub2_udr_gateway" {
   source                 = "../../modules/udr"
   resource_group         = azurerm_resource_group.rg.name
@@ -243,7 +241,7 @@ module "hub2_udr_main" {
   next_hop_in_ip_address = local.hub2_nva_ilb_addr
   destinations           = local.main_udr_destinations
   depends_on             = [module.hub2, ]
-}*/
+}
 
 ####################################################
 # internal lb

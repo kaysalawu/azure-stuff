@@ -125,7 +125,7 @@ echo -e "\n trace ip ...\n"
 %{~ if try(target.ip, "") != "" ~}
 echo -e "\n${target.name}"
 echo -e "-------------------------------------"
-timeout 8 tracepath ${target.ip}
+timeout 9 tracepath ${target.ip}
 %{ endif ~}
 %{ endif ~}
 %{ endfor ~}
