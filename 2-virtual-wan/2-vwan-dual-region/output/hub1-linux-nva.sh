@@ -129,7 +129,6 @@ router bgp 65010
   neighbor 192.168.11.69 soft-reconfiguration inbound
   network 10.11.0.0/24
   network 10.2.0.0/16
-  network 13.80.129.23/32
 !
   address-family ipv6
   exit-address-family

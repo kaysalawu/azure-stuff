@@ -1,6 +1,6 @@
 
 locals {
-  spoke3_vm_public_ip = module.spoke3.vm_public_ip[local.spoke3_vm_dns_host]
+  #spoke3_vm_public_ip = module.spoke3.vm_public_ip[local.spoke3_vm_name]
 }
 
 ####################################################
@@ -16,13 +16,8 @@ module "spoke1" {
   location        = local.spoke1_location
   storage_account = module.common.storage_accounts["region1"]
 
-  private_dns_zone = local.spoke1_dns_zone
-  dns_zone_linked_vnets = {
-    #"hub1" = { vnet = module.hub1.vnet.id, registration_enabled = false }
-  }
-  dns_zone_linked_rulesets = {
-    #"hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
-  }
+  private_dns_zone_name = azurerm_private_dns_zone.global.name
+  private_dns_prefix    = local.spoke1_dns_zone
 
   nsg_subnet_map = {
     "${local.spoke1_prefix}main"  = module.common.nsg_main["region1"].id
@@ -40,13 +35,12 @@ module "spoke1" {
 
   vm_config = [
     {
-      name             = local.spoke1_vm_dns_host
-      subnet           = "${local.spoke1_prefix}main"
-      private_ip       = local.spoke1_vm_addr
-      custom_data      = base64encode(local.vm_startup)
-      source_image     = "ubuntu"
-      use_vm_extension = false
-      delay_creation   = "120s"
+      name         = "vm"
+      dns_host     = local.spoke1_vm_dns_host
+      subnet       = "${local.spoke1_prefix}main"
+      private_ip   = local.spoke1_vm_addr
+      custom_data  = base64encode(local.vm_startup)
+      source_image = "ubuntu"
     }
   ]
   depends_on = [
@@ -67,13 +61,8 @@ module "spoke2" {
   location        = local.spoke2_location
   storage_account = module.common.storage_accounts["region1"]
 
-  private_dns_zone = local.spoke2_dns_zone
-  dns_zone_linked_vnets = {
-    #"hub1" = { vnet = module.hub1.vnet.id, registration_enabled = false }
-  }
-  dns_zone_linked_rulesets = {
-    #"hub1" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub1_onprem.id
-  }
+  private_dns_zone_name = azurerm_private_dns_zone.global.name
+  private_dns_prefix    = local.spoke2_dns_zone
 
   nsg_subnet_map = {
     "${local.spoke2_prefix}main"  = module.common.nsg_main["region1"].id
@@ -90,13 +79,12 @@ module "spoke2" {
 
   vm_config = [
     {
-      name             = local.spoke2_vm_dns_host
-      subnet           = "${local.spoke2_prefix}main"
-      private_ip       = local.spoke2_vm_addr
-      custom_data      = base64encode(local.vm_startup)
-      source_image     = "ubuntu"
-      use_vm_extension = false
-      delay_creation   = "120s"
+      name         = "vm"
+      dns_host     = local.spoke2_vm_dns_host
+      subnet       = "${local.spoke2_prefix}main"
+      private_ip   = local.spoke2_vm_addr
+      custom_data  = base64encode(local.vm_startup)
+      source_image = "ubuntu"
     }
   ]
   depends_on = [
@@ -117,9 +105,8 @@ module "spoke3" {
   location        = local.spoke3_location
   storage_account = module.common.storage_accounts["region1"]
 
-  private_dns_zone         = local.spoke3_dns_zone
-  dns_zone_linked_vnets    = {}
-  dns_zone_linked_rulesets = {}
+  private_dns_zone_name = azurerm_private_dns_zone.global.name
+  private_dns_prefix    = local.spoke3_dns_zone
 
   nsg_subnet_map = {
     "${local.spoke3_prefix}main"  = module.common.nsg_main["region1"].id
@@ -137,14 +124,13 @@ module "spoke3" {
 
   vm_config = [
     {
-      name             = local.spoke3_vm_dns_host
+      name             = "vm"
+      dns_host         = local.spoke3_vm_dns_host
       subnet           = "${local.spoke3_prefix}main"
       private_ip       = local.spoke3_vm_addr
       enable_public_ip = true
       custom_data      = base64encode(local.vm_startup)
       source_image     = "ubuntu"
-      use_vm_extension = false
-      #delay_creation   = "60s"
     }
   ]
   depends_on = [

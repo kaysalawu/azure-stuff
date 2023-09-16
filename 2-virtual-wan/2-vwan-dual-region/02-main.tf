@@ -117,6 +117,14 @@ module "common" {
   regions        = local.regions
 }
 
+resource "azurerm_private_dns_zone" "global" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = local.cloud_domain
+  timeouts {
+    create = "60m"
+  }
+}
+
 # vm startup scripts
 #----------------------------
 
@@ -133,20 +141,20 @@ locals {
   #mypip         = chomp(data.http.mypip.response_body)
 
   vm_script_targets_region1 = [
-    { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },
-    { name = "hub1   ", dns = local.hub1_vm_dns, ip = local.hub1_vm_addr },
-    { name = "hub1-pe", dns = local.hub1_pep_dns, ping = false },
-    { name = "spoke1 ", dns = local.spoke1_vm_dns, ip = local.spoke1_vm_addr },
-    { name = "spoke2 ", dns = local.spoke2_vm_dns, ip = local.spoke2_vm_addr },
-    { name = "spoke3 ", dns = local.spoke3_vm_dns, ip = local.spoke3_vm_addr, ping = false },
+    { name = "branch1", dns = local.branch1_vm_fqdn, ip = local.branch1_vm_addr },
+    { name = "hub1   ", dns = local.hub1_vm_fqdn, ip = local.hub1_vm_addr },
+    { name = "hub1-pe", dns = local.hub1_pep_fqdn, ping = false },
+    { name = "spoke1 ", dns = local.spoke1_vm_fqdn, ip = local.spoke1_vm_addr },
+    { name = "spoke2 ", dns = local.spoke2_vm_fqdn, ip = local.spoke2_vm_addr },
+    { name = "spoke3 ", dns = local.spoke3_vm_fqdn, ip = local.spoke3_vm_addr, ping = false },
   ]
   vm_script_targets_region2 = [
-    { name = "branch3", dns = local.branch3_vm_dns, ip = local.branch3_vm_addr },
-    { name = "hub2   ", dns = local.hub2_vm_dns, ip = local.hub2_vm_addr },
-    { name = "hub2-pe", dns = local.hub2_pep_dns, ping = false },
-    { name = "spoke4 ", dns = local.spoke4_vm_dns, ip = local.spoke4_vm_addr },
-    { name = "spoke5 ", dns = local.spoke5_vm_dns, ip = local.spoke5_vm_addr },
-    { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
+    { name = "branch3", dns = local.branch3_vm_fqdn, ip = local.branch3_vm_addr },
+    { name = "hub2   ", dns = local.hub2_vm_fqdn, ip = local.hub2_vm_addr },
+    { name = "hub2-pe", dns = local.hub2_pep_fqdn, ping = false },
+    { name = "spoke4 ", dns = local.spoke4_vm_fqdn, ip = local.spoke4_vm_addr },
+    { name = "spoke5 ", dns = local.spoke5_vm_fqdn, ip = local.spoke5_vm_addr },
+    { name = "spoke6 ", dns = local.spoke6_vm_fqdn, ip = local.spoke6_vm_addr, ping = false },
   ]
   vm_script_targets_misc = [
     { name = "internet", dns = "icanhazip.com", ip = "icanhazip.com" },
@@ -174,9 +182,9 @@ locals {
     TARGETS              = local.vm_script_targets_region1
   }
   onprem_local_records = [
-    { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
-    { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
-    { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
+    { name = (local.branch1_vm_fqdn), record = local.branch1_vm_addr },
+    { name = (local.branch2_vm_fqdn), record = local.branch2_vm_addr },
+    { name = (local.branch3_vm_fqdn), record = local.branch3_vm_addr },
   ]
   onprem_forward_zones = [
     { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, local.hub2_dns_in_addr], },

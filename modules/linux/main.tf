@@ -106,10 +106,10 @@ SETTINGS
 }
 
 resource "azurerm_private_dns_a_record" "this" {
-  count               = var.private_dns_zone == "" ? 0 : 1
+  count               = var.private_dns_zone_name == "" || var.dns_host == "" ? 0 : 1
   resource_group_name = var.resource_group
-  name                = lower(var.name)
-  zone_name           = var.private_dns_zone
+  name                = lower("${var.dns_host}")
+  zone_name           = var.private_dns_zone_name
   ttl                 = 300
   records             = [azurerm_linux_virtual_machine.this.private_ip_address]
 }

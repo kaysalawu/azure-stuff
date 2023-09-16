@@ -44,8 +44,14 @@ variable "ssh_public_key" {
   default     = null
 }
 
-variable "private_dns_zone" {
-  description = "private dns zone"
+variable "private_dns_zone_name" {
+  description = "private dns zone name"
+  type        = string
+  default     = null
+}
+
+variable "private_dns_prefix" {
+  description = "private dns prefix"
   type        = string
   default     = null
 }
@@ -99,6 +105,7 @@ variable "vnet_config" {
 variable "vm_config" {
   type = list(object({
     name                 = string
+    dns_host             = optional(string, "")
     subnet               = string
     vnet_number          = optional(string, 0)
     dns_host             = optional(string)

@@ -7,10 +7,6 @@ output "subnets" {
   value = azurerm_subnet.this
 }
 
-output "private_dns_zone" {
-  value = azurerm_private_dns_zone.this
-}
-
 output "vm" {
   value = { for k, v in module.vm : k => v.vm }
 }

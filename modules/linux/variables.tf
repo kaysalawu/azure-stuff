@@ -14,6 +14,12 @@ variable "name" {
   type        = string
 }
 
+variable "dns_host" {
+  description = "dns host prefix"
+  type        = string
+  default     = ""
+}
+
 variable "location" {
   description = "vnet region location"
   type        = string
@@ -108,8 +114,14 @@ variable "use_vm_extension" {
   default     = false
 }
 
-variable "private_dns_zone" {
+variable "private_dns_zone_name" {
   description = "private dns zone name"
+  type        = string
+  default     = ""
+}
+
+variable "private_dns_prefix" {
+  description = "private dns zone prefix"
   type        = string
   default     = ""
 }

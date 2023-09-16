@@ -57,24 +57,13 @@ resource "azurerm_subnet_network_security_group_association" "this" {
 # dns
 #----------------------------
 
-# zones
-
-resource "azurerm_private_dns_zone" "this" {
-  count               = var.private_dns_zone == null ? 0 : 1
-  resource_group_name = var.resource_group
-  name                = var.private_dns_zone
-  timeouts {
-    create = "60m"
-  }
-}
-
 # zone links
 
 resource "azurerm_private_dns_zone_virtual_network_link" "internal" {
-  count                 = var.private_dns_zone == null ? 0 : 1
+  count                 = var.private_dns_zone_name == null ? 0 : 1
   resource_group_name   = var.resource_group
   name                  = "${local.prefix}vnet-link"
-  private_dns_zone_name = azurerm_private_dns_zone.this[0].name
+  private_dns_zone_name = var.private_dns_zone_name
   virtual_network_id    = azurerm_virtual_network.this.id
   registration_enabled  = true
   timeouts {
@@ -123,6 +112,16 @@ resource "azurerm_private_dns_resolver_outbound_endpoint" "this" {
     create = "60m"
   }
 }
+
+# dns resolver links
+/*
+resource "azurerm_private_dns_resolver_virtual_network_link" "this" {
+  for_each                  = { for k, v in var.dns_zone_linked_rulesets : k => v if var.private_dns_zone_name != null }
+  name                      = "${local.prefix}${each.key}-vnet-link"
+  dns_forwarding_ruleset_id = each.value
+  virtual_network_id        = azurerm_virtual_network.this.id
+}*/
+
 
 # nat
 #----------------------------
@@ -177,24 +176,26 @@ resource "azurerm_subnet_nat_gateway_association" "nat" {
 #----------------------------
 
 module "vm" {
-  for_each         = { for x in var.vm_config : x.name => x }
-  source           = "../../modules/linux"
-  resource_group   = var.resource_group
-  prefix           = var.prefix
-  name             = each.key
-  location         = var.location
-  subnet           = azurerm_subnet.this[each.value.subnet].id
-  private_ip       = each.value.private_ip
-  source_image     = each.value.source_image
-  use_vm_extension = each.value.use_vm_extension
-  custom_data      = each.value.custom_data
-  enable_public_ip = each.value.enable_public_ip
-  dns_servers      = each.value.dns_servers
-  storage_account  = var.storage_account
-  admin_username   = var.admin_username
-  admin_password   = var.admin_password
-  private_dns_zone = try(azurerm_private_dns_zone.this[0].name, "")
-  delay_creation   = each.value.delay_creation
+  for_each              = { for x in var.vm_config : x.name => x }
+  source                = "../../modules/linux"
+  resource_group        = var.resource_group
+  prefix                = var.prefix
+  name                  = each.key
+  dns_host              = each.value.dns_host
+  location              = var.location
+  subnet                = azurerm_subnet.this[each.value.subnet].id
+  private_ip            = each.value.private_ip
+  source_image          = each.value.source_image
+  use_vm_extension      = each.value.use_vm_extension
+  custom_data           = each.value.custom_data
+  enable_public_ip      = each.value.enable_public_ip
+  dns_servers           = each.value.dns_servers
+  storage_account       = var.storage_account
+  admin_username        = var.admin_username
+  admin_password        = var.admin_password
+  private_dns_zone_name = var.private_dns_zone_name == null ? "" : var.private_dns_zone_name
+  private_dns_prefix    = var.private_dns_prefix == null ? "" : var.private_dns_prefix
+  delay_creation        = each.value.delay_creation
   depends_on = [
     azurerm_public_ip.nat,
     azurerm_nat_gateway.nat,

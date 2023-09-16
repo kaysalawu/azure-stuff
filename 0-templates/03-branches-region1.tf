@@ -28,13 +28,13 @@ module "branch1" {
 
   vm_config = [
     {
-      name           = "vm1"
+      name           = "vm"
       subnet         = "${local.branch1_prefix}main"
       private_ip     = local.branch1_vm_addr
       custom_data    = base64encode(local.vm_startup)
       source_image   = "ubuntu"
       dns_servers    = [local.branch1_dns_addr, ]
-      delay_creation = "150s"
+      delay_creation = "120s"
     },
     {
       name             = "dns"

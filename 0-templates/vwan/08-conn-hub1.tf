@@ -128,7 +128,7 @@ locals {
         BGP_ADVERTISED_PREFIXES = [
           local.hub1_subnets["${local.hub1_prefix}main"].address_prefixes[0],
           local.spoke2_address_space[0],
-          "${local.spoke3_vm_public_ip}/32"
+          #"${local.spoke3_vm_public_ip}/32"
         ]
       }
     ))
@@ -166,7 +166,7 @@ module "hub1_udr_main" {
   destinations           = local.main_udr_destinations
   depends_on             = [module.hub1]
 }
-
+/*
 module "hub1_udr_nva" {
   source         = "../../modules/udr"
   resource_group = azurerm_resource_group.rg.name
@@ -176,7 +176,7 @@ module "hub1_udr_nva" {
   next_hop_type  = "Internet"
   destinations   = ["${local.spoke3_vm_public_ip}/32", ]
   depends_on     = [module.hub1]
-}
+}*/
 
 ####################################################
 # internal lb

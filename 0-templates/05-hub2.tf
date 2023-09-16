@@ -10,14 +10,8 @@ module "hub2" {
   location        = local.hub2_location
   storage_account = module.common.storage_accounts["region2"]
 
-  private_dns_zone = local.hub2_dns_zone
-  dns_zone_linked_vnets = {
-    #"spoke4" = { vnet = module.spoke4.vnet.id, registration_enabled = false }
-    #"spoke5" = { vnet = module.spoke5.vnet.id, registration_enabled = false }
-  }
-  dns_zone_linked_rulesets = {
-    #"hub2" = azurerm_private_dns_resolver_dns_forwarding_ruleset.hub2_onprem.id
-  }
+  private_dns_zone_name = azurerm_private_dns_zone.global.name
+  private_dns_prefix    = local.hub2_dns_zone
 
   nsg_subnet_map = {
     "${local.hub2_prefix}main" = module.common.nsg_main["region2"].id
@@ -45,7 +39,8 @@ module "hub2" {
 
   vm_config = [
     {
-      name         = local.hub2_vm_dns_host
+      name         = "vm"
+      dns_host     = local.hub2_vm_dns_host
       subnet       = "${local.hub2_prefix}main"
       private_ip   = local.hub2_vm_addr
       custom_data  = base64encode(local.vm_startup)
