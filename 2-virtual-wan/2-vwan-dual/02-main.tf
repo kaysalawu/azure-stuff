@@ -34,7 +34,7 @@ locals {
     region1 = local.region1
     region2 = local.region2
   }
-  udr_destinations = concat(
+  main_udr_destinations = concat(
     local.udr_azure_destinations_region1,
     local.udr_onprem_destinations_region1,
     local.udr_azure_destinations_region2,
@@ -70,10 +70,12 @@ locals {
     enable_s2s_vpn_gateway = true
     enable_p2s_vpn_gateway = false
 
-    enable_firewall    = false
-    use_routing_intent = true
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+    security = {
+      enable_firewall    = false
+      use_routing_intent = false
+      firewall_sku       = local.firewall_sku
+      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region1"].id
+    }
   }
 
   vhub2_features = {
@@ -81,10 +83,12 @@ locals {
     enable_s2s_vpn_gateway = true
     enable_p2s_vpn_gateway = false
 
-    enable_firewall    = true
-    use_routing_intent = true
-    firewall_sku       = local.firewall_sku
-    firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
+    security = {
+      enable_firewall    = false
+      use_routing_intent = false
+      firewall_sku       = local.firewall_sku
+      firewall_policy_id = azurerm_firewall_policy.firewall_policy["region2"].id
+    }
   }
 }
 
@@ -155,12 +159,14 @@ locals {
   vm_startup = templatefile("../../scripts/server.sh", {
     TARGETS = local.vm_script_targets
   })
-  branch_unbound_config = templatefile("../../scripts/unbound.sh", {
+  unbound_vars = {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
     REDIRECTED_HOSTS     = local.onprem_redirected_hosts
     FORWARD_ZONES        = local.onprem_forward_zones
     TARGETS              = local.vm_script_targets_region1
-  })
+  }
+  branch_unbound_conf    = templatefile("../../scripts/unbound/unbound.conf", local.unbound_vars)
+  branch_unbound_startup = templatefile("../../scripts/unbound/unbound.sh", local.unbound_vars)
   branch_unbound_vars = {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
     REDIRECTED_HOSTS     = local.onprem_redirected_hosts
@@ -179,10 +185,23 @@ locals {
   onprem_redirected_hosts = []
 }
 
+module "unbound" {
+  source   = "../../modules/cloud-config-gen"
+  packages = ["tcpdump", "bind9-utils", "dnsutils", "net-tools", "unbound"]
+  files = {
+    "/var/log/unbound"          = { owner = "root", permissions = "0755", content = "" }
+    "/etc/unbound/unbound.conf" = { owner = "root", permissions = "0640", content = local.branch_unbound_conf }
+  }
+  run_commands = [
+    "systemctl restart unbound",
+    "systemctl enable unbound",
+  ]
+}
+
 ####################################################
 # nsg
 ####################################################
-
+/*
 # region1
 #----------------------------
 
@@ -262,7 +281,7 @@ resource "azurerm_network_security_group" "nsg_region2_default" {
   resource_group_name = azurerm_resource_group.rg.name
   name                = "${local.prefix}-nsg-${local.region2}-default"
   location            = local.region2
-}
+}*/
 
 ####################################################
 # addresses
@@ -300,10 +319,10 @@ resource "azurerm_firewall_policy" "firewall_policy" {
 
   private_ip_ranges = concat(
     local.private_prefixes,
-    [
+    /*[
       "${local.spoke3_vm_public_ip}/32",
       "${local.spoke6_vm_public_ip}/32",
-    ]
+    ]*/
   )
 
   #dns {
@@ -312,7 +331,7 @@ resource "azurerm_firewall_policy" "firewall_policy" {
 }
 
 # collection
-/*
+
 module "fw_policy_rule_collection_group" {
   for_each           = local.regions
   source             = "../../modules/fw-policy"
@@ -337,4 +356,20 @@ module "fw_policy_rule_collection_group" {
   ]
   application_rule_collection = []
   nat_rule_collection         = []
-}*/
+}
+
+####################################################
+# output files
+####################################################
+
+locals {
+  main_files = {
+    "output/unbound.conf" = module.unbound.cloud_config
+  }
+}
+
+resource "local_file" "main_files" {
+  for_each = local.main_files
+  filename = each.key
+  content  = each.value
+}

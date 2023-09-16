@@ -125,6 +125,7 @@ locals {
           },
         ]
         BGP_ADVERTISED_PREFIXES = [
+          local.hub2_subnets["${local.hub2_prefix}main"].address_prefixes[0],
           local.spoke5_address_space[0],
           "${local.spoke6_vm_public_ip}/32"
         ]
@@ -174,6 +175,69 @@ module "hub2_udr_nva" {
   next_hop_type  = "Internet"
   destinations   = ["${local.spoke6_vm_public_ip}/32", ]
   depends_on     = [module.hub2]
+}
+
+####################################################
+# internal lb
+####################################################
+
+resource "azurerm_lb" "hub2_nva_lb" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = "${local.hub2_prefix}nva-lb"
+  location            = local.hub2_location
+  sku                 = "Standard"
+  frontend_ip_configuration {
+    name                          = "${local.hub2_prefix}nva-lb-feip"
+    subnet_id                     = module.hub2.subnets["${local.hub2_prefix}ilb"].id
+    private_ip_address            = local.hub2_nva_ilb_addr
+    private_ip_address_allocation = "Static"
+  }
+  lifecycle {
+    ignore_changes = [frontend_ip_configuration, ]
+  }
+}
+
+# backend
+
+resource "azurerm_lb_backend_address_pool" "hub2_nva" {
+  name            = "${local.hub2_prefix}nva-beap"
+  loadbalancer_id = azurerm_lb.hub2_nva_lb.id
+}
+
+resource "azurerm_lb_backend_address_pool_address" "hub2_nva" {
+  name                    = "${local.hub2_prefix}nva-beap-addr"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.hub2_nva.id
+  virtual_network_id      = module.hub2.vnet.id
+  ip_address              = local.hub2_nva_addr
+}
+
+# probe
+
+resource "azurerm_lb_probe" "hub2_nva_lb_probe" {
+  name                = "${local.hub2_prefix}nva-probe"
+  interval_in_seconds = 5
+  number_of_probes    = 2
+  loadbalancer_id     = azurerm_lb.hub2_nva_lb.id
+  port                = 22
+  protocol            = "Tcp"
+}
+
+# rule
+
+resource "azurerm_lb_rule" "hub2_nva" {
+  name     = "${local.hub2_prefix}nva-rule"
+  protocol = "All"
+  backend_address_pool_ids = [
+    azurerm_lb_backend_address_pool.hub2_nva.id
+  ]
+  loadbalancer_id                = azurerm_lb.hub2_nva_lb.id
+  frontend_port                  = 0
+  backend_port                   = 0
+  frontend_ip_configuration_name = "${local.hub2_prefix}nva-lb-feip"
+  enable_floating_ip             = false
+  idle_timeout_in_minutes        = 30
+  load_distribution              = "Default"
+  probe_id                       = azurerm_lb_probe.hub2_nva_lb_probe.id
 }
 
 ####################################################

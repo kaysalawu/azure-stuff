@@ -113,8 +113,10 @@ locals {
     FORWARD_ZONES        = local.onprem_forward_zones
     TARGETS              = local.vm_script_targets_region1
   }
-  branch_unbound_conf    = templatefile("../../scripts/unbound/unbound.conf", local.unbound_vars)
-  branch_unbound_startup = templatefile("../../scripts/unbound/unbound.sh", local.unbound_vars)
+  branch_unbound_conf         = templatefile("../../scripts/unbound/unbound.conf", local.unbound_vars)
+  branch_unbound_startup      = templatefile("../../scripts/unbound/unbound.sh", local.unbound_vars)
+  branch_dnsmasq_startup      = templatefile("../../scripts/dnsmasq/dnsmasq.sh", local.unbound_vars)
+  branch_unbound_cloud_config = templatefile("../../scripts/unbound/cloud-config", local.unbound_vars)
   branch_unbound_vars = {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
     REDIRECTED_HOSTS     = local.onprem_redirected_hosts
@@ -285,7 +287,9 @@ module "fw_policy_rule_collection_group" {
 
 locals {
   main_files = {
-    "output/unbound.conf" = module.unbound.cloud_config
+    #"output/unbound.conf" = local.branch_unbound_cloud_config
+    #"output/unbound.sh"   = local.branch_unbound_startup
+    "output/dnsmasq.sh" = local.branch_dnsmasq_startup
   }
 }
 

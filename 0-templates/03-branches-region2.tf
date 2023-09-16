@@ -34,7 +34,7 @@ module "branch3" {
       custom_data    = base64encode(local.vm_startup)
       source_image   = "ubuntu"
       dns_servers    = [local.branch3_dns_addr, ]
-      delay_creation = "150s"
+      delay_creation = "120s"
     },
     {
       name             = "dns"

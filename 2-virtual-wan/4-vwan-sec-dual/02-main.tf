@@ -357,3 +357,19 @@ module "fw_policy_rule_collection_group" {
   application_rule_collection = []
   nat_rule_collection         = []
 }
+
+####################################################
+# output files
+####################################################
+
+locals {
+  main_files = {
+    "output/unbound.conf" = module.unbound.cloud_config
+  }
+}
+
+resource "local_file" "main_files" {
+  for_each = local.main_files
+  filename = each.key
+  content  = each.value
+}

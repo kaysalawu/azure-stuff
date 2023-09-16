@@ -30,10 +30,6 @@ module "hub1" {
       address_space = local.hub1_address_space
       subnets       = local.hub1_subnets
 
-      enable_firewall    = local.hub1_features.enable_firewall
-      firewall_sku       = local.hub1_features.firewall_sku
-      firewall_policy_id = local.hub1_features.firewall_policy_id
-
       private_dns_inbound_subnet_name  = "${local.hub1_prefix}dns-in"
       private_dns_outbound_subnet_name = "${local.hub1_prefix}dns-out"
 
