@@ -1,5 +1,5 @@
 
-# Virtual WAN - Dual Hub <!-- omit from toc -->
+# Virtual WAN - Single Region <!-- omit from toc -->
 ## Lab: Vwan21 <!-- omit from toc -->
 
 Contents
@@ -168,7 +168,7 @@ azureuser@Vwan21-spoke1-vm:~$ curl pep.hub1.az.corp
 }
 ```
 
-The `hostname` and `local-ip` fields belong to the servers running the web application - in this case `Spoke3` and `Spoke6`virtual machines. The `remote-ip` fields (as seen by the web servers) are the respective IP addresses in the Private Link Service NAT subnets.
+The `hostname` and `local-ip` fields belong to the servers running the web application - in this case `Spoke3` virtual machine. The `remote-ip` field (as seen by the web servers) is an IP addresses in the Private Link Service NAT subnet.
 
 Repeat steps 1-4 for all other virtual machines.
 
@@ -281,7 +281,7 @@ RPKI validation codes: V valid, I invalid, N Not found
 
 ## Cleanup
 
-1. Navigate to the lab directory
+1. Make sure you are in the lab directory
 ```sh
 cd azure-network-terraform/2-virtual-wan/1-vwan-single-region
 ```

@@ -1,5 +1,5 @@
 
-# Virtual WAN - Dual Hub <!-- omit from toc -->
+# Virtual WAN - Dual Region <!-- omit from toc -->
 ## Lab: Vwan22 <!-- omit from toc -->
 
 Contents
@@ -338,7 +338,7 @@ RPKI validation codes: V valid, I invalid, N Not found
 
 ## Cleanup
 
-1. Navigate to the lab directory
+1. Make sure you are in the lab directory
 ```sh
 cd azure-network-terraform/2-virtual-wan/2-vwan-dual-region
 ```

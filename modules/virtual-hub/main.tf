@@ -67,9 +67,6 @@ resource "azurerm_firewall" "this" {
   timeouts {
     create = "60m"
   }
-  depends_on = [
-    azurerm_vpn_gateway.this
-  ]
 }
 
 # diagnostic setting

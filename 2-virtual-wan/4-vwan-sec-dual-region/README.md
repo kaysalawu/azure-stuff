@@ -1,5 +1,5 @@
 
-# Secure Virtual WAN - Dual Hub <!-- omit from toc -->
+# Secure Virtual WAN - Dual Region <!-- omit from toc -->
 ## Lab: Vwan24 <!-- omit from toc -->
 
 Contents
@@ -21,7 +21,7 @@ Contents
 
 This terraform code deploys a multi-hub (multi-region) Secured Virtual WAN (Vwan) testbed to observe traffic routing patterns. *Routing Intent* feature is enabled to allow traffic inspection on Azure firewalls for traffic between spokes and branches.
 
-![Secured Virtual WAN - Dual Region](../../images/scenarios/2-4-secure-vwan-dual-region.png)
+![Secured Virtual WAN - Dual Region](../../images/scenarios/2-4-vwan-sec-dual-region.png)
 
 Standard Virtual Network (Vnet) hubs (`Hub1` and `Hub2`) connect to Vwan hubs (`vHub1` and `vHub2` respectively) via a Vwan connections. Direct spokes (`Spoke1` and `Spoke4`) are connected to their respective Vwan hubs via Vnet connections. `Spoke2` and `Spoke5` are indirect spokes from a Vwan perspective; and are connected via standard Vnet peering to `Hub1` and `Hub2` respectively. `Spoke2` and `Spoke5` use the Network Virtual Applinace (NVA) in the standard Vnet hubs as the next hop for traffic to all destinations.
 
@@ -231,10 +231,10 @@ AddressPrefixes    NextHopType
 ```
 ### 6. Azure Firewall
 
-1. Run a traceroute `vm.spoke2.az.corp` (10.2.0.5) to observe the traffic flow through the Azure Firewall.
+1. Run a tracepath `vm.spoke2.az.corp` (10.2.0.5) to observe the traffic flow through the Azure Firewall.
 
 ```sh
-traceroute vm.spoke2.az.corp
+tracepath vm.spoke2.az.corp
 ```
 
 Sample output
@@ -250,12 +250,13 @@ azureuser@Vwan24-spoke1-vm:~$ tracepath vm.spoke2.az.corp
 
 We can observe that the traffic flow from `Spoke1` to `Spoke2` goes through the Azure Firewall in `Hub1` (192.168.11.167 and 192.168.11.166 in this example). Traffic then flows via the Network Virtual Appliance (NVA) in `Hub1` (10.11.1.9) before reaching the destination `Spoke2` (10.2.0.5).
 
-1. Check the Azure Firewall logs to observe the traffic flow.
+2. Check the Azure Firewall logs to observe the traffic flow.
 - Select the Azure Firewall resource `Vwan24-azfw-hub1` in the Azure portal.
 - Click on **Logs** in the left navigation pane.
 - Click **Run** in the *Network rule log data* log category.
+
 ![Vwan24-azfw-hub1-network-rule-log](../../images/demos/vwan24-hub1-net-rule-log.png)
-- On the *targetIP* column deselect all IP addresses except spoke2 (10.2.0.5)
+- On the *TargetIP* column deselect all IP addresses except spoke2 (10.2.0.5)
 
 ![Vwan24-azfw-hub1-network-rule-log-data](../../images/demos/vwan24-hub1-net-rule-log-detail.png)
 
@@ -357,7 +358,7 @@ RPKI validation codes: V valid, I invalid, N Not found
 
 ## Cleanup
 
-1. Navigate to the lab directory
+1. Make sure you are in the lab directory
 ```sh
 cd azure-network-terraform/2-virtual-wan/4-vwan-sec-dual-region
 ```

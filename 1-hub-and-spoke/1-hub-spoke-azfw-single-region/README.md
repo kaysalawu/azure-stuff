@@ -1,4 +1,5 @@
-# Hub and Spoke - Single Region <!-- omit from toc -->
+# Secured Hub and Spoke - Single Region <!-- omit from toc -->
+## Lab: Hs11 <!-- omit from toc -->
 
 Contents
 - [Overview](#overview)
@@ -15,13 +16,15 @@ Contents
 
 ## Overview
 
-This terraform code deploys a hub and spoke topology playground to observe dynamic routing with Azure Route Server (ARS) and a Network Virtual Appiance (NVA).
+This terraform code deploys a single-region Secured Virtual Network (Vnet) hub and spoke topology using Azure firewall and User-Defined Routes (UDR) to direct traffic to the firewall.
 
-`Hub1` ARS with BGP session to a Network Virtual Appliance (NVA) using a Cisco-CSR-100V router. The direct spokes `Spoke1` and `Spoke2` have VNET peering to `Hub1`. An isolated `Spoke3` does not have VNET peering to the hub, but is reachable from `Hub1` via Private Link Service.
+![Secured Hub and Spoke (Single region)](../../images/scenarios/1-3-hub-spoke-nva-single-region.png)
 
-`Branch1` is the on-premises network which is simulated in a VNET using a multi-NIC Cisco-CSR-100V NVA appliance.
+`Hub1` has an Azure firewall used for inspection of traffic between branch and spokes. User-Defined Routes (UDR) are used to influence the Vnet data plane to route traffic from the branch and spokes via the firewall. An isolated spoke (`Spoke3`) does not have Vnet peering to the hub (`Hub1`), but is reachable from the hub via Private Link Service.
 
-![Hub and Spoke Secure (Single region)](../../images/scenarios/1-3-hub-spoke-sec-single-region.png)
+`Branch1` is the on-premises network which is simulated using Vnet. A Multi-NIC Cisco-CSR-1000V NVA appliance connects to the Vnet hub using IPsec VPN connections with dynamic (BGP) routing.
+
+
 
 ## Prerequisites
 
@@ -36,11 +39,11 @@ git clone https://github.com/kaysalawu/azure-network-terraform.git
 
 2. Navigate to the lab directory
 ```sh
-cd azure-network-terraform/1-hub-and-spoke/1-hub-spoke-single-region
+cd azure-network-terraform/1-hub-and-spoke/1-hub-spoke-azfw-single-region
 ```
 
 3. Run the following terraform commands and type **yes** at the prompt:
-```hcl
+```sh
 terraform init
 terraform plan
 terraform apply
@@ -54,11 +57,11 @@ See the [troubleshooting](../../troubleshooting/) section for tips on how to res
 
 Each virtual machine is pre-configured with a shell [script](../../scripts/server.sh) to run various types of tests. Serial console access has been configured for all virtual mchines. You can [access the serial console](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/serial-console-overview#access-serial-console-for-virtual-machines-via-azure-portal) of a virtual machine from the Azure portal.
 
-Login to virtual machine `HubSpokeS1-spoke1-vm` via the serial console.
+Login to virtual machine `Hs11-spoke1-vm` via the serial console.
 - username = **azureuser**
 - password = **Password123**
 
-![HubSpokeS1-spoke1-vm](../../images/demos/hubspokes1-spoke1-vm.png)
+![Hs11-spoke1-vm](../../images/demos/hs11-spoke1-vm.png)
 
 Run the following tests from inside the serial console.
 
@@ -72,14 +75,7 @@ ping-ip
 ```
 Sample output
 ```sh
-azureuser@HubSpokeS1-spoke2-vm:~$ ping-ip
 
- ping ip ...
-
-branch1 - 10.10.0.5 -OK 9.087 ms
-hub1    - 10.11.0.5 -OK 1.878 ms
-spoke1  - 10.1.0.5 -OK 5.353 ms
-spoke2  - 10.2.0.5 -OK 0.035 ms
 ```
 
 ### 2. Ping DNS
@@ -93,14 +89,7 @@ ping-dns
 
 Sample output
 ```sh
-azureuser@HubSpokeS1-spoke2-vm:~$ ping-dns
 
- ping dns ...
-
-vm.branch1.corp - 10.10.0.5 -OK 5.539 ms
-vm.hub1.az.corp - 10.11.0.5 -OK 1.782 ms
-vm.spoke1.az.corp - 10.1.0.5 -OK 5.107 ms
-vm.spoke2.az.corp - 10.2.0.5 -OK 0.032 ms
 ```
 
 ### 3. Curl DNS
@@ -114,19 +103,9 @@ curl-dns
 
 Sample output
 ```sh
-azureuser@HubSpokeS1-spoke2-vm:~$ curl-dns
 
- curl dns ...
-
-200 (0.044847s) - 10.10.0.5 - vm.branch1.corp
-200 (0.019998s) - 10.11.0.5 - vm.hub1.az.corp
-200 (0.024760s) - 10.11.4.4 - pep.hub1.az.corp
-200 (0.041191s) - 10.1.0.5 - vm.spoke1.az.corp
-[ 3627.028144] cloud-init[1511]: 10.2.0.5 - - [21/Jan/2023 19:02:00] "GET / HTTP/1.1" 200 -
-200 (0.015262s) - 10.2.0.5 - vm.spoke2.az.corp
-000 (2.001251s) -  - vm.spoke3.az.corp
 ```
-We can see that spoke3 (vm.spoke3.az.corp) returns a **000** HTTP response code. This is expected as there is no Vnet peering to `Spoke3` from `Hub1`. But `Spoke3` web application is reachable via Private Link Service private endpoint (pep.hub1.az.corp).
+We can see that spoke3 `vm.spoke3.az.corp` returns a **000** HTTP response code. This is expected as there is no Vnet peering to `Spoke3` from `Hub1`. But `Spoke3` web application is reachable via Private Link Service private endpoint `pep.hub1.az.corp`.
 
 ### 4. Private Link Service
 
@@ -137,27 +116,17 @@ curl pep.hub1.az.corp
 
 Sample output
 ```sh
-azureuser@HubSpokeS1-spoke2-vm:~$ curl pep.hub1.az.corp
-{
-  "headers": {
-    "Accept": "*/*",
-    "Host": "pep.hub1.az.corp",
-    "User-Agent": "curl/7.68.0"
-  },
-  "hostname": "HubSpokeS1-spoke3-vm",
-  "local-ip": "10.3.0.5",
-  "remote-ip": "10.3.3.4"
-}
+
 ```
-The `hostname` and `local-ip` field belong to the server running the web application - in this case `Spoke3` virtual machine. The `remote-ip` field (as seen by the web server) is the IP address in the Private Link Service NAT subnets.
+The `hostname` and `local-ip` fields belong to the servers running the web application - in this case `Spoke3` virtual machine. The `remote-ip` field (as seen by the web servers) is an IP addresses in the Private Link Service NAT subnet.
 
 Repeat steps 1-4 for all other virtual machines.
 
 ### 5. Onprem Routes
 
-Let's login to the onprem router `HubSpokeS1-branch1-nva` and observe its dynamic routes.
+Let's login to the onprem router `Hs11-branch1-nva` and observe its dynamic routes.
 
-1. Login to virtual machine `HubSpokeS1-branch1-nva` via the serial console.
+1. Login to virtual machine `Hs11-branch1-nva` via the serial console.
 2. Enter username and password
    - username = **azureuser**
    - password = **Password123**
@@ -172,66 +141,29 @@ show ip route
 
 Sample output
 ```sh
-HubSpokeS1-branch1-nva-vm#show ip route
-[Truncated]
-...
-Gateway of last resort is 10.10.1.1 to network 0.0.0.0
 
-S*    0.0.0.0/0 [1/0] via 10.10.1.1
-      10.0.0.0/8 is variably subnetted, 14 subnets, 4 masks
-B        10.1.0.0/16 [20/0] via 10.11.7.4, 00:26:32
-B        10.2.0.0/16 [20/0] via 10.11.7.4, 00:26:32
-S        10.10.0.0/24 [1/0] via 10.10.2.1
-C        10.10.1.0/24 is directly connected, GigabitEthernet1
-L        10.10.1.9/32 is directly connected, GigabitEthernet1
-C        10.10.2.0/24 is directly connected, GigabitEthernet2
-L        10.10.2.9/32 is directly connected, GigabitEthernet2
-C        10.10.10.0/30 is directly connected, Tunnel0
-L        10.10.10.1/32 is directly connected, Tunnel0
-C        10.10.10.4/30 is directly connected, Tunnel1
-L        10.10.10.5/32 is directly connected, Tunnel1
-B        10.11.0.0/16 [20/0] via 10.11.7.4, 00:26:32
-S        10.11.7.4/32 is directly connected, Tunnel1
-S        10.11.7.5/32 is directly connected, Tunnel0
-      168.63.0.0/32 is subnetted, 1 subnets
-S        168.63.129.16 [254/0] via 10.10.1.1
-      169.254.0.0/32 is subnetted, 1 subnets
-S        169.254.169.254 [254/0] via 10.10.1.1
-      192.168.10.0/32 is subnetted, 1 subnets
-C        192.168.10.10 is directly connected, Loopback0
 ```
 
-5. Show BGP information
+5. Display BGP information
 ```sh
-HubSpokeS1-branch1-nva-vm#show ip bgp
-BGP table version is 5, local router ID is 192.168.10.10
-Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
-              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
-              x best-external, a additional-path, c RIB-compressed,
-              t secondary path, L long-lived-stale,
-Origin codes: i - IGP, e - EGP, ? - incomplete
-RPKI validation codes: V valid, I invalid, N Not found
+show ip bgp
+```
 
-     Network          Next Hop            Metric LocPrf Weight Path
- *    10.1.0.0/16      10.11.7.5                              0 65515 i
- *>                    10.11.7.4                              0 65515 i
- *    10.2.0.0/16      10.11.7.5                              0 65515 i
- *>                    10.11.7.4                              0 65515 i
- *>   10.10.0.0/24     10.10.2.1                0         32768 i
- *    10.11.0.0/16     10.11.7.5                              0 65515 i
- *>                    10.11.7.4                              0 65515 i
+Sample output
+```sh
+
 ```
 
 ## Cleanup
 
-1. Navigate to the lab directory
+1. Make sure you are in the lab directory
 ```sh
-cd azure-network-terraform/1-hub-and-spoke/1-hub-spoke-single-region
+cd azure-network-terraform/1-hub-and-spoke/1-hub-spoke-azfw-single-region
 ```
 
 2. Delete the resource group to remove all resources installed.\
 Run the following Azure CLI command:
 
 ```sh
-az group delete -g HubSpokeS1RG --no-wait
+az group delete -g Hs11RG --no-wait
 ```
