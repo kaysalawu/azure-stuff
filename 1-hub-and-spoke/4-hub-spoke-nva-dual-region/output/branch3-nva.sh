@@ -1,37 +1,37 @@
 Section: IOS configuration
 
-crypto ikev2 proposal AZURE-IKE-PROPOSAL 
+crypto ikev2 proposal AZURE-IKE-PROPOSAL
 encryption aes-cbc-256
 integrity sha1
 group 2
 !
-crypto ikev2 policy AZURE-IKE-PROFILE 
+crypto ikev2 policy AZURE-IKE-PROFILE
 proposal AZURE-IKE-PROPOSAL
 match address local 10.30.1.9
 !
 crypto ikev2 keyring AZURE-KEYRING
-peer 20.82.219.37
-address 20.82.219.37
+peer 20.93.61.182
+address 20.93.61.182
 pre-shared-key changeme
-peer 20.82.218.142
-address 20.82.218.142
+peer 20.93.61.253
+address 20.93.61.253
 pre-shared-key changeme
 !
 crypto ikev2 profile AZURE-IKE-PROPOSAL
 match address local 10.30.1.9
-match identity remote address 20.82.219.37 255.255.255.255
-match identity remote address 20.82.218.142 255.255.255.255
+match identity remote address 20.93.61.182 255.255.255.255
+match identity remote address 20.93.61.253 255.255.255.255
 authentication remote pre-share
 authentication local pre-share
 keyring local AZURE-KEYRING
 lifetime 28800
 dpd 10 5 on-demand
 !
-crypto ipsec transform-set AZURE-IPSEC-TRANSFORM-SET esp-gcm 256 
+crypto ipsec transform-set AZURE-IPSEC-TRANSFORM-SET esp-gcm 256
 mode tunnel
 !
 crypto ipsec profile AZURE-IPSEC-PROFILE
-set transform-set AZURE-IPSEC-TRANSFORM-SET 
+set transform-set AZURE-IPSEC-TRANSFORM-SET
 set ikev2-profile AZURE-IKE-PROPOSAL
 set security-association lifetime seconds 3600
 !
@@ -40,7 +40,7 @@ ip address 10.30.30.1 255.255.255.252
 tunnel mode ipsec ipv4
 ip tcp adjust-mss 1350
 tunnel source 10.30.1.9
-tunnel destination 20.82.219.37
+tunnel destination 20.93.61.182
 tunnel protection ipsec profile AZURE-IPSEC-PROFILE
 !
 interface Tunnel1
@@ -48,7 +48,7 @@ ip address 10.30.30.5 255.255.255.252
 tunnel mode ipsec ipv4
 ip tcp adjust-mss 1350
 tunnel source 10.30.1.9
-tunnel destination 20.82.218.142
+tunnel destination 20.93.61.253
 tunnel protection ipsec profile AZURE-IPSEC-PROFILE
 !
 interface Loopback0

@@ -34,6 +34,10 @@ module "hub2" {
 
       vpn_gateway_sku = "VpnGw2AZ"
       vpn_gateway_asn = local.hub2_vpngw_asn
+
+      enable_firewall    = local.hub2_features.enable_firewall
+      firewall_sku       = local.hub2_features.firewall_sku
+      firewall_policy_id = local.hub2_features.firewall_policy_id
     }
   ]
 

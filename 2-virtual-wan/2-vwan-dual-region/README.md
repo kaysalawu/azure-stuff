@@ -193,7 +193,7 @@ azureuser@Vwan22-spoke1-vm:~$ curl pep.hub2.az.corp
 
 The `hostname` and `local-ip` fields belong to the servers running the web application - in this case `Spoke3` and `Spoke6`virtual machines. The `remote-ip` fields (as seen by the web servers) are the respective IP addresses in the Private Link Service NAT subnets.
 
-Repeat steps 1-4 for all other virtual machines.
+Repeat steps 1-4 for all other spoke and branch virtual machines.
 
 ### 5. Virtual WAN Routes
 

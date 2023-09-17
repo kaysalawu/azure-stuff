@@ -16,7 +16,6 @@ module "hub1_udr_firewall" {
   next_hop_in_ip_address = local.hub2_firewall_ip
   destinations = concat(
     local.udr_azure_destinations_region2,
-    local.udr_onprem_destinations_region2,
   )
   depends_on = [module.hub1, ]
 }
@@ -34,7 +33,6 @@ module "hub2_udr_firewall" {
   next_hop_in_ip_address = local.hub1_firewall_ip
   destinations = concat(
     local.udr_azure_destinations_region1,
-    local.udr_onprem_destinations_region1,
   )
   depends_on = [module.hub2, ]
 }

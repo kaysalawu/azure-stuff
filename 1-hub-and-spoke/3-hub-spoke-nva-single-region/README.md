@@ -11,12 +11,13 @@ Contents
   - [2. Ping DNS](#2-ping-dns)
   - [3. Curl DNS](#3-curl-dns)
   - [4. Private Link Service](#4-private-link-service)
-  - [5. Onprem Routes](#5-onprem-routes)
+  - [5. Network Virtual Appliance (NVA)](#5-network-virtual-appliance-nva)
+  - [6. Onprem Routes](#6-onprem-routes)
 - [Cleanup](#cleanup)
 
 ## Overview
 
-This terraform code deploys a multi-region standard Virtual Network (Vnet) hub and spoke topology playground with dynamic routing.
+This terraform code deploys a single-region standard Virtual Network (Vnet) hub and spoke topology.
 
 ![Hub and Spoke (Single region)](../../images/scenarios/1-3-hub-spoke-nva-single-region.png)
 
@@ -74,7 +75,15 @@ ping-ip
 ```
 Sample output
 ```sh
+azureuser@Hs13-spoke1-vm:~$ ping-ip
 
+ ping ip ...
+
+branch1 - 10.10.0.5 -OK 14.111 ms
+hub1    - 10.11.0.5 -OK 2.538 ms
+spoke1  - 10.1.0.5 -OK 0.043 ms
+spoke2  - 10.2.0.5 -OK 3.009 ms
+internet - icanhazip.com -NA
 ```
 
 ### 2. Ping DNS
@@ -88,7 +97,15 @@ ping-dns
 
 Sample output
 ```sh
+azureuser@Hs13-spoke1-vm:~$ ping-dns
 
+ ping dns ...
+
+vm.branch1.corp - 10.10.0.5 -OK 7.100 ms
+vm.hub1.az.corp - 10.11.0.5 -OK 2.085 ms
+vm.spoke1.az.corp - 10.1.0.5 -OK 0.040 ms
+vm.spoke2.az.corp - 10.2.0.5 -OK 4.382 ms
+icanhazip.com - 104.18.115.97 -NA
 ```
 
 ### 3. Curl DNS
@@ -102,7 +119,18 @@ curl-dns
 
 Sample output
 ```sh
+azureuser@Hs13-spoke1-vm:~$ curl-dns
 
+ curl dns ...
+
+200 (0.057189s) - 10.10.0.5 - vm.branch1.corp
+200 (0.027151s) - 10.11.0.5 - vm.hub1.az.corp
+200 (0.023730s) - 10.11.4.4 - pep.hub1.az.corp
+200 (0.017258s) - 10.1.0.5 - vm.spoke1.az.corp
+[ 4471.136340] cloud-init[1527]: 10.1.0.5 - - [17/Sep/2023 14:34:19] "GET / HTTP/1.1" 200 -
+200 (0.025640s) - 10.2.0.5 - vm.spoke2.az.corp
+000 (2.000986s) -  - vm.spoke3.az.corp
+200 (0.017255s) - 104.18.114.97 - icanhazip.com
 ```
 We can see that spoke3 `vm.spoke3.az.corp` returns a **000** HTTP response code. This is expected as there is no Vnet peering to `Spoke3` from `Hub1`. But `Spoke3` web application is reachable via Private Link Service private endpoint `pep.hub1.az.corp`. The same explanation applies to `Spoke6` virtual machine `vm.spoke6.az.corp`
 
@@ -115,14 +143,44 @@ curl pep.hub1.az.corp
 
 Sample output
 ```sh
-
+azureuser@Hs13-spoke1-vm:~$ curl pep.hub1.az.corp
+{
+  "headers": {
+    "Accept": "*/*",
+    "Host": "pep.hub1.az.corp",
+    "User-Agent": "curl/7.68.0"
+  },
+  "hostname": "Hs13-spoke3-vm",
+  "local-ip": "10.3.0.5",
+  "remote-ip": "10.3.3.4"
+}
 ```
 
 The `hostname` and `local-ip` fields belong to the servers running the web application - in this case `Spoke3` virtual machine. The `remote-ip` field (as seen by the web servers) is an IP addresses in the Private Link Service NAT subnet.
 
-Repeat steps 1-4 for all other virtual machines.
+### 5. Network Virtual Appliance (NVA)
 
-### 5. Onprem Routes
+1. Run a tracepath to `vm.spoke2.az.corp` (10.2.0.5) to observe the traffic flow through the NVA.
+
+```sh
+tracepath vm.spoke2.az.corp
+```
+
+Sample output
+```sh
+azureuser@Hs13-spoke1-vm:~$ tracepath vm.spoke2.az.corp
+ 1?: [LOCALHOST]                      pmtu 1500
+ 1:  10.11.1.9                                            41.160ms
+ 1:  10.11.1.9                                             1.423ms
+ 2:  10.2.0.5                                              4.598ms reached
+     Resume: pmtu 1500 hops 2 back 2
+```
+
+We can observe the traffic flow from `Spoke1` to `Spoke2` goes through the NVA in `Hub1` (IP address 10.11.1.9) before reaching the destination `Spoke2` (10.2.0.5).
+
+Repeat steps 1-5 for all other spoke and branch virtual machines.
+
+### 6. Onprem Routes
 
 Let's login to the onprem router `Hs13-branch1-nva` and observe its dynamic routes.
 
@@ -141,7 +199,34 @@ show ip route
 
 Sample output
 ```sh
+Hs13-branch1-nva-vm#show ip route
+...
+[Truncated for brevity]
+...
+Gateway of last resort is 10.10.1.1 to network 0.0.0.0
 
+S*    0.0.0.0/0 [1/0] via 10.10.1.1
+      10.0.0.0/8 is variably subnetted, 14 subnets, 4 masks
+B        10.1.0.0/16 [20/0] via 10.11.7.4, 00:37:33
+B        10.2.0.0/16 [20/0] via 10.11.7.4, 00:37:33
+S        10.10.0.0/24 [1/0] via 10.10.2.1
+C        10.10.1.0/24 is directly connected, GigabitEthernet1
+L        10.10.1.9/32 is directly connected, GigabitEthernet1
+C        10.10.2.0/24 is directly connected, GigabitEthernet2
+L        10.10.2.9/32 is directly connected, GigabitEthernet2
+C        10.10.10.0/30 is directly connected, Tunnel0
+L        10.10.10.1/32 is directly connected, Tunnel0
+C        10.10.10.4/30 is directly connected, Tunnel1
+L        10.10.10.5/32 is directly connected, Tunnel1
+B        10.11.0.0/16 [20/0] via 10.11.7.4, 00:37:33
+S        10.11.7.4/32 is directly connected, Tunnel0
+S        10.11.7.5/32 is directly connected, Tunnel1
+      168.63.0.0/32 is subnetted, 1 subnets
+S        168.63.129.16 [254/0] via 10.10.1.1
+      169.254.0.0/32 is subnetted, 1 subnets
+S        169.254.169.254 [254/0] via 10.10.1.1
+      192.168.10.0/32 is subnetted, 1 subnets
+C        192.168.10.10 is directly connected, Loopback0
 ```
 
 5. Display BGP information
@@ -151,7 +236,23 @@ show ip bgp
 
 Sample output
 ```sh
+Hs13-branch1-nva-vm#show ip bgp
+BGP table version is 5, local router ID is 192.168.10.10
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+              t secondary path, L long-lived-stale,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
 
+     Network          Next Hop            Metric LocPrf Weight Path
+ *    10.1.0.0/16      10.11.7.5                              0 65515 i
+ *>                    10.11.7.4                              0 65515 i
+ *    10.2.0.0/16      10.11.7.5                              0 65515 i
+ *>                    10.11.7.4                              0 65515 i
+ *>   10.10.0.0/24     10.10.2.1                0         32768 i
+ *    10.11.0.0/16     10.11.7.5                              0 65515 i
+ *>                    10.11.7.4                              0 65515 i
 ```
 
 ## Cleanup

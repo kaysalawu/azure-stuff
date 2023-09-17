@@ -42,10 +42,8 @@ locals {
   )
   hub1_gateway_udr_destinations = concat(
     local.udr_azure_destinations_region1,
-    local.udr_azure_destinations_region2,
   )
   hub2_gateway_udr_destinations = concat(
-    local.udr_azure_destinations_region1,
     local.udr_azure_destinations_region2,
   )
   firewall_sku = "Basic"
@@ -98,6 +96,14 @@ module "common" {
   regions        = local.regions
 }
 
+resource "azurerm_private_dns_zone" "global" {
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = local.cloud_domain
+  timeouts {
+    create = "60m"
+  }
+}
+
 # vm startup scripts
 #----------------------------
 
@@ -114,20 +120,20 @@ locals {
   #mypip         = chomp(data.http.mypip.response_body)
 
   vm_script_targets_region1 = [
-    { name = "branch1", dns = local.branch1_vm_dns, ip = local.branch1_vm_addr },
-    { name = "hub1   ", dns = local.hub1_vm_dns, ip = local.hub1_vm_addr },
-    { name = "hub1-pe", dns = local.hub1_pep_dns, ping = false },
-    { name = "spoke1 ", dns = local.spoke1_vm_dns, ip = local.spoke1_vm_addr },
-    { name = "spoke2 ", dns = local.spoke2_vm_dns, ip = local.spoke2_vm_addr },
-    { name = "spoke3 ", dns = local.spoke3_vm_dns, ip = local.spoke3_vm_addr, ping = false },
+    { name = "branch1", dns = local.branch1_vm_fqdn, ip = local.branch1_vm_addr },
+    { name = "hub1   ", dns = local.hub1_vm_fqdn, ip = local.hub1_vm_addr },
+    { name = "hub1-pe", dns = local.hub1_pep_fqdn, ping = false },
+    { name = "spoke1 ", dns = local.spoke1_vm_fqdn, ip = local.spoke1_vm_addr },
+    { name = "spoke2 ", dns = local.spoke2_vm_fqdn, ip = local.spoke2_vm_addr },
+    { name = "spoke3 ", dns = local.spoke3_vm_fqdn, ip = local.spoke3_vm_addr, ping = false },
   ]
   vm_script_targets_region2 = [
-    { name = "branch3", dns = local.branch3_vm_dns, ip = local.branch3_vm_addr },
-    { name = "hub2   ", dns = local.hub2_vm_dns, ip = local.hub2_vm_addr },
-    { name = "hub2-pe", dns = local.hub2_pep_dns, ping = false },
-    { name = "spoke4 ", dns = local.spoke4_vm_dns, ip = local.spoke4_vm_addr },
-    { name = "spoke5 ", dns = local.spoke5_vm_dns, ip = local.spoke5_vm_addr },
-    { name = "spoke6 ", dns = local.spoke6_vm_dns, ip = local.spoke6_vm_addr, ping = false },
+    { name = "branch3", dns = local.branch3_vm_fqdn, ip = local.branch3_vm_addr },
+    { name = "hub2   ", dns = local.hub2_vm_fqdn, ip = local.hub2_vm_addr },
+    { name = "hub2-pe", dns = local.hub2_pep_fqdn, ping = false },
+    { name = "spoke4 ", dns = local.spoke4_vm_fqdn, ip = local.spoke4_vm_addr },
+    { name = "spoke5 ", dns = local.spoke5_vm_fqdn, ip = local.spoke5_vm_addr },
+    { name = "spoke6 ", dns = local.spoke6_vm_fqdn, ip = local.spoke6_vm_addr, ping = false },
   ]
   vm_script_targets_misc = [
     { name = "internet", dns = "icanhazip.com", ip = "icanhazip.com" },
@@ -146,8 +152,10 @@ locals {
     FORWARD_ZONES        = local.onprem_forward_zones
     TARGETS              = local.vm_script_targets_region1
   }
-  branch_unbound_conf    = templatefile("../../scripts/unbound/unbound.conf", local.unbound_vars)
-  branch_unbound_startup = templatefile("../../scripts/unbound/unbound.sh", local.unbound_vars)
+  branch_unbound_conf         = templatefile("../../scripts/unbound/unbound.conf", local.unbound_vars)
+  branch_unbound_startup      = templatefile("../../scripts/unbound/unbound.sh", local.unbound_vars)
+  branch_dnsmasq_startup      = templatefile("../../scripts/dnsmasq/dnsmasq.sh", local.unbound_vars)
+  branch_unbound_cloud_config = templatefile("../../scripts/unbound/cloud-config", local.unbound_vars)
   branch_unbound_vars = {
     ONPREM_LOCAL_RECORDS = local.onprem_local_records
     REDIRECTED_HOSTS     = local.onprem_redirected_hosts
@@ -155,9 +163,9 @@ locals {
     TARGETS              = local.vm_script_targets_region1
   }
   onprem_local_records = [
-    { name = (local.branch1_vm_dns), record = local.branch1_vm_addr },
-    { name = (local.branch2_vm_dns), record = local.branch2_vm_addr },
-    { name = (local.branch3_vm_dns), record = local.branch3_vm_addr },
+    { name = (local.branch1_vm_fqdn), record = local.branch1_vm_addr },
+    { name = (local.branch2_vm_fqdn), record = local.branch2_vm_addr },
+    { name = (local.branch3_vm_fqdn), record = local.branch3_vm_addr },
   ]
   onprem_forward_zones = [
     { zone = "${local.cloud_domain}.", targets = [local.hub1_dns_in_addr, local.hub2_dns_in_addr], },
@@ -182,87 +190,8 @@ module "unbound" {
 ####################################################
 # nsg
 ####################################################
-/*
-# region1
-#----------------------------
-
-# nsg
-
-resource "azurerm_network_security_group" "nsg_region1_main" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region1}-main"
-  location            = local.region1
-}
-
-resource "azurerm_network_security_group" "nsg_region1_nva" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region1}-nva"
-  location            = local.region1
-}
-
-resource "azurerm_network_security_group" "nsg_region1_appgw" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region1}-appgw"
-  location            = local.region1
-}
-
-resource "azurerm_network_security_group" "nsg_region1_default" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region1}-default"
-  location            = local.region1
-}
 
 # rules
-
-locals {
-  nsg_region1_main_rules = {
-    "allow-public-web"  = { priority = 100, direction = "Inbound", src = ["0.0.0.0/0", ], protocol = "Tcp", destination_port = "80" }
-    "allow-public-icmp" = { priority = 110, direction = "Inbound", src = ["0.0.0.0/0", ], protocol = "Icmp" }
-  }
-}
-
-resource "azurerm_network_security_rule" "nsg_region1_main" {
-  for_each                    = local.nsg_region1_main_rules
-  resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg_region1_main.name
-  name                        = each.key
-  direction                   = each.value.direction
-  access                      = "Allow"
-  priority                    = each.value.priority
-  source_address_prefixes     = each.value.src
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_range      = try(each.value.destination_port, "*")
-  protocol                    = each.value.protocol
-  description                 = each.key
-}
-
-# region2
-#----------------------------
-
-resource "azurerm_network_security_group" "nsg_region2_main" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-main"
-  location            = local.region2
-}
-
-resource "azurerm_network_security_group" "nsg_region2_nva" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-nva"
-  location            = local.region2
-}
-
-resource "azurerm_network_security_group" "nsg_region2_appgw" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-appgw"
-  location            = local.region2
-}
-
-resource "azurerm_network_security_group" "nsg_region2_default" {
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = "${local.prefix}-nsg-${local.region2}-default"
-  location            = local.region2
-}*/
 
 ####################################################
 # addresses
@@ -300,10 +229,10 @@ resource "azurerm_firewall_policy" "firewall_policy" {
 
   private_ip_ranges = concat(
     local.private_prefixes,
-    /*[
-      "${local.spoke3_vm_public_ip}/32",
-      "${local.spoke6_vm_public_ip}/32",
-    ]*/
+    [
+      #"${local.spoke3_vm_public_ip}/32",
+      #"${local.spoke6_vm_public_ip}/32",
+    ]
   )
 
   #dns {

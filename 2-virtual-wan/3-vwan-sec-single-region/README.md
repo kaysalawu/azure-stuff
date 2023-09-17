@@ -12,8 +12,8 @@ Contents
   - [2. Ping DNS](#2-ping-dns)
   - [3. Curl DNS](#3-curl-dns)
   - [4. Private Link Service](#4-private-link-service)
-  - [5. Virtual WAN Routes](#5-virtual-wan-routes)
-  - [6. Azure Firewall](#6-azure-firewall)
+  - [5. Azure Firewall](#5-azure-firewall)
+  - [6. Virtual WAN Routes](#6-virtual-wan-routes)
   - [7. Onprem Routes](#7-onprem-routes)
 - [Cleanup](#cleanup)
 
@@ -167,9 +167,42 @@ Sample output
 
 The `hostname` and `local-ip` fields belong to the servers running the web application - in this case `Spoke3` virtual machine. The `remote-ip` field (as seen by the web servers) is an IP addresses in the Private Link Service NAT subnet.
 
-Repeat steps 1-4 for all other virtual machines.
+### 5. Azure Firewall
 
-### 5. Virtual WAN Routes
+1. Run a tracepath `vm.spoke2.az.corp` (10.2.0.5) to observe the traffic flow through the Azure Firewall.
+
+```sh
+tracepath vm.spoke2.az.corp
+```
+
+Sample output
+```sh
+azureuser@Vwan23-spoke1-vm:~$ tracepath 10.2.0.5
+ 1?: [LOCALHOST]                      pmtu 1500
+ 1:  192.168.11.166                                        3.633ms
+ 1:  192.168.11.165                                        2.666ms
+ 2:  10.11.1.9                                             6.408ms
+ 3:  10.2.0.5                                              6.318ms reached
+     Resume: pmtu 1500 hops 3 back 3
+```
+
+We can observe that the traffic flow from `Spoke1` to `Spoke2` goes through the Azure Firewall in `Hub1` (192.168.11.166 and 192.168.11.165 in this example). Traffic then flows via the Network Virtual Appliance (NVA) in `Hub1` (10.11.1.9) before reaching the destination - `Spoke2` (10.2.0.5).
+
+2. Check the Azure Firewall logs to observe the traffic flow.
+- Select the Azure Firewall resource `Vwan23-azfw-hub1` in the Azure portal.
+- Click on **Logs** in the left navigation pane.
+- Click **Run** in the *Network rule log data* log category.
+
+![Vwan23-azfw-hub1-network-rule-log](../../images/demos/vwan23-hub1-net-rule-log.png)
+- On the *TargetIP* column deselect all IP addresses except spoke2 (10.2.0.5)
+
+![Vwan23-azfw-hub1-network-rule-log-data](../../images/demos/vwan23-hub1-net-rule-log-detail.png)
+
+Observe how traffic from spoke1 (10.1.0.5) to spoke2 flows via the firewall as expected.
+
+Repeat steps 1-5 for all other spoke and branch virtual machines.
+
+### 6. Virtual WAN Routes
 
 1. Ensure you are in the lab directory `azure-network-terraform/2-virtual-wan/3-vwan-sec-single-region`
 2. Display the virtual WAN routing table(s)
@@ -193,39 +226,6 @@ AddressPrefixes    NextHopType                 AsPath
 10.2.0.0/16        HubBgpConnection            65010
 10.10.0.0/24       VPN_S2S_Gateway             65001
 ```
-
-### 6. Azure Firewall
-
-1. Run a tracepath `vm.spoke2.az.corp` (10.2.0.5) to observe the traffic flow through the Azure Firewall.
-
-```sh
-tracepath vm.spoke2.az.corp
-```
-
-Sample output
-```sh
-azureuser@Vwan23-spoke1-vm:~$ tracepath 10.2.0.5
- 1?: [LOCALHOST]                      pmtu 1500
- 1:  192.168.11.166                                        3.633ms
- 1:  192.168.11.165                                        2.666ms
- 2:  10.11.1.9                                             6.408ms
- 3:  10.2.0.5                                              6.318ms reached
-     Resume: pmtu 1500 hops 3 back 3
-```
-
-We can observe that the traffic flow from `Spoke1` to `Spoke2` goes through the Azure Firewall in `Hub1` (192.168.11.166 and 192.168.11.165 in this example). Traffic then flows via the Network Virtual Appliance (NVA) in `Hub1` (10.11.1.9) before reaching the destination `Spoke2` (10.2.0.5).
-
-2. Check the Azure Firewall logs to observe the traffic flow.
-- Select the Azure Firewall resource `Vwan23-azfw-hub1` in the Azure portal.
-- Click on **Logs** in the left navigation pane.
-- Click **Run** in the *Network rule log data* log category.
-
-![Vwan23-azfw-hub1-network-rule-log](../../images/demos/vwan23-hub1-net-rule-log.png)
-- On the *TargetIP* column deselect all IP addresses except spoke2 (10.2.0.5)
-
-![Vwan23-azfw-hub1-network-rule-log-data](../../images/demos/vwan23-hub1-net-rule-log-detail.png)
-
-Observe how traffic from spoke1 (10.1.0.5) to spoke2 flows via the firewall as expected.
 
 ### 7. Onprem Routes
 
