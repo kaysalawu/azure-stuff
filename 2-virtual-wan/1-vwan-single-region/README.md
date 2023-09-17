@@ -1,5 +1,6 @@
 
 # Virtual WAN - Dual Hub <!-- omit from toc -->
+## Lab: Vwan21 <!-- omit from toc -->
 
 Contents
 - [Overview](#overview)
@@ -19,13 +20,13 @@ Contents
 
 This terraform code deploys a single-region Virtual WAN (Vwan) testbed to observe traffic routing patterns.
 
-![Virtual WAN - Single Region](../../images/scenarios/2-2-vwan-dual-region.png)
+![Virtual WAN - Single Region](../../images/scenarios/2-1-vwan-single-region.png)
 
 Standard Virtual Network (Vnet) hub (`Hub1`) connects to the Vwan hub (`vHub1`) via a Vwan connection. Direct spoke (`Spoke1`) is connected to the Vwan hub (`vHub1`). `Spoke2`is an indirect spoke from a Vwan perspective; and is connected via standard Vnet peering to `Hub1`. `Spoke2` uses the Network Virtual Applinace (NVA) in the standard Vnet hub (`Hub1`) as the next hop for traffic to all destinations.
 
 The isolated spoke (`Spoke3`) does not have Vnet peering to the Vnet hub (`Hub1`), but is reachable via Private Link Service through a private endpoint in the hub.
 
-![Virtual WAN - Dual Hub](../../images/scenarios//2-2-vwan-dual-hub.png)
+`Branch1` is an on-premises network which is simulated using Vnet. Multi-NIC Cisco-CSR-1000V NVA appliances connect to the Vwan hubs using IPsec VPN connections with dynamic (BGP) routing.
 
 ## Prerequisites
 
@@ -40,7 +41,7 @@ git clone https://github.com/kaysalawu/azure-network-terraform.git
 
 2. Navigate to the lab directory
 ```sh
-cd azure-network-terraform/2-virtual-wan/2-virtual-wan-dual-hub
+cd azure-network-terraform/2-virtual-wan/1-vwan-single-region
 ```
 
 3. Run the following terraform commands and type **yes** at the prompt:
@@ -58,11 +59,11 @@ See the [troubleshooting](../../troubleshooting/) section for tips on how to res
 
 Each virtual machine is pre-configured with a shell [script](../../scripts/server.sh) to run various types of tests. Serial console access has been configured for all virtual mchines. You can [access the serial console](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/serial-console-overview#access-serial-console-for-virtual-machines-via-azure-portal) of a virtual machine from the Azure portal.
 
-Login to virtual machine `VwanS2-spoke1-vm` via the serial console.
+Login to virtual machine `Vwan21-spoke1-vm` via the serial console.
 - username = **azureuser**
 - password = **Password123**
 
-![VwanS2-spoke1-vm](../../images/demos/vwans2-spoke1-vm.png)
+![Vwan21-spoke1-vm](../../images/demos/vwan21-spoke1-vm.png)
 
 Run the following tests from inside the serial console.
 
@@ -74,20 +75,18 @@ Run the IP ping test
 ```sh
 ping-ip
 ```
+
 Sample output
 ```sh
-azureuser@VwanS2-spoke1-vm:~$ ping-ip
+azureuser@Vwan21-spoke1-vm:~$ ping-ip
 
  ping ip ...
 
-branch1 - 10.10.0.5 -OK 6.423 ms
-hub1    - 10.11.0.5 -OK 3.447 ms
-spoke1  - 10.1.0.5 -OK 0.040 ms
-spoke2  - 10.2.0.5 -OK 7.909 ms
-branch3 - 10.30.0.5 -OK 21.142 ms
-hub2    - 10.22.0.5 -OK 18.983 ms
-spoke4  - 10.4.0.5 -OK 20.588 ms
-spoke5  - 10.5.0.5 -OK 23.882 ms
+branch1 - 10.10.0.5 -OK 7.611 ms
+hub1    - 10.11.0.5 -OK 7.609 ms
+spoke1  - 10.1.0.5 -OK 0.034 ms
+spoke2  - 10.2.0.5 -OK 7.236 ms
+internet - icanhazip.com -NA
 ```
 
 ### 2. Ping DNS
@@ -101,18 +100,15 @@ ping-dns
 
 Sample output
 ```sh
-azureuser@VwanS2-spoke1-vm:~$ ping-dns
+azureuser@Vwan21-spoke1-vm:~$ ping-dns
 
  ping dns ...
 
-vm.branch1.corp - 10.10.0.5 -OK 8.830 ms
-vm.hub1.az.corp - 10.11.0.5 -OK 3.866 ms
-vm.spoke1.az.corp - 10.1.0.5 -OK 0.026 ms
-vm.spoke2.az.corp - 10.2.0.5 -OK 4.457 ms
-vm.branch3.corp - 10.30.0.5 -OK 19.920 ms
-vm.hub2.az.corp - 10.22.0.5 -OK 18.399 ms
-vm.spoke4.az.corp - 10.4.0.5 -OK 19.535 ms
-vm.spoke5.az.corp - 10.5.0.5 -OK 19.782 ms
+vm.branch1.corp - 10.10.0.5 -OK 5.740 ms
+vm.hub1.az.corp - 10.11.0.5 -OK 6.851 ms
+vm.spoke1.az.corp - 10.1.0.5 -OK 0.031 ms
+vm.spoke2.az.corp - 10.2.0.5 -OK 7.291 ms
+icanhazip.com - 104.18.115.97 -NA
 ```
 
 ### 3. Curl DNS
@@ -126,25 +122,20 @@ curl-dns
 
 Sample output
 ```sh
-azureuser@VwanS2-spoke1-vm:~$ curl-dns
+azureuser@Vwan21-spoke1-vm:~$ curl-dns
 
  curl dns ...
 
-200 (0.043027s) - 10.10.0.5 - vm.branch1.corp
-200 (0.021256s) - 10.11.0.5 - vm.hub1.az.corp
-200 (0.020467s) - 10.11.4.4 - pep.hub1.az.corp
-[ 5416.441926] cloud-init[1508]: 10.1.0.5 - - [21/Jan/2023 14:44:13] "GET / HTTP/1.1" 200 -
-200 (0.016221s) - 10.1.0.5 - vm.spoke1.az.corp
-200 (0.042734s) - 10.2.0.5 - vm.spoke2.az.corp
-000 (2.001668s) -  - vm.spoke3.az.corp
-200 (0.057022s) - 10.30.0.5 - vm.branch3.corp
-200 (0.069727s) - 10.22.0.5 - vm.hub2.az.corp
-200 (0.099779s) - 10.22.3.4 - pep.hub2.az.corp
-200 (0.087226s) - 10.4.0.5 - vm.spoke4.az.corp
-200 (0.106390s) - 10.5.0.5 - vm.spoke5.az.corp
-000 (2.000771s) -  - vm.spoke6.az.corp
+200 (0.046468s) - 10.10.0.5 - vm.branch1.corp
+200 (0.035475s) - 10.11.0.5 - vm.hub1.az.corp
+200 (0.029238s) - 10.11.4.4 - pep.hub1.az.corp
+[ 6115.638156] cloud-init[1514]: 10.1.0.5 - - [16/Sep/2023 22:54:31] "GET / HTTP/1.1" 200 -
+200 (0.020506s) - 10.1.0.5 - vm.spoke1.az.corp
+200 (0.035430s) - 10.2.0.5 - vm.spoke2.az.corp
+000 (2.001114s) -  - vm.spoke3.az.corp
+200 (0.014172s) - 104.18.115.97 - icanhazip.com
 ```
-We can see that spoke3 `vm.spoke3.az.corp` returns a **000** HTTP response code. This is expected as there is no Vnet peering to `Spoke3` from `Hub1`. But `Spoke3` web application is reachable via Private Link Service private endpoint `pep.hub1.az.corp`. The same explanation applies to `Spoke6` virtual machine `vm.spoke6.az.corp`
+We can see that spoke3 `vm.spoke3.az.corp` returns a **000** HTTP response code. This is expected as there is no Vnet peering to `Spoke3` from `Hub1`. But `Spoke3` web application is reachable via Private Link Service private endpoint `pep.hub1.az.corp`.
 
 ### 4. Private Link Service
 
@@ -155,17 +146,7 @@ curl pep.hub1.az.corp
 
 Sample output
 ```sh
-azureuser@VwanS2-spoke1-vm:~$ curl pep.hub1.az.corp
-{
-  "headers": {
-    "Accept": "*/*",
-    "Host": "pep.hub1.az.corp",
-    "User-Agent": "curl/7.68.0"
-  },
-  "hostname": "VwanS2-spoke3-vm",
-  "local-ip": "10.3.0.5",
-  "remote-ip": "10.3.3.4"
-}
+
 ```
 Test access to `Spoke6` application using the private endpoint in `Hub2`.
 ```sh
@@ -174,16 +155,16 @@ curl pep.hub2.az.corp
 
 Sample output
 ```sh
-azureuser@VwanS2-spoke1-vm:~$ curl pep.hub2.az.corp
+azureuser@Vwan21-spoke1-vm:~$ curl pep.hub1.az.corp
 {
   "headers": {
     "Accept": "*/*",
-    "Host": "pep.hub2.az.corp",
+    "Host": "pep.hub1.az.corp",
     "User-Agent": "curl/7.68.0"
   },
-  "hostname": "VwanS2-spoke6-vm",
-  "local-ip": "10.6.0.5",
-  "remote-ip": "10.6.3.4"
+  "hostname": "Vwan21-spoke3-vm",
+  "local-ip": "10.3.0.5",
+  "remote-ip": "10.3.3.4"
 }
 ```
 
@@ -193,51 +174,37 @@ Repeat steps 1-4 for all other virtual machines.
 
 ### 5. Virtual WAN Routes
 
-1. Ensure you are in the lab directory `azure-network-terraform/2-virtual-wan/2-virtual-wan-dual-hub`
+1. Ensure you are in the lab directory `azure-network-terraform/2-virtual-wan/1-vwan-single-region`
 2. Display the virtual WAN routing table(s)
 
 ```sh
-bash ../../scripts/_routes.sh VwanS2RG
+bash ../../scripts/_routes.sh Vwan21RG
 ```
 
 Sample output
 ```sh
-salawu$ bash ../../scripts/_routes.sh VwanS2RG
+1-vwan-single-region$ bash ../../scripts/_routes.sh Vwan21RG
 
-Resource group: VwanS2RG
+Resource group: Vwan21RG
 
-vHUB: VwanS2-vhub2-hub
+vHUB: Vwan21-vhub1-hub
 Effective route table: defaultRouteTable
-AddressPrefixes    AsPath             NextHopType
------------------  -----------------  --------------------------
-10.5.0.0/16        65020              HubBgpConnection
-10.22.0.0/16                          Virtual Network Connection
-10.4.0.0/16                           Virtual Network Connection
-10.1.0.0/16        65520-65520        Remote Hub
-10.10.0.0/24       65520-65520-65001  Remote Hub
-10.2.0.0/16        65520-65520-65010  Remote Hub
-10.11.0.0/16       65520-65520        Remote Hub
-10.30.0.0/24       65003              VPN_S2S_Gateway
+AddressPrefixes    NextHopType                 AsPath
+-----------------  --------------------------  --------
+10.1.0.0/16        Virtual Network Connection
+10.11.0.0/16       Virtual Network Connection
+10.2.0.0/16        HubBgpConnection            65010
+10.10.0.0/24       VPN_S2S_Gateway             65001
 
-vHUB: VwanS2-vhub1-hub
-Effective route table: defaultRouteTable
-AddressPrefixes    AsPath             NextHopType
------------------  -----------------  --------------------------
-10.2.0.0/16        65010              HubBgpConnection
-10.11.0.0/16                          Virtual Network Connection
-10.1.0.0/16                           Virtual Network Connection
-10.10.0.0/24       65001              VPN_S2S_Gateway
-10.5.0.0/16        65520-65520-65020  Remote Hub
-10.30.0.0/24       65520-65520-65003  Remote Hub
-10.22.0.0/16       65520-65520        Remote Hub
-10.4.0.0/16        65520-65520        Remote Hub
+vHUB: Vwan21-vhub1-hub
+Effective route table: custom
 ```
 
 ### 6. Onprem Routes
 
-Let's login to the onprem router `VwanS2-branch1-nva` and observe its dynamic routes.
+Let's login to the onprem router `Vwan21-branch1-nva` and observe its dynamic routes.
 
-1. Login to virtual machine `VwanS2-branch1-nva` via the serial console.
+1. Login to virtual machine `Vwan21-branch1-nva` via the serial console.
 2. Enter username and password
    - username = **azureuser**
    - password = **Password123**
@@ -245,23 +212,23 @@ Let's login to the onprem router `VwanS2-branch1-nva` and observe its dynamic ro
 ```sh
 enable
 ```
-1. Display the routing table
+4. Display the routing table
 ```sh
 show ip route
 ```
 
 Sample output
 ```sh
-VwanS2-branch1-nva-vm#show ip route
-[Truncated]
+Vwan21-branch1-nva-vm#show ip route
+...
+[Truncated for brevity]
+...
 Gateway of last resort is 10.10.1.1 to network 0.0.0.0
 
 S*    0.0.0.0/0 [1/0] via 10.10.1.1
-      10.0.0.0/8 is variably subnetted, 16 subnets, 4 masks
-B        10.1.0.0/16 [20/0] via 192.168.11.12, 00:39:25
-B        10.2.0.0/16 [20/0] via 192.168.11.12, 00:39:25
-B        10.4.0.0/16 [20/0] via 192.168.11.12, 00:39:25
-B        10.5.0.0/16 [20/0] via 192.168.11.12, 00:39:25
+      10.0.0.0/8 is variably subnetted, 12 subnets, 4 masks
+B        10.1.0.0/16 [20/0] via 192.168.11.12, 00:23:32
+B        10.2.0.0/16 [20/0] via 192.168.11.12, 00:23:32
 S        10.10.0.0/24 [1/0] via 10.10.2.1
 C        10.10.1.0/24 is directly connected, GigabitEthernet1
 L        10.10.1.9/32 is directly connected, GigabitEthernet1
@@ -271,9 +238,7 @@ C        10.10.10.0/30 is directly connected, Tunnel0
 L        10.10.10.1/32 is directly connected, Tunnel0
 C        10.10.10.4/30 is directly connected, Tunnel1
 L        10.10.10.5/32 is directly connected, Tunnel1
-B        10.11.0.0/16 [20/0] via 192.168.11.12, 00:39:25
-B        10.22.0.0/16 [20/0] via 192.168.11.12, 00:39:25
-B        10.30.0.0/24 [20/0] via 192.168.11.12, 00:38:21
+B        10.11.0.0/16 [20/0] via 192.168.11.12, 00:23:32
       168.63.0.0/32 is subnetted, 1 subnets
 S        168.63.129.16 [254/0] via 10.10.1.1
       169.254.0.0/32 is subnetted, 1 subnets
@@ -281,15 +246,20 @@ S        169.254.169.254 [254/0] via 10.10.1.1
       192.168.10.0/32 is subnetted, 1 subnets
 C        192.168.10.10 is directly connected, Loopback0
       192.168.11.0/24 is variably subnetted, 3 subnets, 2 masks
-B        192.168.11.0/24 [20/0] via 192.168.11.12, 00:39:25
-S        192.168.11.12/32 is directly connected, Tunnel1
-S        192.168.11.13/32 is directly connected, Tunnel0
+B        192.168.11.0/24 [20/0] via 192.168.11.12, 00:23:32
+S        192.168.11.12/32 is directly connected, Tunnel0
+S        192.168.11.13/32 is directly connected, Tunnel1
 ```
 
-5. Show BGP information
+5. Display BGP information
 ```sh
-VwanS2-branch1-nva-vm#show ip bgp
-BGP table version is 10, local router ID is 192.168.10.10
+show ip bgp
+```
+
+Sample output
+```sh
+Vwan21-branch1-nva-vm#show ip bgp
+BGP table version is 6, local router ID is 192.168.10.10
 Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
               r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
               x best-external, a additional-path, c RIB-compressed,
@@ -298,36 +268,27 @@ Origin codes: i - IGP, e - EGP, ? - incomplete
 RPKI validation codes: V valid, I invalid, N Not found
 
      Network          Next Hop            Metric LocPrf Weight Path
- *    10.1.0.0/16      192.168.11.13                          0 65515 i
- *>                    192.168.11.12                          0 65515 i
- *    10.2.0.0/16      192.168.11.13            0             0 65515 65010 i
- *>                    192.168.11.12            0             0 65515 65010 i
- *    10.4.0.0/16      192.168.11.13                          0 65515 65520 65520 e
- *>                    192.168.11.12                          0 65515 65520 65520 e
- *    10.5.0.0/16      192.168.11.13                          0 65515 65520 65520 65020 e
- *>                    192.168.11.12                          0 65515 65520 65520 65020 e
+ *>   10.1.0.0/16      192.168.11.12                          0 65515 i
+ *                     192.168.11.13                          0 65515 i
+ *>   10.2.0.0/16      192.168.11.12            0             0 65515 65010 i
+ *                     192.168.11.13            0             0 65515 65010 i
  *>   10.10.0.0/24     10.10.2.1                0         32768 i
-     Network          Next Hop            Metric LocPrf Weight Path
- *    10.11.0.0/16     192.168.11.13                          0 65515 i
- *>                    192.168.11.12                          0 65515 i
- *    10.22.0.0/16     192.168.11.13                          0 65515 65520 65520 e
- *>                    192.168.11.12                          0 65515 65520 65520 e
- *    10.30.0.0/24     192.168.11.13                          0 65515 65520 65520 65003 e
- *>                    192.168.11.12                          0 65515 65520 65520 65003 e
- *    192.168.11.0     192.168.11.13                          0 65515 i
- *>                    192.168.11.12                          0 65515 i
+ *>   10.11.0.0/16     192.168.11.12                          0 65515 i
+ *                     192.168.11.13                          0 65515 i
+ *>   192.168.11.0     192.168.11.12                          0 65515 i
+ *                     192.168.11.13                          0 65515 i
 ```
 
 ## Cleanup
 
 1. Navigate to the lab directory
 ```sh
-cd azure-network-terraform/2-virtual-wan/2-virtual-wan-dual-hub
+cd azure-network-terraform/2-virtual-wan/1-vwan-single-region
 ```
 
 2. Delete the resource group to remove all resources installed.\
 Run the following Azure CLI command:
 
 ```sh
-az group delete -g VwanS2RG --no-wait
+az group delete -g Vwan21RG --no-wait
 ```

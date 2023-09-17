@@ -76,7 +76,7 @@ resource "azurerm_firewall" "this" {
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
   count                      = var.security_config[0].enable_firewall ? 1 : 0
-  name                       = "${var.prefix}azfw"
+  name                       = "${var.prefix}azfw-diag"
   target_resource_id         = azurerm_firewall.this[0].id
   log_analytics_workspace_id = var.log_analytics_workspace_id
   storage_account_id         = var.storage_account_id
