@@ -16,17 +16,25 @@ The terraform codes in this collection cover different hub and spoke network pat
 
 This terraform code deploys a single-region Secured Virtual Network (Vnet) hub and spoke topology using Azure firewall and User-Defined Routes (UDR) to direct traffic to the firewall.
 
+![Secured Hub and Spoke (Single Region)](../images/scenarios/1-1-hub-spoke-azfw-single-region.png)
+
 ## [2. Secured Hub and Spoke (Dual Region)](./2-hub-spoke-azfw-dual-region/)
 [Terraform Code](./2-hub-spoke-azfw-dual-region/)
 
 This terraform code deploys a multi-region Secured Virtual Network (Vnet) hub and spoke topology using Azure firewall and User-Defined Routes (UDR) to direct traffic to the firewall.
+
+![Secured Hub and Spoke (Dual Region)](../images/scenarios/1-2-hub-spoke-azfw-dual-region.png)
 
 ## [3. Hub and Spoke using NVA (Single Region)](./3-hub-spoke-nva-single-region/)
 [Terraform Code](./3-hub-spoke-nva-single-region/)
 
 This terraform code deploys a single-region standard Virtual Network (Vnet) hub and spoke topology.
 
+![Hub and Spoke using NVA (Single Region)](../images/scenarios/1-3-hub-spoke-nva-single-region.png)
+
 ## [4. Hub and Spoke using NVA (Dual Region)](./4-hub-spoke-nva-dual-region/)
 [Terraform Code](./4-hub-spoke-nva-dual-region/)
 
 This terraform code deploys a multi-region Virtual Network (Vnet) hub and spoke topology with dynamic routing using Network Virtual Aplliance (NVA) and Azure Route Server (ARS).
+
+![Hub and Spoke using NVA (Dual Region)](../images/scenarios/1-4-hub-spoke-nva-dual-region.png)
