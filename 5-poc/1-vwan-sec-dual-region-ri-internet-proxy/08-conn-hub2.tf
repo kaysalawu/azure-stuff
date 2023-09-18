@@ -6,6 +6,7 @@ locals {
   vhub2_vpngw_public_ip1 = module.vhub2.vpn_gateway_public_ip1
   vhub2_vpngw_bgp_ip0    = module.vhub2.vpn_gateway_bgp_ip0
   vhub2_vpngw_bgp_ip1    = module.vhub2.vpn_gateway_bgp_ip1
+  hub2_nva_public_ip     = module.hub2_nva.public_ip
 }
 
 ####################################################
@@ -128,7 +129,7 @@ locals {
         BGP_ADVERTISED_PREFIXES = [
           local.hub2_subnets["${local.hub2_prefix}main"].address_prefixes[0],
           local.spoke5_address_space[0],
-          #"${local.spoke6_vm_public_ip}/32"
+          "${local.spoke6_vm_public_ip}/32"
         ]
       }
     ))
@@ -166,7 +167,7 @@ module "hub2_udr_main" {
   destinations           = local.main_udr_destinations
   depends_on             = [module.hub2]
 }
-/*
+
 module "hub2_udr_nva" {
   source         = "../../modules/udr"
   resource_group = azurerm_resource_group.rg.name
@@ -176,7 +177,7 @@ module "hub2_udr_nva" {
   next_hop_type  = "Internet"
   destinations   = ["${local.spoke6_vm_public_ip}/32", ]
   depends_on     = [module.hub2]
-}*/
+}
 
 ####################################################
 # internal lb

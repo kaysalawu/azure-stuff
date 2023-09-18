@@ -52,10 +52,14 @@ resource "azurerm_vpn_gateway" "this" {
 # firewall
 #----------------------------
 
+resource "random_id" "azfw" {
+  byte_length = 2
+}
+
 resource "azurerm_firewall" "this" {
   count               = var.security_config[0].enable_firewall ? 1 : 0
   resource_group_name = var.resource_group
-  name                = "${var.prefix}azfw"
+  name                = "${var.prefix}azfw-${random_id.azfw.hex}"
   location            = var.location
   sku_tier            = "Standard"
   sku_name            = "AZFW_Hub"

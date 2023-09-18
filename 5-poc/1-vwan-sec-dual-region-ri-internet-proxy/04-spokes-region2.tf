@@ -1,6 +1,6 @@
 
 locals {
-  #spoke6_vm_public_ip = module.spoke6.vm_public_ip[local.spoke6_vm_name]
+  spoke6_vm_public_ip = module.spoke6.vm_public_ip["vm"]
 }
 
 ####################################################

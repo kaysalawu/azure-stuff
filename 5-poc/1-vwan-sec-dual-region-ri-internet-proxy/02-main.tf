@@ -3,7 +3,7 @@
 ####################################################
 
 locals {
-  prefix       = "Vwan24"
+  prefix       = "Poc1"
   my_public_ip = chomp(data.http.my_public_ip.response_body)
 }
 
@@ -109,6 +109,9 @@ data "http" "my_public_ip" {
 # common resources
 ####################################################
 
+# TODO: remove NSG from common module and place in main.tf
+# TODO: split common by region
+
 module "common" {
   source         = "../../modules/common"
   resource_group = azurerm_resource_group.rg.name
@@ -212,6 +215,25 @@ module "unbound" {
 
 # rules
 
+resource "azurerm_network_security_rule" "allow_pulic_ip_to_main_subnet" {
+  for_each                    = local.regions
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = module.common.nsg_main[each.key].name
+  name                        = "inbound-public-ip-to-main-${each.key}"
+  direction                   = "Inbound"
+  access                      = "Allow"
+  priority                    = 300
+  source_address_prefixes = [
+    local.my_public_ip,
+    local.hub1_nva_public_ip,
+    local.hub2_nva_public_ip,
+  ]
+  source_port_range          = "*"
+  destination_address_prefix = "*"
+  destination_port_range     = "*"
+  protocol                   = "*"
+}
+
 ####################################################
 # addresses
 ####################################################
@@ -249,8 +271,8 @@ resource "azurerm_firewall_policy" "firewall_policy" {
   private_ip_ranges = concat(
     local.private_prefixes,
     [
-      # "${local.spoke3_vm_public_ip}/32",
-      # "${local.spoke6_vm_public_ip}/32",
+      "${local.spoke3_vm_public_ip}/32",
+      "${local.spoke6_vm_public_ip}/32",
     ]
   )
 
