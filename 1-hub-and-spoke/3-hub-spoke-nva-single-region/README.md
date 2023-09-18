@@ -17,7 +17,7 @@ Contents
 
 ## Overview
 
-This terraform code deploys a single-region standard Virtual Network (Vnet) hub and spoke topology.
+This terraform code deploys a single-region standard Virtual Network (Vnet) hub and spoke topology using Virtual Network Appliances (NVA) in the hub.
 
 ![Hub and Spoke (Single region)](../../images/scenarios/1-3-hub-spoke-nva-single-region.png)
 
